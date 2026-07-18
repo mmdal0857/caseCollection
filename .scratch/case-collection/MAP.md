@@ -28,6 +28,7 @@ Labels: wayfinder:map
 
 <!-- one line per closed ticket: name(link) — gist -->
 
+- [메커닉 설계 공간 서베이](issues/01-mechanic-survey.md) — 권고: 수집=퍼즐재료(Golden Idol형)로 MVP 후 단서-투-덱(×StS)으로 확장; Balatro형 점수엔진은 마스터리 최고나 내러티브 결합 최약, 도감은 리텐션 레이어; 최대 과제는 리플레이성.
 - [위키 데이터 인벤토리](issues/02-wiki-data-inventory.md) — 카드화 1순위는 clue_type(49)·story(77), case_pattern(4)은 희귀 소재, work(110)는 얇음; 최대 공백은 이미지 전무·수치/희귀도 근거 부재·캐릭터 1급 노드 부재. graph.json은 코드 그래프라 무관.
 
 ## Not yet specified
