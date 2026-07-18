@@ -1,6 +1,6 @@
 # caseCollection
 
-OUT 프로젝트(`f:/Project/out`)의 LLM 위키를 기반으로 하는 웹 카드 콜렉션 게임. 현재 wayfinder 차팅 단계 — 지도는 `.scratch/case-collection/MAP.md`.
+OUT 프로젝트(`f:/Project/out`)의 LLM 위키를 기반으로 하는 웹 카드 콜렉션 게임. wayfinder 지도로 진행 — 정본은 `.scratch/case-collection/MAP.md` (현재 상태·프론티어는 지도의 Decisions so far와 open 티켓이 권위). 리서치 산출물은 `docs/research/`.
 
 ## Agent skills
 
