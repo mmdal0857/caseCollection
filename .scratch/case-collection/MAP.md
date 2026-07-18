@@ -19,7 +19,7 @@ Labels: wayfinder:map
   - 한국어 우선, 영어는 파이프라인 슬롯만
   - 재사용 = 모듈(추출된 코어) + 플로우(추출 절차의 일반화 스킬) 둘 다 — 이번 추출이 플로우의 첫 검증 사례
   - 코어 경계 시작 가설: 생성된 위키 데이터 + 조회 레이어(최소). 생성 파이프라인 포함 여부는 게임 요구 확정 후
-- **협업**: 코딩·이미지 구현 위임은 Codex 우선(codex-collab). Codex 쿼터 ~2026-07-25까지 소진 → 그 전엔 gemini-collab 폴백.
+- **협업**: 코딩·이미지 구현 위임은 Codex 우선(codex-collab). Codex 쿼터 ~2026-07-25까지 소진 → 그 전엔 gemini-collab 폴백. 서브에이전트 모델은 **Opus** 사용(Fable 세션 한도 절약, 2026-07-19 지시).
 - **마일스톤**: 2026-08 첫 공개 빌드 목표 — 느슨한 제약, MVP 스코프 티켓에서 참고.
 - **스킬**: 티켓 해소는 /grilling + /domain-modeling 기본, prototype 티켓은 /prototype. 용어는 OUT `CONTEXT.md` 준수. 주의: OUT 용어집에서 "case"는 기피어(에피소드 인스턴스와 혼동) — 이 프로젝트에서 "case"를 핵심 명사로 재정의하려면 /domain-modeling으로 명시적 결정하고 이 레포의 `CONTEXT.md`에 기록.
 - **트래커**: 로컬 마크다운 — 운영 규약은 `docs/agents/issue-tracker.md`의 "Wayfinding operations".
