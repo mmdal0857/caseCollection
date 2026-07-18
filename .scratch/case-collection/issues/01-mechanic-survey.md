@@ -11,4 +11,4 @@ Blocked-by:
 
 조사 범위: 덱빌더(Slay the Spire, Dominion), 로그라이트 카드(Inscryption, Balatro), 컬렉션 중심(TCG, Marvel Snap, 도감/앨범형), 추리·퍼즐(Return of the Obra Dinn, The Case of the Golden Idol, Her Story)의 코어 루프 패턴과, 수집이 플레이에 통합되는 방식.
 
-Findings: `research/mechanic-survey` 브랜치의 `docs/research/2026-07-19-mechanic-survey.md`
+Findings: `docs/research/2026-07-19-mechanic-survey.md` (main — 로컬 트래커라 research 브랜치 규약 생략)

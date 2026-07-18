@@ -11,4 +11,4 @@ OUT(`f:/Project/out`)의 LLM 위키·조회 레이어가 실제로 제공하는 
 
 조사 대상: `docs/wiki/**`(SCHEMA.md, WIKI_INDEX.md, sources/ 27개, case-patterns/, clues/, characters/, settings/, stories/, archetypes/), `graphify-out/graph.json` + GRAPH_REPORT.md, `pd_wiki/`(loader.py, views.py, render.py, semantic/), `catalog.json`.
 
-Findings: `research/wiki-data-inventory` 브랜치의 `docs/research/2026-07-19-wiki-data-inventory.md`
+Findings: `docs/research/2026-07-19-wiki-data-inventory.md` (main — 로컬 트래커라 research 브랜치 규약 생략)
