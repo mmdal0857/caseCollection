@@ -2,7 +2,7 @@
 
 Status: open
 Labels: wayfinder:grilling
-Assignee:
+Assignee: MMDAL (fable session, 2026-07-19)
 Blocked-by: 03
 
 ## Question

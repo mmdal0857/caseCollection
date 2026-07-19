@@ -32,6 +32,7 @@ Labels: wayfinder:map
 - [위키 데이터 인벤토리](issues/02-wiki-data-inventory.md) — 카드화 1순위는 clue_type(49)·story(77), case_pattern(4)은 희귀 소재, work(110)는 얇음; 최대 공백은 이미지 전무·수치/희귀도 근거 부재·캐릭터 1급 노드 부재. graph.json은 코드 그래프라 무관.
 - [획득 구조 레퍼런스 리서치](issues/09-acquisition-reference-research.md) — 6개 패턴 조사(Balatro/Snap/Dominion/Chants·Golden Idol/Wildfrost + BGG Tech-Tree 대응); 정적웹·1인개발엔 결정론 계열이 최적, MVP는 어휘 확정 게이트+고정공급 기회비용+선택형 단서팩(무중복 편향) 조합 권고, 가챠 피티·다층 라이브 경제는 과설계로 배제.
 - [코어 루프 확정](issues/03-core-loop.md) — ⓑ Golden Idol형 MVP(→ⓐ 확장); case=생성 사건 퍼즐("case" 재정의, CONTEXT.md 신설), 패턴 골격×story 소재풀; 어휘 게이트+게스트 단서 학습형; 근접도+3개 확정 판정; 연속 런(3~5건+복합패턴 보스); 라이프 대신 문맥 태그 시스템(배경 상태×태그 조합식, 인터루드 이벤트, BAD 엔딩). 종이 위 확정 — 재미 검증은 프로토타입 티켓에서.
+- [웹 스택과 디바이스 타깃](issues/05-web-stack.md) — Svelte 5+Vite+TS(SvelteKit 미사용), DOM+절제된 juice(부족 시 PixiJS 레이어 해치, 프로토에서 검증); 데스크톱 우선·클릭/탭 기반 터치 호환; 배포는 itch.io butler(OUT 런북 재사용)+GitHub Pages 병행, Railway 배제. 핵심 가치 교정: 텍스트 중심 아님 — 퍼즐 명료성+카드 시너지.
 
 ## Not yet specified
 
