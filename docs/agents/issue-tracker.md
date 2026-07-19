@@ -32,3 +32,14 @@ This tracker has no native blocking or labels, so wayfinder uses header-line con
 - **Frontier query**: files with `Status: open`, empty `Assignee:`, and all blockers closed. E.g. `grep -l "Status: open" .scratch/<effort>/issues/*.md` then filter by assignee/blockers.
 - **Resolution**: append the answer under `## Resolution` at the bottom, set `Status: closed`, and add a one-line entry to the map's "Decisions so far" linking the ticket by name.
 - Ticket numbering is monotonic across the effort — new tickets take the next `<NN>` regardless of how many are closed.
+
+### Close-time housekeeping
+
+Every ticket close runs this checklist, in order, before the session moves on:
+
+1. **Record** — `## Resolution` + `Status: closed` + map "Decisions so far" entry (above).
+2. **Vocabulary** — if the resolution coined or changed domain terms, update `CONTEXT.md` now (/domain-modeling), not in a later batch.
+3. **Ripple** — append `## Comments` notes to tickets the decision amends (e.g. a loop revision), and update or delete tickets it invalidates.
+4. **Fog graduation** — re-read "Not yet specified"; anything the answer made specifiable becomes a new ticket (create, then wire `Blocked-by`), and its fog line is removed. Out-of-scope discoveries go to "Out of scope" instead.
+5. **Learnings** — judge whether the session surfaced environment facts that live *outside* this repo (tool quirks, infra paths, external data locations): reflect those into agent memory or global CLAUDE.md. Facts already recorded in the repo (resolutions, research docs) are NOT duplicated into memory.
+6. **Commit** — re-read the map before editing it (concurrent sessions), stage only this resolution's files (exclude other sessions' uncommitted work — check `git status` for files you didn't touch), commit as `resolve: <ticket title> (ticket NN) — <gist>`.
