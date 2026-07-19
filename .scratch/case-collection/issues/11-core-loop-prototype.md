@@ -2,7 +2,7 @@
 
 Status: open
 Labels: wayfinder:prototype
-Assignee:
+Assignee: MMDAL (fable session B, 2026-07-19)
 Blocked-by:
 
 ## Question
@@ -15,3 +15,7 @@ Blocked-by:
 4. **DOM juice 충분성** ([웹 스택과 디바이스 타깃](05-web-stack.md) 결정의 검증 항목): 시너지 발동·카드 연출을 Svelte 내장 transition/FLIP/motion만으로 구현했을 때 타격감이 충분한가. 부족하면 PixiJS 카드 레이어 해치를 발동하고 05 결정에 반영.
 
 프로토타입이 루프를 반증하면 03의 결정을 재개정한다(지도 갱신). 프로토 자산은 티켓에서 링크.
+
+## Comments
+
+- 2026-07-19 [카드 스키마와 카드화 대상](04-card-schema.md) 확정으로 검증 대상 추가: ⑤ **가설 선언** — 패턴 카드로 case 골격을 선언(보유·게스트만, 적중 시 정보 보상)하는 슬롯이 추리 제출에 더해짐. ⑥ **수사 노트 해금** — 정답 확정에 포함된 카드의 의미 텍스트가 열리는 성장 축이 동기 부여로 작동하는가. 프로토용 태그 값은 수제 시드 사용(04 결정).
