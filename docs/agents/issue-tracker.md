@@ -31,6 +31,7 @@ This tracker has no native blocking or labels, so wayfinder uses header-line con
 - A ticket is **unblocked** when every ticket in its `Blocked-by` line has `Status: closed`.
 - **Frontier query**: files with `Status: open`, empty `Assignee:`, and all blockers closed. E.g. `grep -l "Status: open" .scratch/<effort>/issues/*.md` then filter by assignee/blockers.
 - **Resolution**: append the answer under `## Resolution` at the bottom, set `Status: closed`, and add a one-line entry to the map's "Decisions so far" linking the ticket by name.
+- **Rejection trail**: if the resolution considered and *discarded* an alternative, record it on the same map line as `/ 기각: …` (rejected outright) or `/ 유예: …` (deferred past MVP). A one-line summary that keeps only what was adopted makes an explicit rejection look like an unexplored gap — readers who see the map but not the ticket then re-raise settled questions, or worse, do work to "fill" it. Demonstrated: `docs/research/2026-07-20-cross-research-audit.md` §3, where 3 of 4 flagged "missing recommendations" were in fact recorded rejections. The map is an **index, not the authority** — ticket bodies remain canonical.
 - Ticket numbering is monotonic across the effort — new tickets take the next `<NN>` regardless of how many are closed.
 
 ### Close-time housekeeping

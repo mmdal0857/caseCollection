@@ -1,0 +1,8 @@
+# 의존성·빌드 산출물 — 어느 하위 디렉토리에서든
+node_modules/
+dist/
+
+# 프로토타입 빌드 부산물
+# (prototype/core-loop 소스는 prototype/core-loop 브랜치에만 존재. main에는
+#  npm install·빌드가 남긴 파일만 떠돌므로 무시한다. ticket 11 참조.)
+prototype/core-loop/smoke.mjs
