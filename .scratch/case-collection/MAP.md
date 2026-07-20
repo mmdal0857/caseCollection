@@ -35,7 +35,7 @@ Labels: wayfinder:map
 - [웹 스택과 디바이스 타깃](issues/05-web-stack.md) — Svelte 5+Vite+TS(SvelteKit 미사용), DOM+절제된 juice(부족 시 PixiJS 레이어 해치, 프로토에서 검증); 데스크톱 우선·클릭/탭 기반 터치 호환; 배포는 itch.io butler(OUT 런북 재사용)+GitHub Pages 병행, Railway 배제. 핵심 가치 교정: 텍스트 중심 아님 — 퍼즐 명료성+카드 시너지.
 - [카드 스키마와 카드화 대상](issues/04-card-schema.md) — 컬렉션 = 단서 49 + 패턴 4(가설 선언 어휘 — 03 소폭 개정, 프로토 검증); 힌트는 소모형 순수 수제; 스키마 = id·name·suit·tags(공개)·insight·text(비공개→수사 노트 해금)·art(개별 슬롯+폴백), 수치·희귀도 없음; 텍스트 전량 카드용 재작성(위키 id 링크 유지); 태그 값은 수제 시드 → 원문 추출 2단계 승격(신규 티켓 14); 컬렉션은 슈트 4종 + 보유율×검증율 2축, 세트 없음.
 - [획득 구조 세부 확정](issues/10-acquisition-detail.md) — 프레임 권고 1+3+2(어휘게이트+고정진열+선택팩); 영구화는 04의 보유×검증 2축 매핑(보유=case클리어 즉시, 검증=런완주 승격, 개방형 풀); BAD엔딩=검증승격 0·보유 전량보존(깔끔한 베팅); 지급 3분할(case=게스트/인터루드=고정진열 정조준구매/완주=선택팩); 수사포인트 화폐·힌트카드 둘 다 런한정·인터루드 진열구매(오답 이중처벌 회피 위해 화폐는 가산보너스); 완주팩 5중1+미보유가중치+승격권폴백; 진행=소수스타터+런마다 진열변주(하나만 변주). 수치 잠정 — 프로토서 튜닝.
-- [OUT 코어 경계](issues/06-core-boundary.md) — 코어 = 재실행 가능 **빌드타임 콘텐츠 파이프라인**(C, 산출물=공유 데이터 팩); 코드 **OUT-구체**(X)·일반화는 플로우 스킬. IN=획득(pg_downloader·pg_pd_filter)+정제(text_cleaner)+생성(wiki-agent·wiki_seeder 통째)+씨앗데이터(docs/wiki)+조회(pd_wiki); OUT=episode_generator(Ren'Py·case생성기 참고원형)·game·graphify. 코어는 **게임무관**(L) — 문맥 태그 추출(14)은 게임측 레이어. 모딩=데이터 팩(오프라인 저작→정적 로드)만, 런타임 추출 배제. → 07 프론티어·신규 15.
+- [OUT 코어 경계](issues/06-core-boundary.md) — 코어 = 재실행 가능 **빌드타임 콘텐츠 파이프라인**(C, 산출물=공유 데이터 팩); 코드 **OUT-구체**(X)·일반화는 플로우 스킬. IN=획득(pg_downloader·pg_pd_filter)+정제(text_cleaner)+생성(wiki-agent·wiki_seeder 통째)+씨앗데이터(docs/wiki)+조회(pd_wiki); OUT=episode_generator(Ren'Py·case생성기 참고원형)·game·graphify. 코어는 **게임무관**(L) — 문맥 태그 추출(14)은 게임측 레이어. 모딩=데이터 팩(오프라인 저작→정적 로드)만, 런타임 추출 배제. → 07 프론티어·신규 16.
 
 ## Not yet specified
 
