@@ -2,7 +2,7 @@
 
 Status: open
 Labels: wayfinder:prototype
-Assignee:
+Assignee: MMDAL (opus session, 2026-07-21)
 Blocked-by: 12
 
 ## Question
