@@ -1,12 +1,19 @@
 <script lang="ts">
+  import { untrack } from 'svelte';
   import { tweened } from 'svelte/motion';
   import { cubicOut } from 'svelte/easing';
   import { scale } from 'svelte/transition';
 
-  let { heat, trust, badHeat = 8 }: { heat: number; trust: number; badHeat?: number } = $props();
+  import type { AxisDef } from '../engine';
 
-  const heatT = tweened(heat, { duration: 500, easing: cubicOut });
-  const trustT = tweened(trust, { duration: 500, easing: cubicOut });
+  let { heat, trust, badHeat = 8, axis, axisDef }: {
+    heat: number; trust: number; badHeat?: number;
+    /** v10(12 §5): case별 가변축. 없는 case면 표시하지 않는다. */
+    axis?: number; axisDef?: AxisDef;
+  } = $props();
+
+  const heatT = tweened(untrack(() => heat), { duration: 500, easing: cubicOut });
+  const trustT = tweened(untrack(() => trust), { duration: 500, easing: cubicOut });
   $effect(() => { heatT.set(heat); });
   $effect(() => { trustT.set(trust); });
 </script>
@@ -35,4 +42,19 @@
     <i class="pole high" class:ahead={trust >= 5}>신중</i>
     {#key trust}<span class="meter-num" in:scale={{ start: 1.7, duration: 260 }}>{trust}</span>{/key}
   </div>
+  <!-- v10: case별 가변축(12 §5) — 재사용 풀에서 하나. 얼굴을 게이트한다. -->
+  {#if axisDef && axis !== undefined}
+    <div class="meter axis" title={axisDef.hint}>
+      <span class="meter-label">{axisDef.label}</span>
+      <i class="pole low">{axisDef.low}</i>
+      <div class="meter-bar"><div class="meter-fill" style="width:{axis * 10}%"></div></div>
+      <i class="pole high">{axisDef.high}</i>
+      {#key axis}<span class="meter-num" in:scale={{ start: 1.7, duration: 260 }}>{axis}</span>{/key}
+    </div>
+  {/if}
 </div>
+
+<style>
+  .meter.axis .meter-fill { background: linear-gradient(90deg, #4a6b7a, #7fb3d5); }
+  .meter.axis .meter-label { color: #9fd3f5; }
+</style>

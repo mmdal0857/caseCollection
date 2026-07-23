@@ -24,13 +24,19 @@
 
 <div class="shell">
   <header class="topbar">
-    <span class="proto-mark">PROTOTYPE — 코어 루프 (ticket 11)</span>
+    <span class="proto-mark">PROTOTYPE — 얼굴 의미론 v10 (ticket 17)</span>
     <div class="mode-toggle">
       <button class:active={mode === 'game'} onclick={() => (mode = 'game')}>추리 게임 (통합)</button>
       <button class:active={mode === 'scenario'} onclick={() => (mode = 'scenario')}>시나리오 샌드박스</button>
     </div>
     {#if mode === 'game' && game.screen !== 'briefing'}
-      <Meters heat={game.heat} trust={game.trust} badHeat={CONTENT.badHeat} />
+      <Meters
+        heat={game.heat}
+        trust={game.trust}
+        badHeat={CONTENT.badHeat}
+        axis={game.axis}
+        axisDef={CONTENT.cases[game.caseIndex]?.axis}
+      />
       <span class="run-progress">
         사건 {Math.min(game.caseIndex + 1, CONTENT.cases.length)}/{CONTENT.cases.length}
       </span>
