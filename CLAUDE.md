@@ -13,9 +13,9 @@ OUT 프로젝트(`f:/Project/out`)의 LLM 위키를 기반으로 하는 웹 카�
 
 ## 프로토타입 자산
 
-코어 루프 프로토타입(v1~v9, ticket 11)은 **`prototype/core-loop` 브랜치**에만 있다(throwaway, main에는 없음). `git checkout prototype/core-loop && cd prototype/core-loop && npm install && npm run dev`.
+코어 루프 프로토타입(v1~v10.1, ticket 11·17·19)은 **main의 `prototype/core-loop/`**에 있다 — 2026-07-23 `b2596bf`로 병합됐고 동명 브랜치는 삭제됐다. **예전 문서의 `git checkout prototype/core-loop`는 무효.** 실행: `cd prototype/core-loop && npm install && npm run dev`.
 
-검증된 **순수 모듈**은 스펙 입력이자 **빌드 파이프라인의 콘텐츠 검증기**로 승격 예정 — `engine.ts`(솔버빌리티), `dramaturgy.ts`(코믹 반응 생성), `scenario.ts`(서사 응집), `persona.ts`, `josa.ts`.
+검증된 **순수 모듈**은 스펙 입력이자 **빌드 파이프라인의 콘텐츠 검증기**로 승격 예정 — `engine.ts`(솔버빌리티), `facets.ts`(얼굴 합법성·해석 공간), `dramaturgy.ts`(코믹 반응 생성), `scenario.ts`(서사 응집), `persona.ts`, `josa.ts`, `datapack.ts`(데이터 팩 로더). 기계 검증기는 `smoke.ts`·`smoke-datapack.ts`.
 
 ## Agent skills
 
