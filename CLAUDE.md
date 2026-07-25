@@ -6,7 +6,9 @@ OUT 프로젝트(`f:/Project/out`)의 LLM 위키를 기반으로 하는 웹 카�
 
 ## 기술 스택 (ticket 05 확정)
 
-**Svelte 5 + Vite + TypeScript** (SvelteKit 미사용 — 단일 페이지 정적 빌드). 배포는 itch.io butler + GitHub Pages.
+**Svelte 5 + Vite + TypeScript** (SvelteKit 미사용 — 단일 페이지 정적 빌드). 배포는 itch.io butler + GitHub Pages (ticket 05).
+
+> ⚠️ **배포 채널 변경 계류 중**: [ticket 08](.scratch/case-collection/issues/08-mvp-scope.md) §⑥이 **Higgsfield 마켓플레이스 + GitHub Pages**(itch.io는 MVP 밖)로 결의했으나, 08은 의도적으로 open 유지 상태라 아직 정식 Resolution이 아니다 — 05가 여전히 형식상 정본. 배포를 실제로 준비하기 전에 08의 상태를 먼저 확인할 것. `higgsfield game deploy/publish` 사용법은 전역 CLAUDE.md 참조.
 
 - **Svelte 5 `$state` 프록시는 `structuredClone`으로 복제 불가** (`DataCloneError`). 순수 리듀서에 상태를 넘길 땐 반드시 `$state.snapshot(state)`로 평범한 객체를 만들어 전달할 것. 이걸 놓치면 모든 dispatch가 조용히 예외로 죽어 화면이 멈춘다 (프로토 v1에서 실제 발생).
 - 파생값은 `$derived`, 복합 계산은 `$derived.by`. `$props()` 값을 지역 상수로 캡처하면 `state_referenced_locally` 경고 — 의도한 초기값 캡처가 아니면 `$derived`로.
@@ -26,6 +28,19 @@ npx esbuild smoke-datapack.ts --bundle --format=esm --platform=node --outfile=sm
 ```
 
 데이터 팩 추출 파이프라인(티켓 14 뼈대 — 3·4단계 STUB): `py scripts/extract_game_data_pack.py`
+
+## 카드 아트 (ticket 13 확정)
+
+**명사는 생성하고 형용사는 계산한다** — 카드 아트 = 사물 1장(생성) × 태그 처리 5종(CSS). 얼굴마다 굽지 않는다: 얼굴 55개가 태그 조합 7종으로 접히므로 구우면 ≈150장, 계산하면 49장 + 처리 5종이고 **얼굴이 잠길 때 전이로 움직인다**.
+
+```
+bash scripts/cardart-generate.sh <card_id> "<영문 사물 묘사>"   # 본 생성 (Higgsfield, 2크레딧/장)
+bash scripts/protoart-prompts.sh                              # 스타일 4안 시안 재현
+```
+
+생성 바이너리는 미커밋(`.gitignore`) — **레시피가 정본**. 생성 규칙 3가지(용도 아닌 사물을 그린다 / 바탕을 근-흑색으로 못박는다 / 조명 중립)는 `scripts/cardart-generate.sh` 주석에 근거와 함께 있다.
+
+**프로토 하네스는 THROWAWAY** — `src/lib/protoart.svelte.ts`, `src/lib/ui/ArtSwitcher.svelte`는 시안 비교용이므로 UI 재작성 시 삭제한다. 반면 `CardChip.svelte`의 아트 슬롯 + 슈트 폴백과 `app.css`의 프레임·태그 처리 CSS는 **승격된 실물**이다.
 
 ## Agent skills
 
