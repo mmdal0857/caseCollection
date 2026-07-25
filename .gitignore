@@ -3,6 +3,8 @@ node_modules/
 dist/
 
 # 프로토타입 빌드 부산물
-# (prototype/core-loop 소스는 prototype/core-loop 브랜치에만 존재. main에는
-#  npm install·빌드가 남긴 파일만 떠돌므로 무시한다. ticket 11 참조.)
+# (2026-07-23: prototype/core-loop는 main에 병합됨 — 더 이상 throwaway 브랜치 전용이 아니다.
+#  npm install·esbuild가 남기는 산출물만 무시한다.)
 prototype/core-loop/smoke.mjs
+prototype/core-loop/smoke-datapack.mjs
+prototype/core-loop/.vite/

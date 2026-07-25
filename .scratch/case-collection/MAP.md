@@ -23,6 +23,7 @@ Labels: wayfinder:map
 - **마일스톤**: 2026-08 첫 공개 빌드 목표 — 느슨한 제약, MVP 스코프 티켓에서 참고.
 - **스킬**: 티켓 해소는 /grilling + /domain-modeling 기본, prototype 티켓은 /prototype. 용어는 OUT `CONTEXT.md` 준수. 주의: OUT 용어집에서 "case"는 기피어(에피소드 인스턴스와 혼동) — 이 프로젝트에서 "case"를 핵심 명사로 재정의하려면 /domain-modeling으로 명시적 결정하고 이 레포의 `CONTEXT.md`에 기록.
 - **트래커**: 로컬 마크다운 — 운영 규약은 `docs/agents/issue-tracker.md`의 "Wayfinding operations".
+- **프로토 브랜치 귀멸화** (2026-07-23): `prototype/core-loop`가 `main`에 병합됨(머지 커밋 b2596bf) — 코어 루프가 [17](issues/17-context-semantics-prototype.md)로 전면 검증됐고 사용자 방향("코어 유지+퍼즐 추가+시각화")이 확정되면서, prototype/ 스킬의 기본값("throwaway, out of main")을 이 효과가 명시적으로 오버라이드. `prototype/core-loop/`는 이제 main의 정식 작업 트리 일부 — 향후 세션은 그 안에서 직접 이어서 구현한다. 단 다른 세션이 병행 중인 데이터팩 작업(`datapack.ts`·`schema/`, 티켓 16·14 소관)에 tsc 타입 에러가 있음 — 내 작업(engine·facets·josa·content·CaseScreen) 범위 밖이라 손대지 않음, 16·14 세션이 정리할 것.
 
 ## Decisions so far
 
