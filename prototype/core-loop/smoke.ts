@@ -224,3 +224,40 @@ console.log('\n=== D. 되돌리기 연쇄 해제 (12 §3) ===');
   console.log(`[연쇄] 잠긴 수 ${lockedBefore} → ${lockedAfter} | 주목 ${heatBefore} → ${g.heat} (되돌리기 대가)`);
   console.log(`[연쇄] ${lockedAfter === 0 && g.heat > heatBefore ? 'PASS — 뒤가 전부 풀리고 대가를 치렀다' : 'FAIL'}`);
 }
+
+console.log('\n=== F. 조사 누출 린트 (ticket 19 P0 검증기 요건) ===');
+{
+  // 규약 ①: 슬롯 직후 조각(피스)에 리터럴 조사가 남아 있으면 정답 받침을 누출한다.
+  // 조사로 시작하는 조각은 josaAfter가 렌더에서 대체해야 하므로 절대 금지.
+  const JOSA_LEAD = /^(이|가|은|는|을|를|로|과|와|이다|다)(?![가-힣])/; // 조사 뒤 한글이 바로 이어지면 다른 낱말(예: '이유')일 수 있어 제외
+  const pieceProblems: string[] = [];
+  for (const def of CONTENT.cases) {
+    for (let i = 0; i < def.slots.length; i++) {
+      const piece = def.pieces[i + 1] ?? '';
+      const stripped = piece.replace(/^\s+/, ''); // 앞선 공백은 조사가 아님
+      if (JOSA_LEAD.test(stripped) && !def.slots[i].josaAfter) {
+        pieceProblems.push(`${def.id}/${def.slots[i].id}: 조각 "${piece}"이 조사로 시작하는데 josaAfter 미지정`);
+      }
+    }
+  }
+  console.log(`[조각 린트] ${pieceProblems.length === 0 ? 'PASS — 리터럴 조사 없음' : 'FAIL'}`);
+  for (const p of pieceProblems) console.log(`        ⚠ ${p}`);
+
+  // 규약 ②: 카드명은 완성형 한글로 끝나야 한다 — 숫자/로마자 발음 매핑 없이 받침 판정이 성립하려면.
+  const nonHangulEnd: string[] = [];
+  for (const card of Object.values(CONTENT.clues)) {
+    const c = card.name.charCodeAt(card.name.length - 1);
+    if (c < 0xac00 || c > 0xd7a3) nonHangulEnd.push(`${card.id}: "${card.name}" — 마지막 글자가 완성형 한글이 아님`);
+  }
+  console.log(`[카드명 린트] ${nonHangulEnd.length === 0 ? 'PASS — 전량 한글 종결' : 'FAIL'}`);
+  for (const p of nonHangulEnd) console.log(`        ⚠ ${p}`);
+
+  // 규약 ③(실측): 조건부 정답 슬롯은 두 후보의 받침이 갈릴 수 있다 — 정적 조사로는 저작 불가.
+  // 여기선 boss b4가 실제로 그 사례임을 재확인해, 동적 계산이 실제로 필요했다는 근거를 남긴다.
+  const b4 = CONTENT.cases.find((c) => c.id === 'boss')!.slots.find((s) => s.id === 'b4')!;
+  const cond = b4.answer as { then: string; else: string };
+  const jong = (w: string) => { const c = w.charCodeAt(w.length - 1); return c >= 0xac00 && c <= 0xd7a3 ? (c - 0xac00) % 28 : -1; };
+  const thenBatchim = jong(CONTENT.clues[cond.then].name) > 0;
+  const elseBatchim = jong(CONTENT.clues[cond.else].name) > 0;
+  console.log(`[조건부 정답 실측] b4: ${cond.then}(받침${thenBatchim ? '○' : '✕'}) vs ${cond.else}(받침${elseBatchim ? '○' : '✕'}) — ${thenBatchim !== elseBatchim ? 'PASS — 갈리는 사례 존재, 동적 계산이 유일해였음을 재확인' : 'FAIL — 갈리는 사례를 못 찾음'}`);
+}

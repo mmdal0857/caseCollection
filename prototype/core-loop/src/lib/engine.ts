@@ -12,6 +12,7 @@ import {
   type FacetCtx,
   type LockMode,
 } from './facets';
+import type { JosaKind } from './josa';
 
 export type Suit = 'physical' | 'behavioral' | 'documentary' | 'forensic';
 export type Tag = '공개' | '은밀' | '강압' | '신중' | '논리';
@@ -191,6 +192,12 @@ export interface Slot {
   hit?: string;
   /** 드라마투르기 패턴 생성을 위한 역할. 없으면 슈트 기반 폴백만. */
   role?: SlotRole;
+  /**
+   * v10.1(ticket 19 — 조사 누출 중립화): 이 슬롯 직후 문장에 필요한 조사 종류.
+   * `pieces`엔 리터럴 조사를 두지 않는다 — 렌더가 **배치된 카드명 기준**으로 동적 계산한다
+   * (오답을 놓아도 문법은 맞아 누출 0). 없으면 이 슬롯 뒤에 조사가 없는 문장.
+   */
+  josaAfter?: JosaKind;
 }
 
 export interface CaseDef {

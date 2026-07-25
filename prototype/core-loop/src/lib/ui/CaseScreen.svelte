@@ -4,7 +4,7 @@
   import type { Action, GameState, PatternId, RunContent, Slot } from '../engine';
   import { FRAME_LABEL, SUIT_LABEL, cardFitsSlot, facetCtxFor, facetOf } from '../engine';
   import { LOCK_MODES, interpretationSpace, readFacets, type LockMode } from '../facets';
-  import { eul } from '../josa';
+  import { eul, josaPlaceholder, resolveJosa } from '../josa';
   import { send, receive } from '../fx';
   import CardChip from './CardChip.svelte';
 
@@ -188,6 +188,15 @@
     return def.slots.find((sl) => sl.id === slotId)?.label ?? slotId;
   }
   function frameOf(sl: Slot) { return sl.role ? FRAME_LABEL[sl.role.frame] : '자유'; }
+
+  // ticket 19(조사 누출 중립화): 조사는 pieces에 리터럴로 두지 않는다 — 슬롯에 실제로 놓인
+  // 카드명(오답 포함) 기준으로 여기서 계산한다. 빈 슬롯은 규범 근거가 가장 강한 빗금 병기형.
+  function josaFor(slot: Slot): string {
+    if (!slot.josaAfter) return '';
+    const p = game.confirmed[slot.id] ?? game.placed[slot.id];
+    if (p) return resolveJosa(slot.josaAfter, content.clues[p.cardId].name);
+    return josaPlaceholder(slot.josaAfter);
+  }
 </script>
 
 <section class="screen case">
@@ -285,6 +294,9 @@
             <button class="commit-btn" title="이 해석을 확정해 잠근다 — 앞으로 전파된다"
               onclick={() => dispatch({ type: 'LOCK_SLOT', slotId: slot.id })}>확정</button>
           {/if}
+        {/if}
+        {#if slot.josaAfter}
+          <span class="josa" class:resolved={!!(game.confirmed[slot.id] ?? game.placed[slot.id])}>{josaFor(slot)}</span>
         {/if}
       {/each}
       <span class="piece">{def.pieces[def.slots.length]}</span>
@@ -513,6 +525,9 @@
 
 <style>
   /* v10 신규 요소만 — 나머지는 app.css */
+  /* ticket 19: 조사 — 미해결(빈 슬롯)은 병기형이라 티 나게 흐리고 이탤릭, 해결되면 본문과 동화. */
+  .josa { font-style: italic; opacity: .55; }
+  .josa.resolved { font-style: normal; opacity: 1; }
   .lockmode-bar {
     display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
     margin: 10px 0; padding: 8px 12px;
