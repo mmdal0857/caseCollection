@@ -23,6 +23,8 @@ export const KINDS = ['사람', '사물', '행위', '기록', '현상'] as const
 export const FRAMES = [
   'route', 'means', 'trace', 'action', 'motive', 'record', 'omission', 'scene', 'identity',
 ] as const;
+/** src/lib/josa.ts의 JosaKind와 동기화 — 티켓 19: 슬롯 직후 조사는 리터럴이 아니라 이 마커로 방출된다. */
+export const JOSA_KINDS = ['이가', '은는', '을를', '으로', '와과', '이다'] as const;
 
 export const PACK_FORMAT = 'game-data-pack';
 export const PACK_FORMAT_VERSION = 1;
@@ -110,10 +112,23 @@ function validateFacet(f: unknown, cardId: string, path: string, out: Issues): v
   }
 }
 
+/** 완성형 한글 음절 범위(가~힣, U+AC00~U+D7A3) — 티켓 19: 받침 판정이 성립하려면 카드명은 여기로 끝나야 한다. */
+function isHangulSyllable(ch: string): boolean {
+  const cp = ch.charCodeAt(0);
+  return cp >= 0xac00 && cp <= 0xd7a3;
+}
+
 function validateClue(c: unknown, key: string, path: string, out: Issues): void {
   if (!out.need(isObj(c), path, '단서가 객체가 아니다')) return;
   out.need(c.id === key, `${path}.id`, `record 키와 id가 다르다 (키 "${key}" vs id ${JSON.stringify(c.id)})`);
-  out.need(isStr(c.name), `${path}.name`, 'name은 문자열이어야 한다');
+  if (out.need(isStr(c.name), `${path}.name`, 'name은 문자열이어야 한다')) {
+    const name = c.name as string;
+    out.need(
+      name.length > 0 && isHangulSyllable(name[name.length - 1]),
+      `${path}.name`,
+      `카드명은 완성형 한글로 끝나야 한다(티켓 19 저작 규약) — "${name}"`,
+    );
+  }
   out.need(inEnum(c.suit, SUITS), `${path}.suit`, `suit는 ${SUITS.join('|')} 중 하나여야 한다`);
   out.need(inEnum(c.kind, KINDS), `${path}.kind`, `kind는 ${KINDS.join('|')} 중 하나여야 한다`);
   out.need(enumArr(c.tags, TAGS), `${path}.tags`, `tags는 ${TAGS.join('|')}의 배열이어야 한다`);
@@ -142,6 +157,9 @@ function validateSlot(sl: unknown, path: string, out: Issues): void {
     }
   }
   if (sl.hit !== undefined) out.need(isStr(sl.hit), `${path}.hit`, 'hit은 문자열이어야 한다');
+  if (sl.josaAfter !== undefined) {
+    out.need(inEnum(sl.josaAfter, JOSA_KINDS), `${path}.josaAfter`, `josaAfter는 ${JOSA_KINDS.join('|')} 중 하나여야 한다(티켓 19)`);
+  }
   if (sl.role !== undefined) {
     const r = sl.role;
     if (out.need(isObj(r), `${path}.role`, 'role은 객체여야 한다')) {
@@ -155,6 +173,8 @@ function validateSlot(sl: unknown, path: string, out: Issues): void {
 }
 
 const FACET_KEY_RE = /^[^:]+:[^:]+$/;
+/** smoke.ts 섹션 F와 동일 규칙(정본은 그쪽) — 조사 뒤 한글이 바로 이어지면 다른 낱말(예: '이유')일 수 있어 제외. */
+const JOSA_LEAD_RE = /^(이|가|은|는|을|를|로|과|와|이다|다)(?![가-힣])/;
 
 function validateCase(k: unknown, path: string, out: Issues): void {
   if (!out.need(isObj(k), path, 'case가 객체가 아니다')) return;
@@ -174,11 +194,22 @@ function validateCase(k: unknown, path: string, out: Issues): void {
         seen.add(sl.id);
       }
     });
-    out.need(
+    const piecesOk = out.need(
       isStrArr(k.pieces) && k.pieces.length === slots!.length + 1,
       `${path}.pieces`,
       `pieces는 slots + 1개(${slots!.length + 1})의 문자열이어야 한다 — 조각 사이에 슬롯이 낀다`,
     );
+    // 티켓 19 P0 검증기 요건 — smoke.ts 섹션 F와 같은 규칙(정본은 그쪽): 슬롯 직후 조각이
+    // 리터럴 조사로 시작하면 정답 받침을 누출한다. josaAfter가 렌더에서 대신 계산해야 한다.
+    if (piecesOk) {
+      const pieces = k.pieces as string[];
+      slots!.forEach((sl, i) => {
+        const piece = (pieces[i + 1] ?? '').replace(/^\s+/, '');
+        if (JOSA_LEAD_RE.test(piece) && isObj(sl) && !sl.josaAfter) {
+          out.add(`${path}.pieces[${i + 1}]`, `조각 "${pieces[i + 1]}"이 조사로 시작하는데 슬롯 "${sl.id}"에 josaAfter 미지정 — 정답 받침 누출`);
+        }
+      });
+    }
   }
   out.need(isStrArr(k.patterns) && (k.patterns as string[]).length > 0, `${path}.patterns`, 'patterns는 골격 id 배열(최소 1)이어야 한다');
   out.need(isStrArr(k.guestClues), `${path}.guestClues`, 'guestClues는 카드 id 배열이어야 한다');

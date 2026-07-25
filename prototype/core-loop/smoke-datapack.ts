@@ -13,7 +13,7 @@ import { readFileSync } from 'node:fs';
 import { CONTENT } from './src/lib/content';
 import type { CaseDef, ClueCard } from './src/lib/engine';
 import {
-  FRAMES, KINDS, SUITS, TAGS,
+  FRAMES, JOSA_KINDS, KINDS, SUITS, TAGS,
   checkIntegrity, loadPacks, mergePacks, packFromContent,
   validateGameDataPack, validatePack,
   type GameDataPack,
@@ -71,6 +71,13 @@ console.log('\n=== B. clue 형태 검증 ===');
   check('B9 gate·needsPrev 형태', !validateGameDataPack(clue({
     facets: [{ key: 'mod_card:route', frame: 'route', meaning: 'x', tags: [], note: '', needsPrev: ['워프'] as never }],
   })));
+  // 티켓 19 P0 검증기 요건 — smoke.ts 섹션 F(콘텐츠 로컬 린트)의 mod 팩 등가물.
+  // 로더가 이걸 안 잡으면, 조사가 새는 mod 팩이 그대로 로드돼 정답 받침이 누출된다.
+  check('B10 카드명 비한글 종결 거부', !validateGameDataPack({
+    ...minimal(),
+    clues: { card7: { id: 'card7', name: '단서7', suit: 'physical', kind: '사물', tags: [], text: 't',
+      facets: [{ key: 'card7:route', frame: 'route', meaning: 'x', tags: [], note: '' }] } },
+  }));
 }
 
 console.log('\n=== C. case 형태 검증 ===');
@@ -99,6 +106,20 @@ console.log('\n=== C. case 형태 검증 ===');
       { id: 'm1', label: 'y', answer: 'b' },
     ],
     pieces: ['', '', ''],
+  })));
+  check('C6 josaAfter 미정의 값 거부', !validateGameDataPack(kase({
+    slots: [{ id: 'm1', label: 'x', answer: 'a', josaAfter: '이랑' as never }],
+  })));
+  check('C7 josaAfter 정상값 통과', validateGameDataPack(kase({
+    slots: [{ id: 'm1', label: 'x', answer: 'a', josaAfter: '으로' }],
+  })));
+  // 티켓 19 P0 검증기 요건: 슬롯 직후 조각이 조사로 시작하는데 josaAfter 미지정 = 정답 받침 누출.
+  check('C8 조사 누출 피스(josaAfter 미지정) 거부', !validateGameDataPack(kase({
+    pieces: ['', '이 이렇게 됐다'],
+  })));
+  check('C9 조사 누출 피스(josaAfter 지정) 통과', validateGameDataPack(kase({
+    pieces: ['', '이 이렇게 됐다'],
+    slots: [{ id: 'm1', label: 'x', answer: 'mod_card', role: { frame: 'route' }, josaAfter: '이가' }],
   })));
 }
 
@@ -165,6 +186,7 @@ console.log('\n=== G. 스키마 동기화 — JSON Schema의 enum = 코드의 �
   check('G2 suit enum 일치', same(schema.$defs.suit.enum, SUITS));
   check('G3 kind enum 일치', same(schema.$defs.kind.enum, KINDS));
   check('G4 frame enum 일치', same(schema.$defs.frame.enum, FRAMES));
+  check('G5 josaKind enum 일치', same(schema.$defs.josaKind.enum, JOSA_KINDS));
 }
 
 console.log(`\n[datapack] ${failures === 0 ? 'PASS — 팩 계약이 기계 판정으로 성립' : `FAIL — ${failures}건`}`);
