@@ -13,7 +13,7 @@ Labels: wayfinder:map
 - **도메인**: 퍼블릭 도메인 추리소설 기반. 데이터 소스는 OUT(`f:/Project/out`)의 LLM 위키 — source_page 27, case_pattern 4, clue_type 49, story 77, work 110(catalog) 등 + `pd_wiki` 조회 레이어(α만 동작). 위키 엣지 14종은 frontmatter가 단일 원천(loader.py 메모리 계산). 주의: `graphify-out/graph.json`은 코드 의존성 그래프라 위키와 무관.
 - **재미 원칙**: Raph Koster *A Theory of Fun* — 재미 = 학습 가능한 시스템의 마스터리, 내러티브는 드레싱. 진짜 메커닉을 위한 추가 시스템 코스트 감수 OK. (OUT 메모리 `feedback_koster_fun_theory` 참조)
 - **확정 제약** (차팅 세션, 2026-07-19):
-  - 정적 클라이언트 온리 웹 게임 — 서버 없음, itch.io/자체 호스팅, localStorage 저장 → 런타임 LLM 배제, 콘텐츠는 빌드타임 생성
+  - 정적 클라이언트 온리 웹 게임 — 서버 없음, GitHub Pages/자체 호스팅, localStorage 저장 → 런타임 LLM 배제, 콘텐츠는 빌드타임 생성
   - Dead Letters와 독립 — 원작(PD 소설) 데이터 직결, 세계관 미공유. ~~캐릭터 미공유~~ → **2026-07-25 개정: 탐정 레이든 1명만 차용**(13 세션, Out of scope 항목 참조). 나머지 캐릭터·세계관은 여전히 미공유
   - 코어 루프 방향: B+C 하이브리드(플레이로 카드 획득 + 수집물의 게임적 사용) — 확정은 코어 루프 티켓에서
   - 한국어 우선, 영어는 파이프라인 슬롯만
@@ -44,7 +44,7 @@ Labels: wayfinder:map
 - `[조사]` [위키 데이터 인벤토리](issues/02-wiki-data-inventory.md) — 카드화 1순위는 clue_type(49)·story(77), case_pattern(4)은 희귀 소재, work(110)는 얇음; 최대 공백은 이미지 전무·수치/희귀도 근거 부재·캐릭터 1급 노드 부재. graph.json은 코드 그래프라 무관.
 - `[조사]` [획득 구조 레퍼런스 리서치](issues/09-acquisition-reference-research.md) — 6개 패턴 조사(Balatro/Snap/Dominion/Chants·Golden Idol/Wildfrost + BGG Tech-Tree 대응); 정적웹·1인개발엔 결정론 계열이 최적, MVP는 어휘 확정 게이트+고정공급 기회비용+선택형 단서팩(무중복 편향) 조합 권고, 가챠 피티·다층 라이브 경제는 과설계로 배제.
 - `[검증]` [코어 루프 확정](issues/03-core-loop.md) — ⓑ Golden Idol형 MVP(→ⓐ 확장); case=생성 사건 퍼즐("case" 재정의, CONTEXT.md 신설), 패턴 골격×story 소재풀; 어휘 게이트+게스트 단서 학습형; 근접도+3개 확정 판정; 연속 런(3~5건+복합패턴 보스); 라이프 대신 문맥 태그 시스템(배경 상태×태그 조합식, 인터루드 이벤트, BAD 엔딩). **2026-07-20 정식 재개정(반증 없음, 통합 루프로 확장)**: ①빈칸 두루마리에서 정답 축(근접도)+서사 축(인접 링크·응집도)이 함께 — "정답 채우기"→"옳으면서 앞뒤 맞는 이야기 짓기", 정답=응집 full로 정렬 ②**반응 레이어가 재미의 핵심 축**(드라마투르기 코믹 패턴 생성+레이든 페르소나) ③**kind×frame 의미 어휘**가 반응·응집·정렬의 공통 토대(→04에 kind 필드 추가 필요) ④문맥 태그=**영역 다수결**(은밀↔공개·강압↔신중 줄다리기, 임계 넘으면 판정 규칙 flip) ⑤인터루드=조사 미니루프+**AP 배분 퍼즐** ⑥재확인(검토) 루프 ⑦클리어 피드백 단계. **새 제약**: case 생성기는 "풀 수 있음 + 정답이 이야기로 성립함" **이중 제약** 필수. **/ 기각**: 권태 대책으로 규칙 변주 모디파이어·일일 사건·도감 리텐션 레이어 제외(01 서베이 권고 중 점수엔진식 보조 마스터리 축도 미채택 — 반응 레이어·영역 다수결로 대체). 잔여 리스크는 감사 §2-3. 3차 개정분(③배치=수·④보유≠앎)은 [17](issues/17-context-semantics-prototype.md)로 검증 완료(2026-07-23). Resolution은 2026-07-21 통합 재작성됨(개정 이력 별도 보존).
-- `[검증]` [웹 스택과 디바이스 타깃](issues/05-web-stack.md) — Svelte 5+Vite+TS(SvelteKit 미사용), DOM+절제된 juice(부족 시 PixiJS 레이어 해치, 프로토에서 검증); 데스크톱 우선·클릭/탭 기반 터치 호환; 배포는 itch.io butler(OUT 런북 재사용)+GitHub Pages 병행, Railway 배제. 핵심 가치 교정: 텍스트 중심 아님 — 퍼즐 명료성+카드 시너지.
+- `[검증]` [웹 스택과 디바이스 타깃](issues/05-web-stack.md) — Svelte 5+Vite+TS(SvelteKit 미사용), DOM+절제된 juice(부족 시 PixiJS 레이어 해치, 프로토에서 검증); 데스크톱 우선·클릭/탭 기반 터치 호환; 배포는 GitHub Pages(정본)+Higgsfield 마켓플레이스 병행, Railway 배제. 핵심 가치 교정: 텍스트 중심 아님 — 퍼즐 명료성+카드 시너지. **⚠️ 배포 체인은 2026-07-25 개정** — 원 Resolution의 itch.io butler는 사용자 결정(itch.io·Patreon 미사용)으로 무효, 05의 `## Comments` 참조. Higgsfield는 약관상 정본이 될 수 없어 병행이 강제된다. 유료 채널은 Steam 후보(18 이후, 리드타임 6주+). **/ 기각**: itch.io 전면(무료·유료 모두), Patreon 시차 공개 모델, Higgsfield 웹사이트+Stripe 직판(검증 완료 후 후순위 대기 [10001](issues/10001-higgsfield-stripe-storefront.md)).
 - `[조사]` [최신 추상전략게임 메커닉 리서치](issues/15-abstract-games-research.md) — 핵심: "정답 맞히기+시나리오 조립" 통합은 **Golden Idol(2022)식 빈칸 두루마리**로 이미 검증됨(caseCollection 추리문이 이미 그 형태). 톱 추천=①빈칸 두루마리를 통합 척추로(v4 시나리오 보드를 추리문 자체로 흡수) ②인접 시너지(Azul) ③제약 만족 재확인(Obra Dinn/CSP) ④문맥 태그=영역 다수결(Tigris→12) ⑤템포(Dune)로 인터루드 추상화. 통합=봉합 아님, 두루마리 위에 층층이 쌓기.
 - `[검증]` [카드 스키마와 카드화 대상](issues/04-card-schema.md) — 컬렉션 = 단서 49 + 패턴 4(가설 선언 어휘 — 03 소폭 개정, 프로토 검증); 힌트는 소모형 순수 수제; 스키마 = id·name·suit·tags(공개)·insight·text(비공개→수사 노트 해금)·art(개별 슬롯+폴백), 수치·희귀도 없음; 텍스트 전량 카드용 재작성(위키 id 링크 유지); 태그 값은 수제 시드 → 원문 추출 2단계 승격(신규 티켓 14); 컬렉션은 슈트 4종 + 보유율×검증율 2축, 세트 없음. 12발 개정분(kind→facet 목록·노트 facet별 해금)은 [17](issues/17-context-semantics-prototype.md)로 검증 완료(진행도 3축 표시는 컬렉션 UI 사안 — 스펙에서 다룸).
 - `[종이]` [획득 구조 세부 확정](issues/10-acquisition-detail.md) — 프레임 권고 1+3+2(어휘게이트+고정진열+선택팩); 영구화는 04의 보유×검증 2축 매핑(보유=case클리어 즉시, 검증=런완주 승격, 개방형 풀); BAD엔딩=검증승격 0·보유 전량보존(깔끔한 베팅); 지급 3분할(case=게스트/인터루드=고정진열 정조준구매/완주=선택팩); 수사포인트 화폐·힌트카드 둘 다 런한정·인터루드 진열구매(오답 이중처벌 회피 위해 화폐는 가산보너스); 완주팩 5중1+미보유가중치+승격권폴백; 진행=소수스타터+런마다 진열변주(하나만 변주). 수치 잠정 — 프로토서 튜닝. **/ 유예**: 09 권고 4(자가선택 수사 렌즈)·5(힌트 카드 크래프팅)는 MVP 이후 확장.
@@ -61,7 +61,7 @@ Labels: wayfinder:map
 ## Not yet specified
 
 - 사운드/BGM — Amuse 파이프라인 재사용 여부. MVP 스코프 이후.
-- 수익화·배포 채널 세부 — itch.io 무료/유료, Patreon 연계 여부.
+- 수익화 — **유료 채널의 시점과 형태만 남았다.** 채널 후보는 Steam으로 좁혀졌고(콘텐츠 분량 때문에 [18](issues/18-case-generator-shape.md) 이후, 리드타임 6주+), 무료 배포는 GitHub Pages+Higgsfield로 확정. itch.io·Patreon은 미사용 결정, Stripe 직판은 후순위 대기([10001](issues/10001-higgsfield-stripe-storefront.md))이므로 이 줄에서 빠졌다. 남은 fog는 "유료판이 무엇을 담는가" — 무료 게시본과의 경계이고 18의 산출에 달렸다.
 - 영어 지원 시점 — 파이프라인 슬롯 설계는 스펙에 포함, 실제 지원은 재미 검증 후. 조사 상당(a/an 등 문법 단서) 렌더 처리는 [19의 P2](issues/19-josa-leak-neutralization.md)가 원리(언어별 particle resolver를 렌더 계층에)만 미리 잡아둠 — 실제 지원 시점에 구체화.
 - 일반화 추출 플로우 스킬의 형태 세부 — 골격 확정(06 경계 + 07 패키징: 자기완결 패키지→CLI generic 팩→하류 변환·번들·분리빌드). 남은 것은 결정이 아니라 **스펙 ② 작성 시 스킬로 문서화**(집필 항목).
 - 인터루드 이벤트·BAD 엔딩의 콘텐츠 생성 — 이벤트 텍스트·연출을 빌드타임에 어떻게 만들지. [case 생성 파이프라인의 형태(18)](issues/18-case-generator-shape.md) 확정 후 구체화.

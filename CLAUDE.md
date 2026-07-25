@@ -6,9 +6,14 @@ OUT 프로젝트(`f:/Project/out`)의 LLM 위키를 기반으로 하는 웹 카�
 
 ## 기술 스택 (ticket 05 확정)
 
-**Svelte 5 + Vite + TypeScript** (SvelteKit 미사용 — 단일 페이지 정적 빌드). 배포는 itch.io butler + GitHub Pages (ticket 05).
+**Svelte 5 + Vite + TypeScript** (SvelteKit 미사용 — 단일 페이지 정적 빌드). 배포는 **GitHub Pages(정본) + Higgsfield 게임 마켓플레이스(병행)**.
 
-> ⚠️ **배포 채널 변경 계류 중**: [ticket 08](.scratch/case-collection/issues/08-mvp-scope.md) §⑥이 **Higgsfield 마켓플레이스 + GitHub Pages**(itch.io는 MVP 밖)로 결의했으나, 08은 의도적으로 open 유지 상태라 아직 정식 Resolution이 아니다 — 05가 여전히 형식상 정본. 배포를 실제로 준비하기 전에 08의 상태를 먼저 확인할 것. `higgsfield game deploy/publish` 사용법은 전역 CLAUDE.md 참조.
+> **배포 채널 (2026-07-25 개정)**: **itch.io·Patreon은 미사용**이 사용자 결정이다 — ticket 05 원 Resolution의 "itch.io butler"는 무효이며 05의 `## Comments`에 개정 기록이 있다. 앞 세션이 남긴 "변경 계류 중" 경고는 이 결정으로 해소됐다.
+>
+> - **GitHub Pages가 정본 호스팅.** Higgsfield는 정본이 될 수 없다 — 약관 §3.4(30일 미활동 시 cold storage)·§16.2(무통보 해지권)·§16.4(콘텐츠 삭제 무책임)가 막는다. **병행은 선호가 아니라 약관이 만든 제약.**
+> - Higgsfield 마켓플레이스 등재는 [ticket 08](.scratch/case-collection/issues/08-mvp-scope.md) §⑥의 결의이고, **08은 여전히 의도적 open**이므로 정식 Resolution은 아니다. 실제 배포 준비 시 08 상태를 먼저 확인할 것. **게시는 비가역**이다(약관 §4.3 영구·취소불가 실시권, CLI에 게임 삭제 커맨드 없음).
+> - **유료 채널은 미확정.** Steam이 후보이나 [18](.scratch/case-collection/issues/18-case-generator-shape.md) 이후 사안(리드타임 6주+). Higgsfield 웹사이트+Stripe 직판은 검증 완료 후 후순위 대기 → [ticket 10001](.scratch/case-collection/issues/10001-higgsfield-stripe-storefront.md).
+> - 근거·실측: [docs/research/2026-07-25-higgsfield-games-marketplace.md](docs/research/2026-07-25-higgsfield-games-marketplace.md). `higgsfield game deploy/publish` 사용법은 전역 CLAUDE.md 참조.
 
 - **Svelte 5 `$state` 프록시는 `structuredClone`으로 복제 불가** (`DataCloneError`). 순수 리듀서에 상태를 넘길 땐 반드시 `$state.snapshot(state)`로 평범한 객체를 만들어 전달할 것. 이걸 놓치면 모든 dispatch가 조용히 예외로 죽어 화면이 멈춘다 (프로토 v1에서 실제 발생).
 - 파생값은 `$derived`, 복합 계산은 `$derived.by`. `$props()` 값을 지역 상수로 캡처하면 `state_referenced_locally` 경고 — 의도한 초기값 캡처가 아니면 `$derived`로.

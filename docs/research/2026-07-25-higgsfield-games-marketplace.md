@@ -128,7 +128,9 @@ og/thumbnail.png, og/favicon.png
 
 > Vite `rollupOptions.output.entryFileNames = 'logic.js'` + `assetFileNames`를 유지해 **루트에 `logic.js` 단 하나**를 두고 나머지는 `assets/`에 남긴다. 코드 한 줄짜리 변경이고, 실패해도 원인이 명확해진다.
 
-**부수 발견 — 커버·아이콘 호스팅 요구를 우회할 단서**: 실측 ZIP은 `og/thumbnail.png`·`og/favicon.png`를 **zip 안에 넣고 `manifest.json`의 `meta.thumbnail_path`/`favicon_path`로 참조**한다. 즉 이미지를 https 호스팅하지 않고 팩에 담는 경로가 플랫폼에 존재한다. **단 이 게임이 CLI로 배포됐는지는 확인 불가**하므로 검증 필요 — `--thumbnail` 없이 manifest만으로 배포해 리스팅에 그림이 뜨는지 보면 즉시 판명된다. 뜨면 티켓 13의 "호스팅 경로도 파이프라인 산출에 포함" 요구가 삭감된다.
+**부수 발견 — 커버·아이콘을 zip에 담는 경로도 존재한다**: 실측 ZIP은 `og/thumbnail.png`·`og/favicon.png`를 **zip 안에 넣고 `manifest.json`의 `meta.thumbnail_path`/`favicon_path`로 참조**한다. 즉 https 호스팅 없이 팩에 담는 경로가 플랫폼에 있다(이 게임이 CLI로 배포됐는지는 확인 불가).
+
+> **후속(2026-07-25)**: 이 우회를 검증할 실익은 사라졌다. [13](../../.scratch/case-collection/issues/13-card-art-pipeline.md)이 같은 날 닫히면서 **Higgsfield 생성 결과의 `result_url`이 이미 https CDN**이라는 사실로 호스팅 제약 자체를 지웠다. CLI 플래그가 https만 받는다는 사실은 유효하지만 더 이상 비용이 아니다.
 
 **용량**: 34.8MB ZIP이 실제로 게시되어 있다 → 아트 전량(카드+배경 9장+인물)을 실은 우리 빌드도 용량 문제는 없다.
 
@@ -253,7 +255,7 @@ og/thumbnail.png, og/favicon.png
 |---|---|---|
 | 정체 | MVP 빌드 = 무료 데모 | 확장판 |
 | 콘텐츠 | 08 ④의 잠정 분량(case 4~5건, 24장) | [18](../../.scratch/case-collection/issues/18-case-generator-shape.md) 생성기 도입 후 대량 case |
-| 채널 | higgsfield.gg + GitHub Pages | itch.io(05의 butler 체인) |
+| 채널 | higgsfield.gg + GitHub Pages | Steam (itch.io는 이후 미사용 결정) |
 
 이 분리는 **새 계획이 아니라 08이 이미 그은 선**이다 — ⑧이 생성기·태그 추출·외부 팩·리플레이성 검증을 MVP 밖으로 뺐고, ④는 분량을 잠정 24장으로 묶었다. **MVP는 그 자체로 데모의 형상이다.** 즉 지금 게시하는 것은 "상품을 무료로 뿌리는 것"이 아니라 "데모를 뿌리는 것"이고, 유니크 100~350명은 잠식이라기보다 **유료판의 유일한 사전 마케팅**이다.
 
@@ -271,14 +273,22 @@ og/thumbnail.png, og/favicon.png
 
 다만 08 ①의 *"판정은 마켓플레이스 사용자 수"*는 **재미 검증으로 읽히면 안 된다.** 유니크 100~350명은 커버 아트와 제목이 만든 클릭 수에 가깝고(리믹스 0이 대부분 = 아무도 깊게 안 들어감), 우리 장르 상한 358명은 "이 게임이 재미있었는가"를 구분하지 못한다. 08은 이미 리플레이성 검증을 유예했으므로 논리적 충돌은 없지만, **"사용자 수가 적으면 게임이 재미없다"는 추론은 이 데이터로 금지된다** — 장르 천장이 먼저 걸린다.
 
-### 13 — 요구 하나 추가, 하나는 검증 대기
+### 13 — https 요구는 해소됨(13이 먼저 해결), 커버 중요도는 유효
 
-- 커버 16:9 · 아이콘 1:1은 **여전히 https 필수**(CLI 플래그 실측). 단 §3.2의 manifest 우회 단서를 **첫 배포에서 함께 검증**하면 호스팅 산출물이 빠질 수 있다.
-- **커버 아트의 중요도를 상향해야 한다.** 발견 UI에 카테고리·검색·정렬이 없어 리스팅은 커버+제목만으로 경쟁한다. 50개 전시면에서 커버는 **게임 내 아트보다 획득 효율이 높은 단일 자산**이다.
+- ~~커버 16:9 · 아이콘 1:1의 https 호스팅 요구~~ → **해소.** [13](../../.scratch/case-collection/issues/13-card-art-pipeline.md)이 같은 날 독립적으로 닫히면서 **Higgsfield 생성 결과의 `result_url` 자체가 https CDN**이라는 사실로 이 제약을 지웠다. 별도 호스팅 산출물이 필요 없다. CLI 플래그가 https만 받는다는 사실(§3.1)은 그대로지만 더 이상 비용이 아니다. §3.2의 manifest 내장 우회는 이제 검증할 실익이 없다.
+- **커버 아트의 중요도를 상향해야 한다** — 이 항목은 유효하다. 발견 UI에 카테고리·검색·정렬이 없어 리스팅은 커버+제목만으로 경쟁한다. 50개 전시면에서 커버는 **게임 내 아트보다 획득 효율이 높은 단일 자산**이다.
 
-### 05 — 파급 코멘트 시 추가할 사실
+### 05 — 랜딩 완료 (2026-07-25)
 
-배포 체인에 Higgsfield를 넣는 기술적 대가는 `dist/` 산출 규칙 한 줄(`entryFileNames: 'logic.js'`)과 zip 단계뿐이다. GitHub Pages와 산출물을 공유하므로 **채널 병행 비용이 사실상 0**이다. 반대로 얻는 것은 GitHub Pages에 없는 **유입**이다.
+`## Comments`로 랜딩했다. 배포 체인의 itch.io butler 항목은 **무효**(사용자 결정: itch.io·Patreon 미사용), GitHub Pages가 정본, Higgsfield는 병행이며 약관상 정본이 될 수 없다.
+
+배포 체인에 Higgsfield를 넣는 기술적 대가는 `dist/` 산출 규칙 한 줄(`entryFileNames: 'logic.js'`)과 zip 단계뿐이다. GitHub Pages와 산출물을 공유하므로 **채널 병행 비용이 사실상 0**이고, 얻는 것은 GitHub Pages에 없는 **유입**이다.
+
+05에 함께 심은 파생 제약: 데스크톱 래핑(Tauri/Electron) 여지를 남기려면 `dist/`가 `file://`에서도 떠야 하므로 **절대 경로·CORS·fetch 의존을 만들지 않는다** — [16](../../.scratch/case-collection/issues/16-external-data-pack-loading.md)의 외부 팩 로딩을 `fetch()` 기반으로 설계하면 걸린다.
+
+### 신설 — 10001 (후순위 대기)
+
+Higgsfield **웹사이트 제품 + Stripe** 직판은 별도 경로다(이 문서의 주제인 게임 마켓플레이스와 다름). 라이브 결제 1건으로 전 구간 검증한 뒤 후순위 대기로 내렸다 → [10001](../../.scratch/case-collection/issues/10001-higgsfield-stripe-storefront.md). 플랫폼 제약 6건은 그 티켓 본문에 있다.
 
 ---
 
@@ -289,7 +299,7 @@ og/thumbnail.png, og/favicon.png
    - 유료 채널은 [05](../../.scratch/case-collection/issues/05-web-stack.md)가 이미 확정한 itch.io butler 체인을 쓴다 — 08 ⑧의 "itch.io는 MVP 밖"은 **기각이 아니라 유예**이고, 판매 계획은 거기 착지한다.
    - **웹 UI에 게임 삭제·게시취소 버튼이 있는지 첫 deploy 전에 확인할 것**(§4.7 — CLI·약관에는 계정 폐쇄 외 경로가 없다). 없으면 "게시 = 영구"로 취급.
 3. **`deploy`(비공개 링크)와 `publish`(마켓플레이스)를 분리 운용.** 08 ①의 완료 조건("올려둔 빌드")은 deploy만으로 충족된다. **주의: §4.3 부여는 deploy 시점에 이미 발생**하고, publish가 추가로 넘기는 것은 타 사용자 노출이다.
-4. **첫 deploy를 기술 검증으로 설계.** 한 번에 판정: ⓐ `logic.js` 규약 강제 여부 ⓑ manifest 내장 thumbnail/favicon 인정 여부 ⓒ 한글 폰트·레이아웃 실렌더. 실패해도 `--game-id`로 갱신하면 되므로 비용은 낮다.
+4. **첫 deploy를 기술 검증으로 설계.** 한 번에 판정: ⓐ `logic.js` 규약 강제 여부 ⓑ 한글 폰트·레이아웃 실렌더. 실패해도 `--game-id`로 갱신하면 되므로 비용은 낮다. (커버·아이콘은 13이 `result_url`로 해소했으므로 검증 항목에서 빠졌다.)
 5. **커버 아트를 13의 1급 산출물로 승격.** 스타일 키 확정(08 ⑦) 직후, 카드 전량 생성보다 먼저.
 6. **`LICENSE`를 zip 루트에 포함.** 약관이 리믹서에게 권리를 부여하지 않으므로(§4.3) 우리 저작권 주장이 살아 있다 — 라이선스 파일이 그 주장을 실효화하는 유일한 저비용 수단이다.
 7. **구독 유지 여부를 배포 계획에 반영.** §3.4의 30일 inactive 규칙 때문에 구독을 끊으면 호스팅 가용성이 불확실해진다. Higgsfield 링크를 어딘가에 공표할 거라면 구독 유지가 전제다.
