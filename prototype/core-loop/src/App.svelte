@@ -10,6 +10,7 @@
   import EndScreen from './lib/ui/EndScreen.svelte';
   import ScenarioBoard from './lib/ui/ScenarioBoard.svelte';
   import DebugPanel from './lib/ui/DebugPanel.svelte';
+  import ArtSwitcher from './lib/ui/ArtSwitcher.svelte'; // PROTOTYPE(13) — 시안 확정 시 제거
 
   let game = $state(initGame(CONTENT));
   const dispatch = (a: Action) => {
@@ -67,3 +68,4 @@
 </div>
 
 {#if mode === 'game'}<DebugPanel {game} />{/if}
+<ArtSwitcher />

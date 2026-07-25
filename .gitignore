@@ -8,3 +8,8 @@ dist/
 prototype/core-loop/smoke.mjs
 prototype/core-loop/smoke-datapack.mjs
 prototype/core-loop/.vite/
+
+# 티켓 13 아트 — 생성 바이너리는 미커밋(레시피가 정본).
+#   시안 재현: scripts/protoart-prompts.sh   본 생성: scripts/cardart-generate.sh
+prototype/core-loop/public/protoart/
+prototype/core-loop/public/cardart/

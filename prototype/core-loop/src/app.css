@@ -222,11 +222,80 @@ button:disabled { cursor: default; }
   font-size: 26px; font-weight: 700; background: repeating-linear-gradient(
     45deg, var(--panel), var(--panel) 6px, var(--panel-2) 6px, var(--panel-2) 12px);
 }
-.card-art {
-  position: absolute; top: 6px; right: 8px; font-size: 22px; opacity: 0.28;
-  filter: grayscale(0.3); pointer-events: none;
+/* ---- 아트 슬롯 (04 개별 슬롯 + 슈트 폴백) — 프레임 3안은 티켓 13 시안, 확정 시 1안만 남김 ---- */
+.card { position: relative; overflow: hidden; }
+.card-body { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.art-slot { display: block; pointer-events: none; }
+.art-slot img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.art-fallback {
+  display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;
+  font-style: normal; opacity: 0.22; filter: grayscale(0.4);
 }
-.card { position: relative; }
+
+/* ---- 태그 처리 = "계산된 형용사" (사용자 방향, 2026-07-25) ------------------
+   아트는 **사물(명사)** 1장만 생성하고, 태그(형용사)는 런타임에 얹는다.
+   근거: 얼굴 55개가 태그 조합 7종으로 접힌다 → 생성하면 이미지 ≈150장,
+   계산하면 카드 수(49)장 + 처리 5종. 게다가 계산본은 **얼굴이 잠기는 순간
+   전이(transition)로 움직일 수 있다** — 12의 "배치=수"가 그림으로 보인다. */
+.art-slot { position: relative; }
+.art-slot::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  transition: opacity 0.35s, background 0.35s;
+}
+.art-slot.treat-stealth img { filter: brightness(0.42) contrast(1.25) saturate(0.55) hue-rotate(160deg); }
+.art-slot.treat-stealth::after {
+  background: radial-gradient(ellipse at 62% 38%, rgb(120 190 200 / 22%) 0%, rgb(0 0 0 / 0%) 45%),
+              radial-gradient(ellipse at 50% 50%, rgb(0 0 0 / 0%) 30%, rgb(4 8 10 / 88%) 100%);
+}
+.art-slot.treat-exposed img { filter: brightness(1.55) contrast(1.35) saturate(0.35); }
+.art-slot.treat-exposed::after {
+  background: radial-gradient(ellipse at 50% 30%, rgb(255 252 240 / 45%) 0%, rgb(255 252 240 / 0%) 62%);
+  mix-blend-mode: screen;
+}
+.art-slot.treat-logic img { filter: saturate(0.5) brightness(0.92) contrast(1.1); }
+.art-slot.treat-logic::after {
+  background:
+    repeating-linear-gradient(0deg, rgb(150 220 235 / 26%) 0 1px, rgb(0 0 0 / 0%) 1px 14px),
+    repeating-linear-gradient(90deg, rgb(150 220 235 / 26%) 0 1px, rgb(0 0 0 / 0%) 1px 14px);
+}
+.art-slot.treat-force img { filter: contrast(1.3) saturate(1.15) brightness(0.88); }
+.art-slot.treat-force::after {
+  background: linear-gradient(118deg, rgb(0 0 0 / 0%) 44%, rgb(178 58 48 / 62%) 46%, rgb(178 58 48 / 0%) 53%),
+              linear-gradient(0deg, rgb(150 40 34 / 26%), rgb(150 40 34 / 26%));
+  mix-blend-mode: multiply;
+}
+.art-slot.treat-prudence img { filter: saturate(0.42) brightness(1.04) contrast(0.94) sepia(0.18); }
+.art-slot.treat-prudence::after { background: rgb(210 186 140 / 12%); }
+
+/* 밴드 — 상단 띠. 텍스트가 주(主), 아트는 식별 보조. */
+.card.frame-band { padding-top: 0; }
+.card.frame-band .art-slot {
+  height: 54px; margin: 0 -10px 4px; border-bottom: 1px solid var(--line);
+}
+.card.frame-band .art-fallback { font-size: 24px; }
+
+/* 전면 — 아트가 카드 전체, 텍스트는 하단 스크림 위. 아트 우위. */
+.card.frame-full { min-height: 206px; padding: 0; justify-content: flex-end; }
+.card.frame-full .art-slot { position: absolute; inset: 0; }
+.card.frame-full .art-fallback { font-size: 52px; }
+.card.frame-full .card-body {
+  position: relative; padding: 26px 10px 8px;
+  background: linear-gradient(to top, rgb(10 8 6 / 94%) 42%, rgb(10 8 6 / 0%));
+}
+.card.frame-full .card-note { color: #cfc6b4; }
+
+/* 액자 — 표본 플레이트. 여백이 "장면이 아니라 표본"임을 말한다(12 §1 제약). */
+.card.frame-plate { min-height: 200px; }
+.card.frame-plate .art-slot {
+  height: 92px; margin-bottom: 6px; border: 1px solid var(--line);
+  border-radius: 3px; background: #0e0c09; padding: 3px;
+}
+.card.frame-plate .art-slot img { border-radius: 2px; }
+.card.frame-plate .art-fallback { font-size: 34px; }
+.card.frame-plate.suit-physical .art-slot { border-color: color-mix(in srgb, var(--physical) 45%, var(--line)); }
+.card.frame-plate.suit-behavioral .art-slot { border-color: color-mix(in srgb, var(--behavioral) 45%, var(--line)); }
+.card.frame-plate.suit-documentary .art-slot { border-color: color-mix(in srgb, var(--documentary) 45%, var(--line)); }
+.card.frame-plate.suit-forensic .art-slot { border-color: color-mix(in srgb, var(--forensic) 45%, var(--line)); }
 .chip-icon { font-style: normal; font-size: 13px; margin-right: 2px; }
 .card-top { display: flex; gap: 5px; align-items: center; }
 .chip-suit {
