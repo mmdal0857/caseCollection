@@ -89,8 +89,19 @@ class Issues {
   }
 }
 
+/**
+ * isObj 타입가드 + issue 기록을 한 번에 — `out.need(isObj(x), ...)`는 need()가 평범한
+ * boolean을 받아 x의 타입을 좁혀주지 않는다(x는 계속 unknown으로 남아 이후 필드 접근이 전부 에러).
+ * 이 함수 자체가 타입가드라 `if (!needObj(x, ...)) return;` 뒤에서 x가 실제로 좁혀진다.
+ */
+function needObj(v: unknown, path: string, msg: string, out: Issues): v is Record<string, unknown> {
+  if (isObj(v)) return true;
+  out.add(path, msg);
+  return false;
+}
+
 function validateFacet(f: unknown, cardId: string, path: string, out: Issues): void {
-  if (!out.need(isObj(f), path, '얼굴이 객체가 아니다')) return;
+  if (!needObj(f, path, '얼굴이 객체가 아니다', out)) return;
   if (out.need(inEnum(f.frame, FRAMES), `${path}.frame`, `frame은 ${FRAMES.join('|')} 중 하나여야 한다`)) {
     out.need(f.key === `${cardId}:${f.frame}`, `${path}.key`, `facet key는 "${cardId}:${f.frame}"이어야 한다 (실제: ${JSON.stringify(f.key)})`);
   }
@@ -103,7 +114,7 @@ function validateFacet(f: unknown, cardId: string, path: string, out: Issues): v
   }
   if (f.gate !== undefined) {
     const g = f.gate;
-    if (out.need(isObj(g), `${path}.gate`, 'gate는 객체여야 한다')) {
+    if (needObj(g, `${path}.gate`, 'gate는 객체여야 한다', out)) {
       out.need(inEnum(g.stat, ['heat', 'trust', 'axis']), `${path}.gate.stat`, 'gate.stat은 heat|trust|axis');
       out.need(isStr(g.why), `${path}.gate.why`, 'gate.why(막힌 이유)는 필수 문자열');
       if (g.gte !== undefined) out.need(isNum(g.gte), `${path}.gate.gte`, 'gte는 숫자');
@@ -119,7 +130,7 @@ function isHangulSyllable(ch: string): boolean {
 }
 
 function validateClue(c: unknown, key: string, path: string, out: Issues): void {
-  if (!out.need(isObj(c), path, '단서가 객체가 아니다')) return;
+  if (!needObj(c, path, '단서가 객체가 아니다', out)) return;
   out.need(c.id === key, `${path}.id`, `record 키와 id가 다르다 (키 "${key}" vs id ${JSON.stringify(c.id)})`);
   if (out.need(isStr(c.name), `${path}.name`, 'name은 문자열이어야 한다')) {
     const name = c.name as string;
@@ -145,12 +156,12 @@ function validateClue(c: unknown, key: string, path: string, out: Issues): void 
 }
 
 function validateSlot(sl: unknown, path: string, out: Issues): void {
-  if (!out.need(isObj(sl), path, '슬롯이 객체가 아니다')) return;
+  if (!needObj(sl, path, '슬롯이 객체가 아니다', out)) return;
   out.need(isStr(sl.id), `${path}.id`, 'id는 문자열이어야 한다');
   out.need(isStr(sl.label), `${path}.label`, 'label은 문자열이어야 한다');
   const a = sl.answer;
   if (!isStr(a)) {
-    if (out.need(isObj(a), `${path}.answer`, 'answer는 카드 id 또는 조건부 정답 객체여야 한다')) {
+    if (needObj(a, `${path}.answer`, 'answer는 카드 id 또는 조건부 정답 객체여야 한다', out)) {
       out.need(inEnum(a.stat, ['heat', 'trust']), `${path}.answer.stat`, '조건부 정답의 stat은 heat|trust');
       out.need(isNum(a.gte), `${path}.answer.gte`, 'gte는 숫자');
       out.need(isStr(a.then) && isStr(a.else), `${path}.answer`, 'then/else는 카드 id 문자열이어야 한다');
@@ -162,7 +173,7 @@ function validateSlot(sl: unknown, path: string, out: Issues): void {
   }
   if (sl.role !== undefined) {
     const r = sl.role;
-    if (out.need(isObj(r), `${path}.role`, 'role은 객체여야 한다')) {
+    if (needObj(r, `${path}.role`, 'role은 객체여야 한다', out)) {
       out.need(inEnum(r.frame, FRAMES), `${path}.role.frame`, `role.frame은 ${FRAMES.join('|')} 중 하나여야 한다`);
       if (r.noun !== undefined) out.need(isStr(r.noun), `${path}.role.noun`, 'noun은 문자열');
       if (r.quality !== undefined) out.need(isStr(r.quality), `${path}.role.quality`, 'quality는 문자열');
@@ -177,7 +188,7 @@ const FACET_KEY_RE = /^[^:]+:[^:]+$/;
 const JOSA_LEAD_RE = /^(이|가|은|는|을|를|로|과|와|이다|다)(?![가-힣])/;
 
 function validateCase(k: unknown, path: string, out: Issues): void {
-  if (!out.need(isObj(k), path, 'case가 객체가 아니다')) return;
+  if (!needObj(k, path, 'case가 객체가 아니다', out)) return;
   out.need(isStr(k.id), `${path}.id`, 'id는 문자열이어야 한다');
   out.need(isStr(k.title), `${path}.title`, 'title은 문자열이어야 한다');
   out.need(isStr(k.intro), `${path}.intro`, 'intro는 문자열이어야 한다');
@@ -223,7 +234,7 @@ function validateCase(k: unknown, path: string, out: Issues): void {
   }
   if (k.axis !== undefined) {
     const ax = k.axis;
-    if (out.need(isObj(ax), `${path}.axis`, 'axis는 객체여야 한다')) {
+    if (needObj(ax, `${path}.axis`, 'axis는 객체여야 한다', out)) {
       for (const f of ['id', 'label', 'low', 'high', 'hint'] as const) {
         out.need(isStr(ax[f]), `${path}.axis.${f}`, `${f}는 문자열이어야 한다`);
       }
@@ -240,7 +251,7 @@ function validateCase(k: unknown, path: string, out: Issues): void {
 }
 
 function validateRun(run: unknown, out: Issues): void {
-  if (!out.need(isObj(run), 'run', 'run은 객체여야 한다')) return;
+  if (!needObj(run, 'run', 'run은 객체여야 한다', out)) return;
   for (const key of Object.keys(run)) {
     out.need((RUN_KEYS as string[]).includes(key), `run.${key}`, '알 수 없는 run 필드');
   }
@@ -274,7 +285,7 @@ function validateRun(run: unknown, out: Issues): void {
 /** 팩 한 개의 형태 검증 — schema/game-data-pack.json과 같은 규칙 + 교차 필드 불변식. */
 export function validatePack(json: unknown): PackValidation {
   const out = new Issues();
-  if (!out.need(isObj(json), '', '팩이 JSON 객체가 아니다')) return { ok: false, issues: out.list };
+  if (!needObj(json, '', '팩이 JSON 객체가 아니다', out)) return { ok: false, issues: out.list };
   out.need(json.format === PACK_FORMAT, 'format', `format은 "${PACK_FORMAT}"이어야 한다 (실제: ${JSON.stringify(json.format)})`);
   out.need(
     json.formatVersion === PACK_FORMAT_VERSION,
@@ -285,11 +296,11 @@ export function validatePack(json: unknown): PackValidation {
   for (const [field, fn] of [['clues', validateClue], ['patterns', null], ['hintDefs', null]] as const) {
     const rec = json[field];
     if (rec === undefined) continue;
-    if (!out.need(isObj(rec), field, 'id → 항목의 record여야 한다')) continue;
+    if (!needObj(rec, field, 'id → 항목의 record여야 한다', out)) continue;
     for (const [key, item] of Object.entries(rec)) {
       if (fn) {
         fn(item, key, `${field}.${key}`, out);
-      } else if (out.need(isObj(item), `${field}.${key}`, '항목이 객체가 아니다')) {
+      } else if (needObj(item, `${field}.${key}`, '항목이 객체가 아니다', out)) {
         out.need(item.id === key, `${field}.${key}.id`, `record 키와 id가 다르다`);
         out.need(isStr(item.name), `${field}.${key}.name`, 'name은 문자열이어야 한다');
         const textField = field === 'patterns' ? 'text' : 'desc';
