@@ -28,6 +28,7 @@
 set -u
 CARD="${1:?card_id 필요}"
 DESC="${2:?영문 사물 묘사 필요}"
+COMPOSITION="${3:-single}"
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 OUT="$ROOT/prototype/core-loop/public/cardart"
 KEY="$ROOT/docs/art/style-key.png"   # 스타일 키 — 모든 카드가 이걸 레퍼런스로 문다
@@ -36,7 +37,14 @@ mkdir -p "$OUT"
 STYLE='Flat cel-shaded graphic-novel noir illustration. Hard black ink contours, heavy flat black shadow masses, no gradients, limited palette of warm grey and pale bone.'
 GROUND='IMPORTANT: the background is a single flat near-black field, edge to edge, with no paper, no card, no border, no frame, no vignette, no surface, no table. The subject floats on flat near-black.'
 LIGHT='Neutral even lighting on the subject, no dramatic key light, no coloured light, no rim light.'
-RULE='Single isolated subject, centered. The object alone as a specimen — no scene, no hands, no action, no narrative. No text, no lettering, no watermark, no signature.'
+RULE_SINGLE='Single isolated object, centered. The object alone as a specimen — no scene, no hands, no action, no narrative. No readable words, logos, watermark, or signature; abstract illegible marks are allowed when they are physically part of a document.'
+RULE_GROUP='One coherent isolated object group, centered. The grouped objects alone as a specimen — no surrounding scene, no hands, no action, no narrative. No readable words, logos, watermark, or signature; abstract illegible marks are allowed when they are physically part of a document.'
+
+case "$COMPOSITION" in
+  single) RULE="$RULE_SINGLE" ;;
+  group) RULE="$RULE_GROUP" ;;
+  *) echo "FAIL composition은 single 또는 group이어야 한다: $COMPOSITION" >&2; exit 2 ;;
+esac
 
 PROMPT="$STYLE Subject: $DESC. $GROUND $LIGHT $RULE"
 
