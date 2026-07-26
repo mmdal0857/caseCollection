@@ -4,7 +4,7 @@
 #   bash scripts/cardart-generate.sh <card_id> "<영문 사물 묘사>"
 #   bash scripts/cardart-generate.sh thread_fiber "a few loose strands of thread and textile fibre, lying free"
 #
-# 전제: `higgsfield account status` 통과. 장당 nano_banana_pro 2크레딧.
+# 전제: `higgsfield account status` 통과. 장당 gpt_image_2 low 0.5크레딧.
 #
 # ── 이 파이프라인의 핵심 원리: **명사는 생성하고 형용사는 계산한다** ──────────
 # 카드 아트 = 사물(명사) × 태그 처리(형용사).
@@ -59,8 +59,9 @@ fi
 REF=(--image-references "$KEY")
 HIGGSFIELD="${HIGGSFIELD_BIN:-higgsfield}"
 
-json=$("$HIGGSFIELD" generate create nano_banana_pro \
+json=$("$HIGGSFIELD" generate create gpt_image_2 \
     --aspect-ratio 3:4 --resolution 1k --prompt "$PROMPT" "${REF[@]}" \
+    --quality low \
     --wait --json)
 url=$(printf '%s' "$json" | node "$ROOT/scripts/extract-higgsfield-url.mjs")
 

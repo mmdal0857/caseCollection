@@ -70,3 +70,4 @@ Blocked-by:
 - 슈트 공용 폴백 아트 4종과 레이든 표정 3~4종은 **같은 레시피로 생성만 하면 되는 실행 항목** — 결정은 남아 있지 않다.
 
 - 2026-07-25 **후속 티켓 [20 플레이 화면 정보 위계 재설계](20-play-screen-hierarchy.md) 생성** (사용자 요청 "ui 쪽 개선도 고려"). 13이 스타일 키를 확정하며 08 §⑦의 순서 조건이 충족돼 UI 설계가 specifiable해졌다 — `Blocked-by: 13`으로 걸었고 13 종료와 함께 프론티어에 올랐다. 13의 미구현 결정(배경 3장×그레이딩, 태그 처리 전이)은 20의 입력이다.
+- 2026-07-27 **본 생성 모델 실측 개정 — `gpt_image_2` low 채택**: 스트레스 대상 6종(스타일 기준·문서·복수 사물·부재 대역·의미 대역·가로형)을 모델 4종(`nano_banana_2_lite` / `gpt_image_2` low / `z_image` / `recraft_v4_1`) × 프롬프트 템플릿 2종(`noir-specimen` / `small-card-glyph`)으로 교차해 **48장** 비교. GPT Image 2 low가 0.5크레딧/장에서 대상 가독성·근-흑색 바탕·플랫 누아르·레퍼런스 순응을 가장 안정적으로 함께 지켰다. Nano Banana 2 Lite는 일부 `small-card-glyph` 조합에서 스타일 키의 실·섬유 피사체를 새 대상 대신 복제했고, Z Image는 회색 배경·사진성·가짜 글자, Recraft는 팔레트·피사체 크기 편차가 있었다. 따라서 ⑨의 역사적 선택은 **스타일 키 생성 모델**로 유지하되, `scripts/cardart-generate.sh`의 본 생성 기본값은 `gpt_image_2 --quality low --resolution 1k`로 개정. `small-card-glyph` 전면 적용은 기각하고 `noir-specimen`을 유지한다.
