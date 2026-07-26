@@ -59,9 +59,10 @@ fi
 REF=(--image-references "$KEY")
 HIGGSFIELD="${HIGGSFIELD_BIN:-higgsfield}"
 
-url=$("$HIGGSFIELD" generate create nano_banana_pro \
+json=$("$HIGGSFIELD" generate create nano_banana_pro \
     --aspect-ratio 3:4 --resolution 1k --prompt "$PROMPT" "${REF[@]}" \
-    --wait --json 2>/dev/null | grep -oP '"result_url": "\K[^"]+' | head -1)
+    --wait --json)
+url=$(printf '%s' "$json" | node "$ROOT/scripts/extract-higgsfield-url.mjs")
 
 if [ -n "$url" ]; then
   curl -s -o "$OUT/${CARD}.png" "$url"
