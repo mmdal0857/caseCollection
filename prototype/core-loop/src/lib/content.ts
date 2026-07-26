@@ -4,7 +4,7 @@
 import type { RunContent, SlotFrame, Tag } from './engine';
 import type { Facet } from './facets';
 
-// v10(티켓 17): 카드마다 **얼굴 목록**. facets[0] = 카드를 얻을 때 함께 아는 "명백한" 얼굴,
+// v10(티켓 17): 카드마다 **측면 목록**. facets[0] = 카드를 얻을 때 함께 아는 "명백한" 측면,
 // 나머지는 게스트 대여·강한 링크 발견으로 열린다(12 §4 보유 ≠ 앎).
 const F = (
   card: string,
@@ -15,7 +15,7 @@ const F = (
   extra: Partial<Facet> = {},
 ): Facet => ({ key: `${card}:${frame}`, frame, meaning, tags, note, ...extra });
 
-// 12 §7 "안전한 구석이 없다" — 극단으로 가면 실패가 아니라 **얼굴이 잠긴다**.
+// 12 §7 "안전한 구석이 없다" — 극단으로 가면 실패가 아니라 **측면이 확정된다**.
 const NEEDS_NOISE = { stat: 'heat' as const, gte: 2, why: '너무 조용히 움직였다 — 이렇게 요란한 해석을 꺼낼 명분이 없다' };
 const NEEDS_EDGE = { stat: 'trust' as const, lt: 8, why: '반이 너무 신중하다 — 이런 거친 해석은 결재가 나지 않는다' };
 
@@ -213,7 +213,7 @@ export const CONTENT: RunContent = {
       ],
     },
     // ---- forensic ----
-    // venom_trace에 route 얼굴은 **일부러 없다** — "독이 제 발로 문을 열고 들어왔나" 개그를 살린다.
+    // venom_trace에 route 측면은 **일부러 없다** — "독이 제 발로 문을 열고 들어왔나" 개그를 살린다.
     venom_trace: {
       id: 'venom_trace', name: '독물 흔적', suit: 'forensic', kind: '사물', tags: ['신중'],
       text: '독은 흉기 없는 살인 — 주입 자국의 위치가 경로를 말한다.',
@@ -287,7 +287,7 @@ export const CONTENT: RunContent = {
       ],
       patterns: ['locked-room'],
       guestClues: ['vent_gap', 'night_errand'],
-      // 12 §4: 게스트는 카드뿐 아니라 **얼굴도** 빌려준다.
+      // 12 §4: 게스트는 카드뿐 아니라 **측면도** 빌려준다.
       // 실·섬유는 이미 갖고 있지만 "침입 도구"로만 알고 있다 — 이 사건이 "접촉 증거"를 가르친다.
       guestFacets: ['thread_fiber:trace'],
       axis: { id: 'seal', label: '봉인', low: '단단함', high: '허술함', init: 2, drivenBy: '논리',
@@ -381,7 +381,7 @@ export const CONTENT: RunContent = {
       guestClues: ['scattered_belongings'],
       guestPattern: 'staged-disappearance',
       // "연습된 진술"을 [신분 위장]으로 읽는 법을 이 사건이 가르친다 —
-      // 단, 그 얼굴은 앞 슬롯이 [연출된 현장]으로 잠겨야 열린다(needsPrev). 포석이 강제되는 지점.
+      // 단, 그 측면은 앞 슬롯이 [연출된 현장]으로 확정되어야 열린다(needsPrev). 포석이 강제되는 지점.
       guestFacets: ['rehearsed_story:identity'],
       axis: { id: 'testimony', label: '증언 일관성', low: '엇갈림', high: '입 맞춤', init: 4, drivenBy: '신중',
         hint: '신중하게 다룰수록 증언이 매끄러워진다 — 매끄러운 증언은 대본일 수 있다.' },
@@ -446,7 +446,7 @@ export const CONTENT: RunContent = {
 
   // 순서 평가 — 첫 매칭만 발동. BAD 게이트가 최우선.
   // v10(12 §7): **등급형** — 죽는 방향은 둘(공개 과다·강압 과다)이고, 그 아래 "아프지만 생존" 밴드가
-  // 마지막 경고를 준다. 은밀·신중 극단은 죽지 않는 대신 **얼굴이 잠긴다**(안전한 구석 없음).
+  // 마지막 경고를 준다. 은밀·신중 극단은 죽지 않는 대신 **측면이 확정된다**(안전한 구석 없음).
   interludeEvents: [
     {
       id: 'bad-press',
@@ -484,13 +484,13 @@ export const CONTENT: RunContent = {
       ],
     },
     {
-      // 은밀 극단 — 실패가 아니라 **얼굴 잠김**. 죽지 않지만 쓸 수 있는 해석이 마른다.
+      // 은밀 극단 — 실패가 아니라 **측면 막힘**. 죽지 않지만 쓸 수 있는 해석이 마른다.
       id: 'too-quiet',
       cond: { heatLte: 1 },
       title: '너무 조용한 수사',
-      desc: '아무도 이 사건을 모른다. 그래서 아무도 협조하지 않는다. 요란한 해석([몸싸움의 자취]·[사후의 처신] 같은)은 꺼낼 명분이 없어 잠겨 있다 — 조용한 구석은 안전하지만, 거기서는 풀 수 없는 사건이 있다.',
+      desc: '아무도 이 사건을 모른다. 그래서 아무도 협조하지 않는다. 요란한 해석([몸싸움의 자취]·[사후의 처신] 같은)은 꺼낼 명분이 없어 막혀 있다 — 조용한 구석은 안전하지만, 거기서는 풀 수 없는 사건이 있다.',
       investigation: [
-        { id: 'leak', label: '한 줄만 흘려본다', reveal: '작은 기사 한 줄로도 증인 몇은 입을 연다. 주목을 올리면 잠긴 얼굴이 열린다 — 위험은 그 다음 문제다.', isHint: true },
+        { id: 'leak', label: '한 줄만 흘려본다', reveal: '작은 기사 한 줄로도 증인 몇은 입을 연다. 주목을 올리면 확정된 측면이 열린다 — 위험은 그 다음 문제다.', isHint: true },
       ],
       choices: [
         { id: 'leak-it', label: '소문을 흘린다',   effects: { heat: 2 },  result: '거리에 이야기가 돌기 시작했다. 잠겼던 해석이 하나둘 열린다. (주목 +2)' },

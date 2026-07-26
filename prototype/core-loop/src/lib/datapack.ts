@@ -101,7 +101,7 @@ function needObj(v: unknown, path: string, msg: string, out: Issues): v is Recor
 }
 
 function validateFacet(f: unknown, cardId: string, path: string, out: Issues): void {
-  if (!needObj(f, path, '얼굴이 객체가 아니다', out)) return;
+  if (!needObj(f, path, '측면이 객체가 아니다', out)) return;
   if (out.need(inEnum(f.frame, FRAMES), `${path}.frame`, `frame은 ${FRAMES.join('|')} 중 하나여야 한다`)) {
     out.need(f.key === `${cardId}:${f.frame}`, `${path}.key`, `facet key는 "${cardId}:${f.frame}"이어야 한다 (실제: ${JSON.stringify(f.key)})`);
   }
@@ -144,12 +144,12 @@ function validateClue(c: unknown, key: string, path: string, out: Issues): void 
   out.need(inEnum(c.kind, KINDS), `${path}.kind`, `kind는 ${KINDS.join('|')} 중 하나여야 한다`);
   out.need(enumArr(c.tags, TAGS), `${path}.tags`, `tags는 ${TAGS.join('|')}의 배열이어야 한다`);
   out.need(isStr(c.text), `${path}.text`, 'text는 문자열이어야 한다');
-  if (!out.need(Array.isArray(c.facets) && c.facets.length > 0, `${path}.facets`, '얼굴이 최소 1개 필요하다(facets[0] = 획득 시 아는 얼굴)')) return;
+  if (!out.need(Array.isArray(c.facets) && c.facets.length > 0, `${path}.facets`, '측면이 최소 1개 필요하다(facets[0] = 획득 시 아는 측면)')) return;
   const seen = new Set<string>();
   (c.facets as unknown[]).forEach((f, i) => {
     validateFacet(f, key, `${path}.facets[${i}]`, out);
     if (isObj(f) && isStr(f.frame)) {
-      out.need(!seen.has(f.frame), `${path}.facets[${i}].frame`, `frame "${f.frame}" 중복 — 한 카드의 얼굴 frame은 유일해야 한다`);
+      out.need(!seen.has(f.frame), `${path}.facets[${i}].frame`, `frame "${f.frame}" 중복 — 한 카드의 측면 frame은 유일해야 한다`);
       seen.add(f.frame);
     }
   });
@@ -433,12 +433,12 @@ export function checkIntegrity(content: RunContent): PackIssue[] {
       const answers = typeof sl.answer === 'string' ? [sl.answer] : [sl.answer.then, sl.answer.else];
       for (const id of answers) {
         if (!clue(id, `${sp}.answer`)) continue;
-        // 정답 카드는 슬롯 역할 frame의 얼굴을 실제로 가져야 한다 — 없으면 그 case는 풀 수 없다.
+        // 정답 카드는 슬롯 역할 frame의 측면을 실제로 가져야 한다 — 없으면 그 case는 풀 수 없다.
         if (sl.role) {
           out.need(
             content.clues[id].facets.some((f) => f.frame === sl.role!.frame),
             `${sp}.answer`,
-            `정답 카드 "${id}"에 [${sl.role.frame}] 얼굴이 없다 — 풀 수 없는 슬롯`,
+            `정답 카드 "${id}"에 [${sl.role.frame}] 측면이 없다 — 풀 수 없는 슬롯`,
           );
         }
       }
@@ -449,7 +449,7 @@ export function checkIntegrity(content: RunContent): PackIssue[] {
         out.need(
           content.clues[cardId].facets.some((f) => f.key === key),
           `${path}.guestFacets`,
-          `얼굴 "${key}"가 카드에 없다`,
+          `측면 "${key}"가 카드에 없다`,
         );
       }
     }

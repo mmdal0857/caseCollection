@@ -54,15 +54,15 @@ export interface ClueCard {
   id: string;
   name: string;
   suit: Suit;
-  /** v9까지의 카드 단위 태그 — v10부터는 **얼굴 단위 태그**가 실제 영향력이다(12 §1). 표시용으로만 남김. */
+  /** v9까지의 카드 단위 태그 — v10부터는 **측면 단위 태그**가 실제 영향력이다(12 §1). 표시용으로만 남김. */
   tags: Tag[];
   /** 존재 범주 — 드라마투르기 패턴이 슬롯 frame과 대조. */
   kind: Kind;
   /** 의미 텍스트 — 수사 노트. 검증 전에는 비공개. */
   text: string;
   /**
-   * v10(티켓 12 §1): 카드가 가진 **얼굴 목록**. 태그는 "카드의 비용표"가 아니라
-   * "이 카드가 무엇이 될 수 있는지의 목록"이다. facets[0]은 카드를 얻을 때 함께 아는 얼굴.
+   * v10(티켓 12 §1): 카드가 가진 **측면 목록**. 태그는 "카드의 비용표"가 아니라
+   * "이 카드가 무엇이 될 수 있는지의 목록"이다. facets[0]은 카드를 얻을 때 함께 아는 측면.
    */
   facets: Facet[];
 }
@@ -101,7 +101,7 @@ export interface SlotRole {
   accepts?: Kind[];
 }
 
-/** 얼굴·슬롯 역할의 표시 이름 — 해석 공간을 UI에 띄우려면 필요하다. */
+/** 측면·슬롯 역할의 표시 이름 — 해석 공간을 UI에 띄우려면 필요하다. */
 export const FRAME_LABEL: Record<SlotFrame, string> = {
   route: '경로',
   means: '수단',
@@ -160,8 +160,8 @@ export function influenceOf(
 }
 
 /**
- * v10: 슬롯에 놓인 것은 이제 카드가 아니라 **카드의 한 얼굴**이다(12 §1·§3).
- * `locked`가 곧 "수(手)를 뒀다" — 잠긴 얼굴만 앞으로 전파해 다음 슬롯의 해석 공간을 연다.
+ * v10: 슬롯에 놓인 것은 이제 카드가 아니라 **카드의 한 측면**이다(12 §1·§3).
+ * `locked`가 곧 "수(手)를 뒀다" — 확정된 측면만 앞으로 전파해 다음 슬롯의 해석 공간을 연다.
  */
 export interface Placement {
   cardId: string;
@@ -171,7 +171,7 @@ export interface Placement {
 
 /**
  * case별 가변축(12 §5) — 재사용 풀에서 하나를 고른다. 매번 새 축을 발명하면 학습이 불가능해진다.
- * 축은 얼굴을 게이트하고(`gate.stat === 'axis'`), 특정 태그의 얼굴이 잠길 때마다 밀린다.
+ * 축은 측면을 게이트하고(`gate.stat === 'axis'`), 특정 태그의 측면이 잠길 때마다 밀린다.
  */
 export interface AxisDef {
   id: string;
@@ -179,7 +179,7 @@ export interface AxisDef {
   low: string;
   high: string;
   init: number;
-  /** 이 태그의 얼굴이 잠기면 축이 +1 밀린다. */
+  /** 이 태그의 측면이 확정되면 축이 +1 밀린다. */
   drivenBy: Tag;
   hint: string;
 }
@@ -215,7 +215,7 @@ export interface CaseDef {
   patterns: PatternId[];
   guestClues: string[];
   guestPattern?: PatternId;
-  /** 게스트가 이 사건에서만 빌려주는 **얼굴**(12 §4) — 카드뿐 아니라 해석도 빌려준다. */
+  /** 게스트가 이 사건에서만 빌려주는 **측면**(12 §4) — 카드뿐 아니라 해석도 빌려준다. */
   guestFacets?: string[];
   /** 이 사건의 가변축(12 §5). 없으면 고정 2축만. */
   axis?: AxisDef;
@@ -304,9 +304,9 @@ export interface SlotReaction {
   special: boolean;
   /** 이 반응을 낳은 드라마투르기 패턴명(오답 시). UI 태그로 노출. */
   pattern?: string;
-  /** 어떤 얼굴로 읽었는가. */
+  /** 어떤 측면으로 읽었는가. */
   meaning?: string;
-  /** 카드는 맞았으나 얼굴(역할)이 어긋난 경우 — v10의 새 실패 양태. */
+  /** 카드는 맞았으나 측면(역할)이 어긋난 경우 — v10의 새 실패 양태. */
   rightCardWrongFace?: boolean;
 }
 
@@ -325,7 +325,7 @@ export interface NoteEntry {
   caseId: string;
 }
 
-/** 잠금(수를 둠)의 즉시 피드백 — 12 §3 "대가만 있으면 벌칙, 무언가를 주면 거래". */
+/** 확정(수를 둠)의 즉시 피드백 — 12 §3 "대가만 있으면 벌칙, 무언가를 주면 거래". */
 export interface LockFeedback {
   seq: number;
   slotId: string;
@@ -336,9 +336,9 @@ export interface LockFeedback {
   heat: number;
   trust: number;
   axis: number;
-  /** 앞 카드와 태그가 공명한 강한 링크인가 — 이때만 정보 보상(얼굴 발견). */
+  /** 앞 카드와 태그가 공명한 강한 링크인가 — 이때만 정보 보상(측면 발견). */
   strongLink: boolean;
-  /** 강한 링크 보상으로 발견한 새 얼굴. */
+  /** 강한 링크 보상으로 발견한 새 측면. */
   discovered?: { cardId: string; meaning: string };
   /** 이 수가 다음 슬롯에 연 frame들. */
   opened: SlotFrame[];
@@ -374,10 +374,10 @@ export interface GameState {
   /** 검증된 카드 id(단서·패턴 공통) — 수사 노트 해금. */
   verified: string[];
   hints: string[];
-  // ---- v10: 얼굴 의미론(12) ----
-  /** 잠금 시점 — 이 프로토의 1번 질문. 런타임 토글. */
+  // ---- v10: 측면 의미론(12) ----
+  /** 확정 시점 — 이 프로토의 1번 질문. 런타임 토글. */
   lockMode: LockMode;
-  /** 아는 얼굴 key(12 §4: 보유 ≠ 앎). 카드를 얻으면 facets[0]만 함께 안다. */
+  /** 아는 측면 key(12 §4: 보유 ≠ 앎). 카드를 얻으면 facets[0]만 함께 안다. */
   knownFacets: string[];
   /** case별 가변축의 현재 값(12 §5). */
   axis: number;
@@ -417,7 +417,7 @@ export interface GameState {
 export type Action =
   | { type: 'START' }
   | { type: 'PLACE'; slotId: string; cardId: string; facetKey: string }
-  /** 가늠 → 확정(commit 모드). immediate 모드에선 PLACE가 곧 잠금이라 쓰이지 않는다. */
+  /** 가늠 → 확정(commit 모드). immediate 모드에선 PLACE가 곧 확정이라 쓰이지 않는다. */
   | { type: 'LOCK_SLOT'; slotId: string }
   | { type: 'CLEAR_SLOT'; slotId: string }
   | { type: 'SET_LOCK_MODE'; mode: LockMode }
@@ -468,13 +468,13 @@ export function reactionLine(
   return { line: comic.line, special: comic.special, pattern: comic.pattern };
 }
 
-// ── v10: 얼굴 의미론 (티켓 12) ────────────────────────────────────────────────
+// ── v10: 측면 의미론 (티켓 12) ────────────────────────────────────────────────
 
 export function facetOf(cardId: string, facetKey: string, c: RunContent): Facet | undefined {
   return c.clues[cardId]?.facets.find((f) => f.key === facetKey);
 }
 
-/** 이 슬롯에 앞에서 물려받은 문맥 — 잠긴 얼굴만 전파한다(submit 모드는 가늠도 전파). */
+/** 이 슬롯에 앞에서 물려받은 문맥 — 확정된 측면만 전파한다(submit 모드는 가늠도 전파). */
 export function prevFrameFor(
   s: GameState,
   c: RunContent,
@@ -492,7 +492,7 @@ export function prevFrameFor(
   return null;
 }
 
-/** 얼굴 합법성 판정에 필요한 문맥 — facets.ts가 요구하는 순수 입력. */
+/** 측면 합법성 판정에 필요한 문맥 — facets.ts가 요구하는 순수 입력. */
 export function facetCtxFor(s: GameState, c: RunContent, slotIdx: number): FacetCtx {
   const def = c.cases[s.caseIndex];
   return {
@@ -501,7 +501,7 @@ export function facetCtxFor(s: GameState, c: RunContent, slotIdx: number): Facet
     axis: s.axis,
     prevFrame: prevFrameFor(s, c, slotIdx),
     known: new Set(s.knownFacets),
-    // 게스트가 빌려주는 것: 명시된 얼굴 + 게스트 카드의 명백한 얼굴(facets[0]).
+    // 게스트가 빌려주는 것: 명시된 측면 + 게스트 카드의 명백한 측면(facets[0]).
     lent: new Set([
       ...(def.guestFacets ?? []),
       ...def.guestClues.flatMap((id) => (c.clues[id]?.facets[0] ? [c.clues[id].facets[0].key] : [])),
@@ -509,7 +509,7 @@ export function facetCtxFor(s: GameState, c: RunContent, slotIdx: number): Facet
   };
 }
 
-/** 얼굴의 태그가 트랙(고정 2축 + 가변축)을 민다 — 12 §6 경로 1. sign=-1이면 되돌림. */
+/** 측면의 태그가 트랙(고정 2축 + 가변축)을 민다 — 12 §6 경로 1. sign=-1이면 되돌림. */
 function applyFacetInfluence(s: GameState, c: RunContent, f: Facet, sign: number): void {
   const axis = c.cases[s.caseIndex].axis;
   for (const t of f.tags) {
@@ -520,14 +520,14 @@ function applyFacetInfluence(s: GameState, c: RunContent, f: Facet, sign: number
   }
 }
 
-/** 두 얼굴이 태그를 공유하는가 — 강한 링크(태그 공명). 이때만 정보 보상(12 §3). */
+/** 두 측면이 태그를 공유하는가 — 강한 링크(태그 공명). 이때만 정보 보상(12 §3). */
 function resonant(a: Facet, b: Facet): boolean {
   return a.tags.some((t) => b.tags.includes(t));
 }
 
 /**
- * 수를 둔다 — 얼굴을 잠그고, 대가를 치르고, 보상을 준다.
- * 보상: 노트 해금 + 두루마리 서사 한 줄 + (강한 링크일 때만) 새 얼굴 발견.
+ * 수를 둔다 — 측면을 잠그고, 대가를 치르고, 보상을 준다.
+ * 보상: 노트 해금 + 두루마리 서사 한 줄 + (강한 링크일 때만) 새 측면 발견.
  */
 function lockPlacement(s: GameState, c: RunContent, slotIdx: number): void {
   const def = c.cases[s.caseIndex];
@@ -540,9 +540,9 @@ function lockPlacement(s: GameState, c: RunContent, slotIdx: number): void {
   const before = { heat: s.heat, trust: s.trust, axis: s.axis };
   p.locked = true;
   applyFacetInfluence(s, c, f, +1);
-  addUnique(s.knownFacets, [f.key]); // 써본 얼굴은 아는 얼굴이 된다
+  addUnique(s.knownFacets, [f.key]); // 써본 측면은 아는 측면이 된다
 
-  // 앞 얼굴과의 공명 — 강한 링크일 때만 정보 보상(매번 주면 퍼즐이 녹는다).
+  // 앞 측면과의 공명 — 강한 링크일 때만 정보 보상(매번 주면 퍼즐이 녹는다).
   let strongLink = false;
   let discovered: LockFeedback['discovered'];
   const prevIdx = (() => {
@@ -558,7 +558,7 @@ function lockPlacement(s: GameState, c: RunContent, slotIdx: number): void {
     const pf = facetOf(pp.cardId, pp.facetKey, c);
     if (pf && resonant(pf, f)) {
       strongLink = true;
-      // 발견: 이 수에 관여한 두 카드 중 아직 모르는 얼굴 하나가 열린다.
+      // 발견: 이 수에 관여한 두 카드 중 아직 모르는 측면 하나가 열린다.
       for (const cid of [p.cardId, pp.cardId]) {
         const unknown = c.clues[cid].facets.find((x) => !s.knownFacets.includes(x.key));
         if (unknown) {
@@ -598,7 +598,7 @@ function lockPlacement(s: GameState, c: RunContent, slotIdx: number): void {
 
 /**
  * 되돌리기 — 확정을 뒤집는 건 수사를 공개 번복하는 일이다(12 §6 경로 2).
- * 이 슬롯 **뒤의 잠긴 수가 전부 연쇄로 풀린다**(앞→뒤 단방향의 대가).
+ * 이 슬롯 **뒤의 확정된 수가 전부 연쇄로 풀린다**(앞→뒤 단방향의 대가).
  */
 function unlockCascade(s: GameState, c: RunContent, slotIdx: number): number {
   const def = c.cases[s.caseIndex];
@@ -680,9 +680,9 @@ export function initGame(c: RunContent): GameState {
     ownedPatterns: [...c.starterPatterns],
     verified: [],
     hints: [...c.starterHints],
-    // 잠금 시점 = 즉시 잠금(12안) 확정, 제출 시 잠금(11안)은 기각(티켓 17 §1번 질문 검증 완료).
+    // 확정 시점 = 즉시 확정(12안) 확정, 제출 시 확정(11안)은 기각(티켓 17 §1번 질문 검증 완료).
     lockMode: 'immediate',
-    // 보유 ≠ 앎(12 §4): 스타터 카드는 **얼굴 하나씩만** 알고 시작한다.
+    // 보유 ≠ 앎(12 §4): 스타터 카드는 **측면 하나씩만** 알고 시작한다.
     knownFacets: c.starterClues.flatMap((id) => (c.clues[id].facets[0] ? [c.clues[id].facets[0].key] : [])),
     axis: 5,
     notebook: [],
@@ -720,7 +720,7 @@ function handleSetLockMode(s: GameState, a: ActionOf<'SET_LOCK_MODE'>, _c: RunCo
   if (a.mode === 'submit') {
     for (const p of Object.values(s.placed)) if (p) p.locked = false;
   }
-  s.log.push(`잠금 시점 변경 → ${a.mode}`);
+  s.log.push(`확정 시점 변경 → ${a.mode}`);
 }
 
 function handlePlace(s: GameState, a: ActionOf<'PLACE'>, c: RunContent): void {
@@ -729,14 +729,14 @@ function handlePlace(s: GameState, a: ActionOf<'PLACE'>, c: RunContent): void {
   const idx = def.slots.findIndex((sl) => sl.id === a.slotId);
   if (idx < 0) return;
   const existing = s.placed[a.slotId];
-  if (existing?.locked) return; // 잠긴 수는 되돌리기(CLEAR_SLOT)로만 뺀다
-  // 한 카드는 한 슬롯에만 — 다른 곳에 가늠으로 놓여 있으면 회수(잠긴 건 못 뺀다).
+  if (existing?.locked) return; // 확정된 수는 되돌리기(CLEAR_SLOT)로만 뺀다
+  // 한 카드는 한 슬롯에만 — 다른 곳에 가늠으로 놓여 있으면 회수(확정된 건 못 뺀다).
   for (const k of Object.keys(s.placed)) {
     const p = s.placed[k];
     if (p && p.cardId === a.cardId && !p.locked) s.placed[k] = null;
   }
   s.placed[a.slotId] = { cardId: a.cardId, facetKey: a.facetKey, locked: false };
-  // 즉시 잠금(12 §3) — 놓는 것이 곧 수를 두는 것.
+  // 즉시 확정(12 §3) — 놓는 것이 곧 수를 두는 것.
   if (s.lockMode === 'immediate') lockPlacement(s, c, idx);
 }
 
@@ -812,7 +812,7 @@ function calculateSubmissionJudgment(
   open: Slot[],
   c: RunContent,
 ): SubmissionJudgment {
-  // v10: 정답 = **맞는 카드 + 맞는 얼굴**. 카드가 맞아도 역할이 어긋난 얼굴로 읽었으면 오답.
+  // v10: 정답 = **맞는 카드 + 맞는 측면**. 카드가 맞아도 역할이 어긋난 측면으로 읽었으면 오답.
   const judgments: SlotJudgment[] = open.map((slot) => {
     const placement = s.placed[slot.id]!;
     const cardRight = placement.cardId === resolveAnswer(slot, s);
@@ -824,7 +824,7 @@ function calculateSubmissionJudgment(
   // 슬롯별 반응 — 정오 판정과 같은 상태로 계산.
   const reactions: SlotReaction[] = judgments.map((judgment) => {
     if (judgment.cardRight && !judgment.faceRight) {
-      // 새 실패 양태: 맞는 카드를 틀린 얼굴로 읽었다.
+      // 새 실패 양태: 맞는 카드를 틀린 측면으로 읽었다.
       return {
         slotId: judgment.slot.id,
         cardId: judgment.placement.cardId,
@@ -888,7 +888,7 @@ function decideSubmissionOutcome(
 
   const cleared = rights.length === open.length;
   if (!cleared && rights.length < PARTIAL_CONFIRM_THRESHOLD) {
-    // v10(12 §6): 오답 플랫 페널티 **제거**. 오염은 놓은 얼굴의 태그가 이미 냈다 —
+    // v10(12 §6): 오답 플랫 페널티 **제거**. 오염은 놓은 측면의 태그가 이미 냈다 —
     // 이중처벌이 아니며, 오답조차 "세계를 어느 방향으로 밀 것인가"의 수가 된다.
     s.lastSubmit = {
       seq: s.seq,
@@ -921,7 +921,7 @@ function decideSubmissionOutcome(
   if (!cleared) return;
 
   addUnique(s.ownedClues, def.guestClues);
-  // 게스트는 카드뿐 아니라 **얼굴도** 빌려줬다 — 해결하면 그 해석까지 영구히 배운다(12 §4).
+  // 게스트는 카드뿐 아니라 **측면도** 빌려줬다 — 해결하면 그 해석까지 영구히 배운다(12 §4).
   for (const id of def.guestClues) {
     if (c.clues[id]?.facets[0]) addUnique(s.knownFacets, [c.clues[id].facets[0].key]);
   }
@@ -977,9 +977,9 @@ function handleHint(s: GameState, a: ActionOf<'HINT'>, c: RunContent): void {
 function handlePickReward(s: GameState, a: ActionOf<'PICK_REWARD'>, c: RunContent): void {
   if (s.screen !== 'reward' || !s.packOffer.includes(a.cardId)) return;
   addUnique(s.ownedClues, [a.cardId]);
-  // 카드를 얻으면 **명백한 얼굴 하나**만 안다 — 나머지는 써보며 발견한다(12 §4).
+  // 카드를 얻으면 **명백한 측면 하나**만 안다 — 나머지는 써보며 발견한다(12 §4).
   if (c.clues[a.cardId].facets[0]) addUnique(s.knownFacets, [c.clues[a.cardId].facets[0].key]);
-  s.log.push(`보상팩: ${c.clues[a.cardId].name} 획득 — 얼굴 하나만 안다`);
+  s.log.push(`보상팩: ${c.clues[a.cardId].name} 획득 — 측면 하나만 안다`);
   s.packOffer = [];
   pickInterlude(s, c);
 }

@@ -43,7 +43,7 @@
     <i class="pole high" class:ahead={trust >= 5}>신중</i>
     {#key trust}<span class="meter-num" in:scale={{ start: 1.7, duration: 260 }}>{trust}</span>{/key}
   </div>
-  <!-- v10: case별 가변축(12 §5) — 재사용 풀에서 하나. 얼굴을 게이트한다. -->
+  <!-- v10: case별 가변축(12 §5) — 재사용 풀에서 하나. 측면을 게이트한다. -->
   {#if axisDef && axis !== undefined}
     <div class="meter axis" title={axisDef.hint}>
       <span class="meter-label">{axisDef.label}</span>
