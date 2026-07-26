@@ -1,6 +1,7 @@
 # 의존성·빌드 산출물 — 어느 하위 디렉토리에서든
 node_modules/
 dist/
+.worktrees/
 
 # 프로토타입 빌드 부산물
 # (2026-07-23: prototype/core-loop는 main에 병합됨 — 더 이상 throwaway 브랜치 전용이 아니다.
