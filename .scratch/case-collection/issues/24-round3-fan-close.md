@@ -1,5 +1,7 @@
 # Codex 위임 스펙 — 결함 ③ 펼침이 반응 띠·핸드를 덮는다
 
+Status: closed
+
 > 이 파일은 **사용자가 Codex에 직접 전달**하기 위한 위임 스펙이다(Lane B / `Mode: direct`).
 > 지배 티켓은 [24 플레이 화면 구현](24-play-screen-build.md)이고, 위계 규약은 [20](20-play-screen-hierarchy.md)이 정본이다.
 > Claude가 스펙과 UX 결정을 확정했고, 디스패치와 결과 수용은 사용자가 한다.
@@ -35,14 +37,14 @@ Write-scope: prototype/core-loop/src/lib/ui/HandRail.svelte
 
 ## 수용 조건
 
-- [ ] 슈트 탭 → 펼침 열기 → 카드 클릭 시 **펼침이 닫힌다**
-- [ ] 측면 피커가 열려 있는 동안 펼침이 화면에 없다
-- [ ] 배치 완료 후에도 펼침이 없다
-- [ ] 반응 띠와 핸드가 **어느 시점에도 가려지지 않는다**
-- [ ] 같은 슈트 탭을 다시 누르면 정상적으로 다시 열린다(토글 유지)
-- [ ] 슈트 탭을 눌러 여는 동작 자체는 그대로
-- [ ] `npm run smoke` / `npm run smoke:datapack` 출력이 변경 전과 동일, FAIL 0
-- [ ] `npx tsc --noEmit` 클린 / `npx vite build` 클린
+- [x] 슈트 탭 → 펼침 열기 → 카드 클릭 시 **펼침이 닫힌다**
+- [x] 측면 피커가 열려 있는 동안 펼침이 화면에 없다
+- [x] 배치 완료 후에도 펼침이 없다
+- [x] 반응 띠와 핸드가 **어느 시점에도 가려지지 않는다**
+- [x] 같은 슈트 탭을 다시 누르면 정상적으로 다시 열린다(토글 유지)
+- [x] 슈트 탭을 눌러 여는 동작 자체는 그대로
+- [x] `npm run smoke` / `npm run smoke:datapack` 출력이 변경 전과 동일, FAIL 0
+- [x] `npx tsc --noEmit` 클린 / `npx vite build` 클린
 
 ## 반환 형식
 
@@ -67,3 +69,23 @@ Housekeeping:
 사용자 직접 위임이므로 Codex는 시작 전에 확인할 것: 현재 브랜치·dirty 워킹트리, 클레임된 wayfinder 티켓, 이 요청이 열린 설계 결정을 침범하는지, write scope가 다른 소유자의 변경과 겹치는지.
 
 **주의 — 지금 워킹트리에 다른 세션의 미커밋 변경이 있다**: `CLAUDE.md`, `prototype/core-loop/package.json`, `docs/CODE_QUALITY_HANDOFF.md`, `.vscode/`. **이들은 건드리지 말고 보고만 할 것.**
+
+## Resolution
+
+2026-07-26 Codex 직접 위임으로 완료했다. `HandRail.svelte`의 카드 클릭 경로에서
+`onpick`을 호출하기 전에 로컬 `openSuit`을 `null`로 바꿔, 카드 선택 즉시 펼침을
+닫도록 했다. 구현 커밋은 `078bf14` (`fix(ui): close hand fan after card selection`)다.
+
+실제 브라우저에서 수정 전 카드 선택 후 `.stack-fan`과 펼쳐진 슈트 탭이 각각 1개
+남는 증상을 재현했다. 수정 후에는 카드 선택 직후, 측면 피커 표시 중, 배치 완료 후
+모두 `.stack-fan` 0개·`aria-expanded="true"` 탭 0개였고, 같은 슈트 탭을 다시 누르면
+정상적으로 재개방됐다.
+
+검증 결과:
+
+- `npm run smoke` — PASS, FAIL 0
+- `npm run smoke:datapack` — PASS, FAIL 0
+- `npx tsc --noEmit` — 클린
+- `npx vite build` — 성공, 140 modules transformed
+
+범위 이탈은 없으며 게임 밸런스·판정 모듈은 변경하지 않았다.
