@@ -57,8 +57,9 @@ if [ ! -f "$KEY" ]; then
   exit 2
 fi
 REF=(--image-references "$KEY")
+HIGGSFIELD="${HIGGSFIELD_BIN:-higgsfield}"
 
-url=$(higgsfield generate create nano_banana_pro \
+url=$("$HIGGSFIELD" generate create nano_banana_pro \
     --aspect-ratio 3:4 --resolution 1k --prompt "$PROMPT" "${REF[@]}" \
     --wait --json 2>/dev/null | grep -oP '"result_url": "\K[^"]+' | head -1)
 

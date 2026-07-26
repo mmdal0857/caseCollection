@@ -35,6 +35,13 @@ export function planBatch(rows, { ids, existingIds, force }) {
   return { planned, skipped, errors };
 }
 
+export function resolveHiggsfieldBin(env, existsSync = fs.existsSync) {
+  if (env.HIGGSFIELD_BIN && existsSync(env.HIGGSFIELD_BIN)) return env.HIGGSFIELD_BIN;
+  if (!env.APPDATA) return null;
+  const npmShim = `${env.APPDATA.replaceAll('\\', '/')}/npm/higgsfield.cmd`;
+  return existsSync(npmShim) ? npmShim : null;
+}
+
 function loadManifest(manifestPath) {
   return fs.readFileSync(manifestPath, 'utf8')
     .split(/\r?\n/)
@@ -101,6 +108,12 @@ function main() {
   }
 
   for (const id of plan.skipped) console.log(`SKIP ${id} existing`);
+  const higgsfieldBin = options.dryRun ? null : resolveHiggsfieldBin(process.env);
+  if (!options.dryRun && !higgsfieldBin) {
+    console.error('FAIL Higgsfield CLI를 찾을 수 없다. HIGGSFIELD_BIN 또는 APPDATA npm shim을 확인하라.');
+    process.exitCode = 1;
+    return;
+  }
   for (const row of plan.planned) {
     if (options.dryRun) {
       console.log(`PLAN ${row.id} composition=${row.composition}`);
@@ -116,7 +129,11 @@ function main() {
         row.description,
         row.composition,
       ],
-      { cwd: root, encoding: 'utf8' },
+      {
+        cwd: root,
+        encoding: 'utf8',
+        env: { ...process.env, HIGGSFIELD_BIN: higgsfieldBin },
+      },
     );
     if (result.stdout) process.stdout.write(result.stdout);
     if (result.stderr) process.stderr.write(result.stderr);

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { planBatch } from './cardart-batch.mjs';
+import { planBatch, resolveHiggsfieldBin } from './cardart-batch.mjs';
 
 const rows = [
   { id: 'alpha', category: 'clue', enabled: true, description: 'A', composition: 'single' },
@@ -47,4 +47,13 @@ test('rejects unknown and disabled IDs', () => {
     skipped: [],
     errors: ['unknown card id: missing', 'disabled card id: pattern'],
   });
+});
+
+test('resolves the existing Windows npm Higgsfield shim from APPDATA', () => {
+  const result = resolveHiggsfieldBin(
+    { APPDATA: 'C:/Users/test/AppData/Roaming' },
+    (candidate) => candidate === 'C:/Users/test/AppData/Roaming/npm/higgsfield.cmd',
+  );
+
+  assert.equal(result, 'C:/Users/test/AppData/Roaming/npm/higgsfield.cmd');
 });
