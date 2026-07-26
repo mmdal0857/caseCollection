@@ -1,10 +1,6 @@
 <script lang="ts">
   import type { ClueCard } from '../engine';
   import { SUIT_LABEL, SUIT_ICON } from '../engine';
-  // PROTOTYPE(티켓 13) — 아트 슬롯 시안. `proto`/`artFor` 임포트는 스타일 확정 시 제거하고
-  // card.art(04 스키마의 개별 슬롯)만 남긴다.
-  import { proto, artFor, treatClass } from '../protoart.svelte';
-
   let {
     card,
     verified = false,
@@ -12,6 +8,7 @@
     selected = false,
     small = false,
     onclick,
+    treatment = null,
   }: {
     card: ClueCard;
     verified?: boolean;
@@ -19,13 +16,12 @@
     selected?: boolean;
     small?: boolean;
     onclick?: () => void;
+    treatment?: string | null;
   } = $props();
 
-  // 04: 카드별 개별 아트 슬롯 + 슈트 공용 폴백. 폴백 경로도 같이 보여야
-  // "일부만 채운 컬렉션"이 어떻게 보이는지 판단할 수 있다(08 §④ 분량 결정의 입력).
-  const art = $derived(artFor(card.id));
-  const frame = $derived(proto.frame);
-  const treat = $derived(treatClass());
+  let artFailed = $state(false);
+  const art = $derived(`/assets/cards/${card.id}.webp`);
+  const treat = $derived(treatment ? `treat-${treatment}` : '');
 </script>
 
 {#if small}
@@ -34,17 +30,17 @@
   </span>
 {:else}
   <button
-    class="card suit-{card.suit} frame-{frame}"
+    class="card suit-{card.suit} frame-full"
     class:selected
     class:guest
     class:static={!onclick}
-    class:has-art={art !== null}
+    class:has-art={!artFailed}
     onclick={onclick}
     type="button"
   >
     <span class="art-slot {treat}" aria-hidden="true">
-      {#if art !== null}
-        <img src={art} alt="" />
+      {#if !artFailed}
+        <img src={art} alt="" onerror={() => (artFailed = true)} />
       {:else}
         <i class="art-fallback">{SUIT_ICON[card.suit]}</i>
       {/if}

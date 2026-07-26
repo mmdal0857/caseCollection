@@ -16,9 +16,10 @@
   const trustT = tweened(untrack(() => trust), { duration: 500, easing: cubicOut });
   $effect(() => { heatT.set(heat); });
   $effect(() => { trustT.set(trust); });
+  const elevated = $derived(heat >= badHeat - 2 || trust <= 2);
 </script>
 
-<div class="meters">
+<div class="meters instrument-strip" class:elevated>
   <!-- 주목 트랙 = 은밀 ◁▷ 공개 영역 다수결. 5 넘으면 공개 우세 → 판정 규칙 전환. -->
   <div class="meter heat" class:hot={heat >= 5} class:critical={heat >= badHeat}>
     <span class="meter-label">주목</span>
@@ -55,6 +56,18 @@
 </div>
 
 <style>
+  .instrument-strip {
+    min-height: 48px;
+    max-height: 48px;
+    overflow: hidden;
+    padding: 8px 14px;
+    transition: max-height 240ms ease, min-height 240ms ease, background 240ms ease;
+  }
+  .instrument-strip.elevated {
+    min-height: 72px;
+    max-height: 96px;
+    background: rgb(42 29 21 / 94%);
+  }
   .meter.axis .meter-fill { background: linear-gradient(90deg, #4a6b7a, #7fb3d5); }
   .meter.axis .meter-label { color: #9fd3f5; }
 </style>
