@@ -60,3 +60,7 @@ Default role strings (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-fo
 ### Domain docs
 
 Single-context: `CONTEXT.md` + `docs/adr/` at repo root. See `docs/agents/domain.md`.
+
+### Codex collaboration
+
+Codex handles code (refactor/review/diagnosis on `prototype/core-loop/`) — not design decisions, not image generation (that's Higgsfield CLI, above). Standing `action_safety` block + behavior-preservation gate (smoke tests). See `docs/agents/codex-collab.md`.

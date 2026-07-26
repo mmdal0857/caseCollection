@@ -2,6 +2,8 @@
 
 Issues and PRDs for this repo live as markdown files in `.scratch/`.
 
+Standalone Codex work (not delegated by Claude) uses a separate, parallel queue — see "Claude intake queue" below. It is not part of the Wayfinder map or its numbering.
+
 ## Conventions
 
 - One feature per directory: `.scratch/<feature-slug>/`
@@ -53,6 +55,10 @@ This tracker has no native blocking or labels, so wayfinder uses header-line con
 | **대기(10000번대)** | 말할 수 있고 조사까지 됐지만 **순서상 뒤다** | `Status: deferred` + 10000번대 번호 |
 
 지도에는 "Decisions so far"가 아니라 **`## 후순위 대기 (10000번대)`** 섹션에 한 줄로 색인한다. 지도에 없는 티켓은 존재를 잊는다.
+
+### Claude intake queue (cross-agent)
+
+`.scratch/codex-intake/issues/<NN>-<slug>.md` — a **separate** tracker (own numbering, own directory) for unresolved knowledge surfaced by standalone Codex work, distinct from the game Wayfinder map in `.scratch/case-collection/`. Full file format and when Codex should create one: `docs/agents/codex-collab.md` ("Claude intake queue"). An intake file is never decision authority by itself — Claude processes it by folding it into an existing ticket, creating a proper ticket, updating a shared doc, or closing it as no-action.
 
 ### Close-time housekeeping
 
