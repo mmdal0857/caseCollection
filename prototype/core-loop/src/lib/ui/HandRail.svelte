@@ -42,7 +42,10 @@
                   guest={item.guest}
                   verified={verified.includes(item.card.id)}
                   selected={selected === item.card.id}
-                  onclick={() => onpick(item.card.id)}
+                  onclick={() => {
+                    openSuit = null;
+                    onpick(item.card.id);
+                  }}
                 />
               </div>
             {/each}
