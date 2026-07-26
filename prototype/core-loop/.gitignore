@@ -2,3 +2,4 @@ node_modules
 dist
 smoke.mjs
 smoke-datapack.mjs
+case-generator-prototype.mjs

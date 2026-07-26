@@ -25,6 +25,8 @@
     "audio:promote": "node scripts/promote-audio.mjs --spec audio/audio-spec.json --report audio/audio-qa-report.json --picks audio/audio-picks.json --out public/audio",
     "audio:verify": "node scripts/verify-audio-manifest.mjs",
     "audio:verify-page": "node scripts/prepare-final-audio-verification.mjs",
+    "prototype:case-generator": "esbuild case-generator-prototype.ts --bundle --format=esm --platform=node --outfile=case-generator-prototype.mjs && node case-generator-prototype.mjs",
+    "prototype:case-generator:demo": "esbuild case-generator-prototype.ts --bundle --format=esm --platform=node --outfile=case-generator-prototype.mjs && node case-generator-prototype.mjs --demo",
     "preview": "vite preview"
   },
   "devDependencies": {
