@@ -1,5 +1,10 @@
 /* PROTOTYPE — 코어 루프 검증용 스타일. 아트 방향성 아님 — juice 검증이 목적. */
 :root {
+  /* 상단바 높이의 단일 진리원. sticky 오프셋과 플레이 층 컨테이너 높이가 이 값을
+     함께 물어야 한다 — 예전에는 상단바 40px을 54px·48px로 각각 다르게 가정해서
+     컨테이너가 뷰포트를 넘고, 페이지가 스크롤되며 sticky 계기 스트립이 자기 행에서
+     떨어져 두루마리 제목을 13px 덮었다 (ticket 24 플레이 판정, 2026-07-26). */
+  --topbar-h: 40px;
   --bg: #14120f;
   --panel: #1e1a15;
   --panel-2: #262117;
@@ -58,16 +63,23 @@ body {
 .topbar { background: rgb(12 11 9 / 82%); backdrop-filter: blur(10px); }
 
 .play-layers {
-  min-height: calc(100vh - 54px);
+  min-height: calc(100vh - var(--topbar-h) - 12px);
   display: grid;
   grid-template-rows: auto minmax(45vh, 1fr) 112px auto minmax(92px, 180px);
   gap: 8px;
   padding: 0;
 }
 .instrument-strip {
-  position: sticky; top: 48px; z-index: 1;
+  /* sticky를 쓰지 않는다. 스트립은 그리드 1행이고 컨테이너가 뷰포트에 맞으므로
+     항상 보인다 — sticky는 페이지가 조금이라도 넘칠 때 자기 행에서 떨어져 두루마리를
+     덮는 것이 유일한 효과였다 (ticket 24 플레이 판정). */
+  position: relative; z-index: 5;
   border: 1px solid var(--line); border-radius: 0 0 8px 8px;
   background: rgb(20 18 15 / 88%); backdrop-filter: blur(9px);
+}
+.instrument-strip.elevated {
+  border-color: var(--red);
+  box-shadow: 0 5px 22px rgb(133 47 35 / 48%), inset 0 -2px 0 rgb(216 180 90 / 38%);
 }
 .scroll-layer {
   position: relative; z-index: 2; min-height: 45vh; overflow: auto;
@@ -486,7 +498,14 @@ button:disabled { cursor: default; }
 .slot:hover { border-color: var(--gold); }
 .slot.filled { border-style: solid; border-color: var(--line); background: var(--panel-2); }
 .slot.targeting { border-color: var(--documentary); box-shadow: 0 0 0 2px rgb(106 163 201 / 30%); }
-.slot-label { font-size: 12px; color: var(--dim); font-family: system-ui, sans-serif; }
+.slot-label {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12px; color: var(--dim); font-family: system-ui, sans-serif;
+}
+.slot-frame {
+  font-style: normal; font-size: 10px; line-height: 1.4;
+  color: #8f849b; border: 1px solid #3a2f4d; border-radius: 3px; padding: 0 4px;
+}
 .slot.confirmed {
   border: 1.5px solid var(--gold); background: #2b230f; border-radius: 6px;
   box-shadow: 0 0 10px rgb(216 180 90 / 25%);

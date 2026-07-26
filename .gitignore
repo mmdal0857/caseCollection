@@ -10,6 +10,10 @@ prototype/core-loop/smoke-datapack.mjs
 prototype/core-loop/.vite/
 
 # 티켓 13 아트 — 생성 바이너리는 미커밋(레시피가 정본).
-#   시안 재현: scripts/protoart-prompts.sh   본 생성: scripts/cardart-generate.sh
+#   시안 재현: scripts/protoart-prompts.sh   카드: scripts/cardart-generate.sh
+#   배경: scripts/bgart-generate.sh
+# 예외: docs/art/style-key.png 은 **커밋한다** — 산출물이 아니라 재현 불가한 입력이다.
+#       근거는 docs/art/README.md.
 prototype/core-loop/public/protoart/
 prototype/core-loop/public/cardart/
+prototype/core-loop/public/assets/backgrounds/

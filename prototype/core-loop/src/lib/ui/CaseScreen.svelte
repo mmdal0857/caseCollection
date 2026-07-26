@@ -177,7 +177,10 @@
                 <i class="facet-tag">{meaningOf(slot.id)}</i>
               </span>
             {:else}
-              <span class="slot-label">{slot.label}<i class="slot-frame">{frameOf(slot)}</i></span>
+              <span class="slot-label">
+                <span>{slot.label}</span>
+                <i class="slot-frame">{frameOf(slot)}</i>
+              </span>
             {/if}
           </button>
           {#if slot.josaAfter}<span class="josa" class:resolved={!!placed}>{josaFor(slot)}</span>{/if}
