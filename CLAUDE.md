@@ -45,6 +45,8 @@ bash scripts/protoart-prompts.sh                              # 스타일 4안 �
 
 생성 바이너리는 미커밋(`.gitignore`) — **레시피가 정본**. 생성 규칙 3가지(용도 아닌 사물을 그린다 / 바탕을 근-흑색으로 못박는다 / 조명 중립)는 `scripts/cardart-generate.sh` 주석에 근거와 함께 있다.
 
+> **예외 하나 — `docs/art/style-key.png`는 커밋한다.** 이건 산출물이 아니라 **입력**이고 생성이 확률적이라 레시피로 재현되지 않는다. 키가 없으면 49장이 각자 다른 스타일로 구워진다. 2026-07-26에 실제로 키가 부재했고 `cardart-generate.sh`가 **경고 없이 레퍼런스 없이 생성**하도록 돼 있었다(지금은 키 부재 시 exit 2). 배경도 같은 키를 문다. 근거·재생성 절차: [docs/art/README.md](docs/art/README.md).
+
 **프로토 하네스는 THROWAWAY** — `src/lib/protoart.svelte.ts`, `src/lib/ui/ArtSwitcher.svelte`는 시안 비교용이므로 UI 재작성 시 삭제한다. 반면 `CardChip.svelte`의 아트 슬롯 + 슈트 폴백과 `app.css`의 프레임·태그 처리 CSS는 **승격된 실물**이다.
 
 ## Agent skills

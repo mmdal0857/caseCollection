@@ -40,8 +40,15 @@ RULE='Single isolated subject, centered. The object alone as a specimen — no s
 
 PROMPT="$STYLE Subject: $DESC. $GROUND $LIGHT $RULE"
 
-REF=()
-[ -f "$KEY" ] && REF=(--image-references "$KEY")
+# 키가 없으면 **중단한다.** 예전에는 `[ -f "$KEY" ] &&`로 조용히 넘어갔는데, 그러면
+# 13이 실측한 보장(키를 물리면 스타일 드리프트 0/12)이 경고 없이 사라져 49장이
+# 각자 다른 스타일로 구워진다. 2026-07-26에 실제로 키가 부재한 상태였다.
+if [ ! -f "$KEY" ]; then
+  echo "FAIL 스타일 키가 없다: $KEY" >&2
+  echo "     키 없이 구우면 스타일이 드리프트한다 — 절차는 docs/art/README.md" >&2
+  exit 2
+fi
+REF=(--image-references "$KEY")
 
 url=$(higgsfield generate create nano_banana_pro \
     --aspect-ratio 3:4 --resolution 1k --prompt "$PROMPT" "${REF[@]}" \

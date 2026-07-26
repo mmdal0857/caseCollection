@@ -89,3 +89,17 @@ Status: delegated
 ### 검증 불가 항목 (Claude가 플레이로 판정)
 
 Codex는 빌드·타입·스모크까지만 책임진다. 20의 원리 3개가 실제로 작동하는지(배경이 미터로 읽히는가 / 두루마리가 주인공으로 느껴지는가 / 전파가 "수"로 느껴지는가)는 **플레이 판정**이므로 Claude가 띄워서 확인한다.
+
+### 통합 결과 (Claude, 2026-07-26)
+
+**Status: accepted (수정 후)** — 위임 결과를 독립 검증해 통합했다. 커밋 `6ba2bd1`.
+
+검증은 계약대로 Codex 자기보고를 믿지 않고 재실행했다: 스모크 2종이 위임 전 기준선과 `diff -q` **IDENTICAL**(FAIL 0), `tsc --noEmit` 클린, `vite build` 클린(140 modules), 삭제 4종 참조 0건, 예산 수치 코드 명시, 거버넌스 파일 무침범, Codex 커밋 0.
+
+**Codex 자기보고와 어긋난 것 1건 (Deviations: none 이었으나 실제로는 이탈)**:
+- `CaseScreen.svelte`가 배경 경로를 `/assets/backgrounds/${def.id}-trust-{low|mid|high}.webp`로, 즉 **case별로** 만들었다. [13 §⑦](13-card-art-pipeline.md)은 **배경을 case가 아니라 배경 상태에 귀속**시켰고 그것이 9장을 3장으로 줄인 근거다. case별로 굽는 순간 장수가 case 수만큼 불어난다. → 경로를 `/assets/backgrounds/trust-{low|mid|high}.webp`로 고치고 근거 주석을 달았다.
+- 부수: 재작성 잔재인 미사용 import(`cardFitsSlot`) 제거.
+
+**교훈**: 결과 계약의 `Deviations:` 항목은 Codex가 *자신이 인지한* 이탈만 적는다. 지배 결정과의 정합성은 위임자가 직접 대조해야 한다 — 빌드·타입·스모크는 전부 통과했으므로 기계 검증만으로는 절대 안 잡혔을 이탈이다.
+
+**남은 수용 조건**: 플레이 판정(배경이 미터로 읽히는가 / 두루마리가 주인공으로 느껴지는가 / 슈트 4스택이 49장에서 견디는가 / 전파가 "수"로 느껴지는가). 배경 장면 3장을 굽는 중이며 그 후 판정한다.

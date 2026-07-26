@@ -1,7 +1,7 @@
 <script lang="ts">
   import { fly } from 'svelte/transition';
   import type { Action, GameState, PatternId, RunContent, Slot, Tag } from '../engine';
-  import { FRAME_LABEL, cardFitsSlot, facetCtxFor, facetOf } from '../engine';
+  import { FRAME_LABEL, facetCtxFor, facetOf } from '../engine';
   import { readFacets } from '../facets';
   import { josaPlaceholder, resolveJosa } from '../josa';
   import CardChip from './CardChip.svelte';
@@ -58,11 +58,13 @@
   });
   const canSubmit = $derived(def.slots.every((slot) => game.confirmed[slot.id] || game.placed[slot.id]));
   const caseNotes = $derived(game.notebook.filter((note) => note.correct !== null));
-  const scenes = $derived({
-    low: `/assets/backgrounds/${def.id}-trust-low.webp`,
-    mid: `/assets/backgrounds/${def.id}-trust-mid.webp`,
-    high: `/assets/backgrounds/${def.id}-trust-high.webp`,
-  });
+  // 배경은 **case가 아니라 배경 상태에 귀속**한다(ticket 13 §⑦). case별로 굽는 순간
+  // 장수가 case 수만큼 불어나 13이 9장을 3장으로 줄인 근거가 사라진다.
+  const scenes = {
+    low: '/assets/backgrounds/trust-low.webp',
+    mid: '/assets/backgrounds/trust-mid.webp',
+    high: '/assets/backgrounds/trust-high.webp',
+  };
 
   const treatment: Record<Tag, string> = {
     은밀: 'stealth', 공개: 'exposed', 논리: 'logic', 강압: 'force', 신중: 'prudence',
