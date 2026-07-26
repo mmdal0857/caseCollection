@@ -16,7 +16,7 @@
   let openSuit: Suit | null = $state(null);
 </script>
 
-<section class="hand-rail" aria-label="손패">
+<section class="hand-rail" aria-label="핸드">
   <div class="suit-stacks">
     {#each suits as suit (suit)}
       {@const held = cards.filter((item) => item.card.suit === suit)}
