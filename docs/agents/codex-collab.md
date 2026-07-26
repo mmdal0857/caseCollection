@@ -162,6 +162,46 @@ Handoff: review_required | complete | not-needed
 
 `completed` is valid only when every acceptance item was checked. A task that changed files but couldn't run its required validation is `blocked`, never `completed`.
 
+## Document handoff (Codex analysis/report deliverables)
+
+Not every Codex output is a diff. Standalone analysis — an architecture review, a code-quality audit,
+a technology comparison — is itself a deliverable and needs its own standard, not the diff-shaped
+Result Contract above and not an ad-hoc file dropped wherever the task happened to write it.
+
+**Location.** `docs/research/<date>-<slug>.md` — the same directory and dated-filename convention
+root `CLAUDE.md` already uses for research artifacts ("리서치 산출물은 `docs/research/`"), regardless
+of whether Claude or Codex authored it. One evidence-document shelf for the whole repo. A
+document-type deliverable never lives as a loose top-level file — that's how the first
+`CODE_QUALITY_HANDOFF.md` landed and had to be relocated (2026-07-26).
+
+**Required header**, before the body:
+
+```markdown
+# <title>
+
+> Source: Codex (Entry Lane A delegated | Entry Lane B direct) | <date>
+> Scope reviewed: <paths, or "whole repo">
+> Verification performed by Codex: <commands + results, or "analysis only, no verification run">
+> Verified by Claude: <date — what was independently re-checked, or "pending">
+> Status: proposal | accepted | superseded
+> Follow-up: <ticket or intake path, or "none yet">
+```
+
+**Claude's processing on receipt:**
+
+1. Spot-check a sample of the document's factual claims against the repo — line references,
+   test/build results — rather than accepting them at face value. Same evidentiary bar as the
+   Result Contract's `Verification` field.
+2. Append a `## Claude 검증 및 처리` section at the bottom: what was independently re-verified, what's
+   accepted vs. deferred, and the ticket/intake path that will act on it.
+3. If the document describes small, already-applied, behavior-preserving edits (e.g. an added npm
+   script), call them out explicitly and check they haven't gone unnoticed inside a dirty working
+   tree shared with unrelated in-progress work — flag it for a separate commit even when the change
+   itself is fine.
+4. A document is evidence, not decision authority — same rule as the intake queue below. It informs
+   a ticket or a future delegation; it doesn't substitute for either. If it surfaces a decision no
+   open ticket owns, file a Claude intake issue pointing at it rather than acting on it inline.
+
 ## LLM wiki as a shared evidence plane
 
 The OUT LLM wiki (`f:/Project/out`) is read-only evidence, not a decision authority. Prefer deterministic `pd_wiki` alpha-layer view functions; cite the view function, arguments/node IDs, and the OUT revision used. Use `render_for_llm()` rather than slicing arbitrary Markdown; beta semantic search only when semantic similarity is explicitly needed. Claude normally runs the live query and curates what goes into a delegation — Codex queries the wiki directly only when a task explicitly allows read-only OUT access. OUT wiki data must never overwrite caseCollection's intentional redefinition of "case" (see this repo's `CONTEXT.md`). If wiki evidence contradicts a ticket, return `source_conflict`; if evidence is missing or unattributable, return `blocked` or `decision_required` — never invent context. Codex never writes to or regenerates the OUT wiki; a durable finding becomes `wiki_candidate` in housekeeping or a Claude intake issue.
