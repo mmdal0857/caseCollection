@@ -65,4 +65,4 @@ Single-context: `CONTEXT.md` + `docs/adr/` at repo root. See `docs/agents/domain
 
 ### Codex collaboration
 
-Codex handles code (refactor/review/diagnosis on `prototype/core-loop/`) — not design decisions, not image generation (that's Higgsfield CLI, above). Standing `action_safety` block + behavior-preservation gate (smoke tests). See `docs/agents/codex-collab.md`.
+Codex handles code (refactor/review/diagnosis on `prototype/core-loop/`) — not design decisions, not image generation (that's Higgsfield CLI, above). Standing `action_safety` block + behavior-preservation gate (smoke tests). Token expiry handoff and Claude's independent review/integration flow also live in `docs/agents/codex-collab.md`.

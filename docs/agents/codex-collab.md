@@ -31,6 +31,61 @@ The user may hand Codex a task directly, with no preceding Claude delegation. Be
 
 **Lesson from the first run (2026-07-26)**: a standalone task read this project's own `docs/agents/codex-collab.md` and, unprompted, authored a full governance redesign as a new file outside its declared scope. That output happened to be exactly what the user wanted here — but it was outside the task's action_safety and had to be caught in review, not assumed safe. Treat "Codex wrote something insightful but unscoped" as a finding to surface, not a deliverable to accept silently.
 
+## Session continuity — Claude ↔ Codex
+
+Token expiry changes the active executor, not the goal, authority, or permission boundary. Use one redacted handoff at `%TEMP%\caseCollection-handoff.md`; update it at meaningful checkpoints rather than waiting for the final tokens. The receiving agent must treat it as a claim to verify, not as decision authority.
+
+```markdown
+# Agent Handoff
+
+- Updated:
+- Source agent: Claude | Codex
+- Next agent: Codex | Claude
+- Status: in_progress | blocked | review_required | complete
+
+## Goal and completion criteria
+## Governing ticket/spec and decision state
+## Confirmed current state
+## Work completed
+## Files changed and ownership
+## Verification performed
+## Remaining work
+## Exact next action
+## Decisions requiring the user
+## Risks, failures, and do-not-do
+## References
+## Suggested skills
+```
+
+Do not duplicate tickets, plans, ADRs, commits, or diffs in the handoff; link their paths or revisions. Never include secrets, auth files, environment values, or personal data. A handoff transfers context only: it does not grant commit, push, delete, stash, deployment, publication, or broader write authority.
+
+### Claude → Codex resume
+
+1. Claude records the goal, governing evidence, exact write scope, dirty-file ownership, completed verification, and the next executable action.
+2. Codex independently checks the worktree, branch, recent commits, cited ticket/spec state, mentioned files, and last verification result.
+3. If the handoff conflicts with the repository, the repository and governing evidence win; Codex reports `source_conflict` or `decision_required` instead of guessing.
+4. Codex states the verified resume point and continues only within the inherited scope. Any materially new action needs the same authorization it would have needed without a handoff.
+
+### Codex → Claude review and integration
+
+Codex ends changed work with `Status: review_required` and its result contract, then hands back:
+
+- the exact changed paths and whether each was pre-existing, modified by Codex, or merely observed;
+- the governing ticket/spec and any deviation;
+- commands actually run, their results, and checks not run;
+- unresolved decisions, risks, documentation/wiki candidates, and the exact next action for Claude.
+
+Claude then performs an independent integration review:
+
+1. compare the handoff to `git status`, the scoped diff, and the governing ticket/spec;
+2. reject or isolate any out-of-scope change instead of silently accepting it;
+3. re-run the narrow acceptance checks and, for refactors, the behavior-preservation gate below;
+4. record accepted/revision-requested/rejected status in the governing ticket or intake item;
+5. update shared docs/map only when the verified result creates durable knowledge;
+6. commit or push only under the user's separate authorization.
+
+Claude marks the handoff `complete` only after acceptance and required integration work are finished. If revision is needed, keep `review_required`, state the failed acceptance item, and return an exact bounded task to Codex.
+
 ## Claude intake queue
 
 Separate from the game Wayfinder map — for unresolved cross-agent work only:
@@ -93,13 +148,16 @@ Read the source ticket in full — a `MAP.md` summary line is never sufficient. 
 ```markdown
 Outcome: completed | decision_required | source_conflict | blocked
 Changed: <file list>
+Ownership: <pre-existing | Codex | observed for each changed path>
 Verification: <commands and results>
+Not-run: <checks not run and why>
 Deviations: <none or exact deviation>
 Housekeeping:
   docs: updated | candidate | skip
   wiki: updated | wiki_candidate | skip
   memory: updated | candidate | skip
   git: clean | changes-left | commit-approval-needed
+Handoff: review_required | complete | not-needed
 ```
 
 `completed` is valid only when every acceptance item was checked. A task that changed files but couldn't run its required validation is `blocked`, never `completed`.
