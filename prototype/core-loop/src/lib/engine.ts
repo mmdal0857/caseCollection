@@ -680,8 +680,8 @@ export function initGame(c: RunContent): GameState {
     ownedPatterns: [...c.starterPatterns],
     verified: [],
     hints: [...c.starterHints],
-    // 12의 제안(즉시 잠금)에서 실시간 재해석과 높은 자유도를 위해 'submit'(제출 시 잠금)을 기본값으로 사용.
-    lockMode: 'submit',
+    // 잠금 시점 = 즉시 잠금(12안) 확정, 제출 시 잠금(11안)은 기각(티켓 17 §1번 질문 검증 완료).
+    lockMode: 'immediate',
     // 보유 ≠ 앎(12 §4): 스타터 카드는 **얼굴 하나씩만** 알고 시작한다.
     knownFacets: c.starterClues.flatMap((id) => (c.clues[id].facets[0] ? [c.clues[id].facets[0].key] : [])),
     axis: 5,
@@ -706,286 +706,368 @@ export function initGame(c: RunContent): GameState {
   };
 }
 
+type ActionOf<T extends Action['type']> = Extract<Action, { type: T }>;
+
+function handleStart(s: GameState, _a: ActionOf<'START'>, c: RunContent): void {
+  const def = c.cases[s.caseIndex];
+  setupCase(s, c);
+  s.log.push(`run 시작 — ${def.title}`);
+}
+
+function handleSetLockMode(s: GameState, a: ActionOf<'SET_LOCK_MODE'>, _c: RunContent): void {
+  // 판을 갈아엎지 않고 시점만 바꾼다 — 같은 사건에서 세 모드를 직접 비교하기 위해.
+  s.lockMode = a.mode;
+  if (a.mode === 'submit') {
+    for (const p of Object.values(s.placed)) if (p) p.locked = false;
+  }
+  s.log.push(`잠금 시점 변경 → ${a.mode}`);
+}
+
+function handlePlace(s: GameState, a: ActionOf<'PLACE'>, c: RunContent): void {
+  const def = c.cases[s.caseIndex];
+  if (s.screen !== 'case' || s.confirmed[a.slotId]) return;
+  const idx = def.slots.findIndex((sl) => sl.id === a.slotId);
+  if (idx < 0) return;
+  const existing = s.placed[a.slotId];
+  if (existing?.locked) return; // 잠긴 수는 되돌리기(CLEAR_SLOT)로만 뺀다
+  // 한 카드는 한 슬롯에만 — 다른 곳에 가늠으로 놓여 있으면 회수(잠긴 건 못 뺀다).
+  for (const k of Object.keys(s.placed)) {
+    const p = s.placed[k];
+    if (p && p.cardId === a.cardId && !p.locked) s.placed[k] = null;
+  }
+  s.placed[a.slotId] = { cardId: a.cardId, facetKey: a.facetKey, locked: false };
+  // 즉시 잠금(12 §3) — 놓는 것이 곧 수를 두는 것.
+  if (s.lockMode === 'immediate') lockPlacement(s, c, idx);
+}
+
+function handleLockSlot(s: GameState, a: ActionOf<'LOCK_SLOT'>, c: RunContent): void {
+  const def = c.cases[s.caseIndex];
+  if (s.screen !== 'case' || s.lockMode !== 'commit') return;
+  const idx = def.slots.findIndex((sl) => sl.id === a.slotId);
+  if (idx < 0 || !s.placed[a.slotId] || s.placed[a.slotId]!.locked) return;
+  lockPlacement(s, c, idx);
+}
+
+function handleClearSlot(s: GameState, a: ActionOf<'CLEAR_SLOT'>, c: RunContent): void {
+  const def = c.cases[s.caseIndex];
+  if (s.screen !== 'case' || s.confirmed[a.slotId]) return;
+  const idx = def.slots.findIndex((sl) => sl.id === a.slotId);
+  if (idx < 0) return;
+  const p = s.placed[a.slotId];
+  if (!p) return;
+  if (p.locked) {
+    const released = unlockCascade(s, c, idx);
+    s.log.push(`되돌리기 — 뒤의 수 ${released - 1}개가 연쇄로 풀렸다 (주목 +1)`);
+  } else {
+    s.placed[a.slotId] = null;
+  }
+}
+
+function handleDeclare(s: GameState, a: ActionOf<'DECLARE'>, c: RunContent): void {
+  const def = c.cases[s.caseIndex];
+  if (s.screen !== 'case' || s.patternJudged) return;
+  if (s.declared.includes(a.pattern)) {
+    s.declared = s.declared.filter((p) => p !== a.pattern);
+  } else if (s.declared.length < def.patterns.length) {
+    s.declared.push(a.pattern);
+  }
+}
+
+interface SlotJudgment {
+  slot: Slot;
+  placement: Placement;
+  facet: Facet | undefined;
+  cardRight: boolean;
+  faceRight: boolean;
+  correct: boolean;
+}
+
+interface SubmissionJudgment {
+  rights: Slot[];
+  reactions: SlotReaction[];
+}
+
+const PARTIAL_CONFIRM_THRESHOLD = 3;
+const REWARD_OFFER_SIZE = 3;
+const INVESTIGATION_AP_COST = 1;
+
+function judgeHypothesis(s: GameState, def: CaseDef): void {
+  // 가설 선언 — 첫 제출에서만 판정. 적중 시 근접도 상세화 + 패턴 카드 검증.
+  if (s.patternJudged || s.declared.length === 0) return;
+  s.patternJudged = true;
+  s.patternHit =
+    s.declared.length === def.patterns.length &&
+    def.patterns.every((p) => s.declared.includes(p));
+  if (s.patternHit) {
+    addUnique(s.verified, def.patterns);
+    s.log.push(`가설 적중: ${def.patterns.join('+')} — 근접도 상세 해금`);
+  } else {
+    s.log.push('가설 빗나감 — 이 case에서는 재선언 불가');
+  }
+}
+
+function calculateSubmissionJudgment(
+  s: GameState,
+  def: CaseDef,
+  open: Slot[],
+  c: RunContent,
+): SubmissionJudgment {
+  // v10: 정답 = **맞는 카드 + 맞는 얼굴**. 카드가 맞아도 역할이 어긋난 얼굴로 읽었으면 오답.
+  const judgments: SlotJudgment[] = open.map((slot) => {
+    const placement = s.placed[slot.id]!;
+    const cardRight = placement.cardId === resolveAnswer(slot, s);
+    const facet = facetOf(placement.cardId, placement.facetKey, c);
+    const faceRight = !slot.role || facet?.frame === slot.role.frame;
+    return { slot, placement, facet, cardRight, faceRight, correct: cardRight && faceRight };
+  });
+  const rights = judgments.filter((judgment) => judgment.correct).map((judgment) => judgment.slot);
+  // 슬롯별 반응 — 정오 판정과 같은 상태로 계산.
+  const reactions: SlotReaction[] = judgments.map((judgment) => {
+    if (judgment.cardRight && !judgment.faceRight) {
+      // 새 실패 양태: 맞는 카드를 틀린 얼굴로 읽었다.
+      return {
+        slotId: judgment.slot.id,
+        cardId: judgment.placement.cardId,
+        correct: false,
+        special: true,
+        pattern: '오독',
+        meaning: judgment.facet?.meaning,
+        rightCardWrongFace: true,
+        line: `${c.clues[judgment.placement.cardId].name}은 여기 맞네. 그런데 자네는 그걸 "${judgment.facet?.meaning}"으로 읽었어 — 이 자리가 묻는 건 그게 아닐세.`,
+      };
+    }
+    const reaction = reactionLine(
+      def,
+      judgment.slot,
+      judgment.placement.cardId,
+      judgment.correct,
+      s,
+      c,
+    );
+    return {
+      slotId: judgment.slot.id,
+      cardId: judgment.placement.cardId,
+      correct: judgment.correct,
+      line: reaction.line,
+      special: reaction.special,
+      pattern: reaction.pattern,
+      meaning: judgment.facet?.meaning,
+    };
+  });
+  return { rights, reactions };
+}
+
+function updateNotebookFromSubmission(s: GameState, def: CaseDef, reactions: SlotReaction[]): void {
+  // 노트 판정 — 맞은 해석은 지식, 틀린 해석은 줄 그어진 자산(12 §4).
+  for (const reaction of reactions) {
+    const note = s.notebook.find(
+      (entry) => entry.correct === null && entry.cardId === reaction.cardId && entry.caseId === def.id,
+    );
+    if (note) {
+      note.correct = reaction.correct;
+      if (!reaction.correct) note.line = reaction.line;
+    }
+  }
+}
+
+function decideSubmissionOutcome(
+  s: GameState,
+  def: CaseDef,
+  open: Slot[],
+  judgment: SubmissionJudgment,
+  c: RunContent,
+): void {
+  const { rights, reactions } = judgment;
+  const perSuit = s.patternHit
+    ? SUITS.map((suit) => ({
+        suit,
+        placed: open.filter((sl) => c.clues[s.placed[sl.id]!.cardId]?.suit === suit).length,
+        right: rights.filter((sl) => c.clues[s.placed[sl.id]!.cardId]?.suit === suit).length,
+      })).filter((x) => x.placed > 0)
+    : null;
+
+  const cleared = rights.length === open.length;
+  if (!cleared && rights.length < PARTIAL_CONFIRM_THRESHOLD) {
+    // v10(12 §6): 오답 플랫 페널티 **제거**. 오염은 놓은 얼굴의 태그가 이미 냈다 —
+    // 이중처벌이 아니며, 오답조차 "세계를 어느 방향으로 밀 것인가"의 수가 된다.
+    s.lastSubmit = {
+      seq: s.seq,
+      kind: 'wrong',
+      total: rights.length,
+      outOf: open.length,
+      perSuit,
+      confirmedNow: [],
+      reactions,
+    };
+    return;
+  }
+
+  const cardIds = rights.map((sl) => s.placed[sl.id]!.cardId);
+  for (const sl of rights) {
+    s.confirmed[sl.id] = s.placed[sl.id]!;
+    s.placed[sl.id] = null;
+    s.reveals = s.reveals.filter((r) => r.slotId !== sl.id);
+  }
+  addUnique(s.verified, cardIds); // 수사 노트 해금
+  s.lastSubmit = {
+    seq: s.seq,
+    kind: cleared ? 'clear' : 'confirm',
+    total: rights.length,
+    outOf: open.length,
+    perSuit,
+    confirmedNow: cardIds,
+    reactions,
+  };
+  if (!cleared) return;
+
+  addUnique(s.ownedClues, def.guestClues);
+  // 게스트는 카드뿐 아니라 **얼굴도** 빌려줬다 — 해결하면 그 해석까지 영구히 배운다(12 §4).
+  for (const id of def.guestClues) {
+    if (c.clues[id]?.facets[0]) addUnique(s.knownFacets, [c.clues[id].facets[0].key]);
+  }
+  addUnique(s.knownFacets, def.guestFacets ?? []);
+  if (def.guestPattern) addUnique(s.ownedPatterns, [def.guestPattern]);
+  s.history.push({ caseId: def.id, submits: s.submits, heatAfter: s.heat });
+  s.log.push(`${def.title} 해결 (${s.submits}회 제출)`);
+  // 라우팅은 ADVANCE로 미룬다 — 클리어 순간의 반응·영향력 피드백을 보여주기 위해.
+  s.awaitingAdvance = true;
+}
+
+function handleSubmit(s: GameState, _a: ActionOf<'SUBMIT'>, c: RunContent): void {
+  const def = c.cases[s.caseIndex];
+  if (s.screen !== 'case') return;
+  const open = def.slots.filter((sl) => !s.confirmed[sl.id]);
+  if (open.some((sl) => !s.placed[sl.id])) return;
+  s.submits++;
+
+  judgeHypothesis(s, def);
+
+  // 남은 가늠은 여기서 전부 수가 된다 — 제출은 곧 커밋(모드 불문).
+  for (let i = 0; i < def.slots.length; i++) {
+    if (!s.confirmed[def.slots[i].id]) lockPlacement(s, c, i);
+  }
+
+  const judgment = calculateSubmissionJudgment(s, def, open, c);
+  updateNotebookFromSubmission(s, def, judgment.reactions);
+  decideSubmissionOutcome(s, def, open, judgment, c);
+}
+
+function handleHint(s: GameState, a: ActionOf<'HINT'>, c: RunContent): void {
+  const def = c.cases[s.caseIndex];
+  if (s.screen !== 'case') return;
+  const idx = s.hints.indexOf(a.hintId);
+  if (idx < 0 || s.confirmed[a.slotId]) return;
+  const slot = def.slots.find((sl) => sl.id === a.slotId);
+  if (!slot) return;
+  const answer = resolveAnswer(slot, s);
+  let text: string;
+  if (a.hintId === 'analysis') {
+    if (!s.placed[a.slotId]) return;
+    text = s.placed[a.slotId]!.cardId === answer ? '감식 결과: 맞다' : '감식 결과: 아니다';
+  } else {
+    text = `제보: 정답은 [${SUIT_LABEL[c.clues[answer].suit]}] 슈트`;
+  }
+  s.hints.splice(idx, 1);
+  // v10(12 §6): 힌트는 트랙을 오염시키지 않는다 — 자원 경제와 상태 경제를 분리.
+  // (오답 이중처벌 회피 원칙, 10)
+  s.reveals = s.reveals.filter((r) => r.slotId !== a.slotId);
+  s.reveals.push({ slotId: a.slotId, text: `${text} (현재 상태 기준)` });
+}
+
+function handlePickReward(s: GameState, a: ActionOf<'PICK_REWARD'>, c: RunContent): void {
+  if (s.screen !== 'reward' || !s.packOffer.includes(a.cardId)) return;
+  addUnique(s.ownedClues, [a.cardId]);
+  // 카드를 얻으면 **명백한 얼굴 하나**만 안다 — 나머지는 써보며 발견한다(12 §4).
+  if (c.clues[a.cardId].facets[0]) addUnique(s.knownFacets, [c.clues[a.cardId].facets[0].key]);
+  s.log.push(`보상팩: ${c.clues[a.cardId].name} 획득 — 얼굴 하나만 안다`);
+  s.packOffer = [];
+  pickInterlude(s, c);
+}
+
+function handleAdvance(s: GameState, _a: ActionOf<'ADVANCE'>, c: RunContent): void {
+  const def = c.cases[s.caseIndex];
+  if (!s.awaitingAdvance) return;
+  s.awaitingAdvance = false;
+  if (s.caseIndex === c.cases.length - 1) {
+    s.ending = {
+      kind: 'GOOD',
+      title: '사건부 완결',
+      desc: '보스 case까지 전부 재구성했다. 수사 노트가 두꺼워졌다.',
+    };
+    s.screen = 'end';
+  } else {
+    s.packOffer = def.packPool
+      .filter((id) => !s.ownedClues.includes(id))
+      .slice(0, REWARD_OFFER_SIZE);
+    s.screen = s.packOffer.length > 0 ? 'reward' : 'interlude';
+    if (s.screen === 'interlude') pickInterlude(s, c);
+  }
+}
+
+function handleInvestigate(s: GameState, a: ActionOf<'INVESTIGATE'>, c: RunContent): void {
+  if (s.screen !== 'interlude' || !s.interlude) return;
+  const ev = c.interludeEvents.find((e) => e.id === s.interlude!.eventId);
+  const lead = ev?.investigation?.find((l) => l.id === a.leadId);
+  if (!lead || s.interlude.revealed.includes(lead.id)) return;
+  if (s.interlude.ap < INVESTIGATION_AP_COST) return; // 행동력 부족 — 기회비용
+  s.interlude.ap -= INVESTIGATION_AP_COST;
+  s.interlude.revealed.push(lead.id);
+}
+
+function handleInterludeAction(s: GameState, a: ActionOf<'INTERLUDE_ACTION'>, c: RunContent): void {
+  if (s.screen !== 'interlude' || !s.interlude) return;
+  const act = c.interludeActions.find((x) => x.id === a.actionId);
+  if (!act) return;
+  if (act.once && s.interlude.usedActions.includes(act.id)) return;
+  if (s.interlude.ap < act.cost) return; // 행동력 부족
+  s.interlude.ap -= act.cost;
+  s.interlude.usedActions.push(act.id);
+  s.heat = clamp(s.heat + (act.effects.heat ?? 0));
+  s.trust = clamp(s.trust + (act.effects.trust ?? 0));
+  if (act.effects.gainHint) s.hints.push(act.effects.gainHint);
+}
+
+function handleInterludeChoice(s: GameState, a: ActionOf<'INTERLUDE_CHOICE'>, c: RunContent): void {
+  if (s.screen !== 'interlude' || !s.interlude || s.interlude.choiceId) return;
+  const ev = c.interludeEvents.find((e) => e.id === s.interlude!.eventId);
+  const ch = ev?.choices?.find((x) => x.id === a.choiceId);
+  if (!ev || !ch) return;
+  if (ch.requires && countVerifiedTag(s, c, ch.requires.tag) < ch.requires.count) return;
+  s.heat = clamp(s.heat + (ch.effects.heat ?? 0));
+  s.trust = clamp(s.trust + (ch.effects.trust ?? 0));
+  if (ch.effects.gainHint) s.hints.push(ch.effects.gainHint);
+  s.interlude.choiceId = ch.id;
+  s.interlude.result = ch.result;
+}
+
+function handleContinue(s: GameState, _a: ActionOf<'CONTINUE'>, c: RunContent): void {
+  if (s.screen !== 'interlude' || !s.interlude?.choiceId) return;
+  s.interlude = null;
+  s.caseIndex++;
+  setupCase(s, c);
+  s.log.push(`다음 사건 — ${c.cases[s.caseIndex].title}`);
+}
+
 export function reduce(prev: GameState, a: Action, c: RunContent): GameState {
   const s: GameState = structuredClone(prev);
   s.seq++;
-  const def = c.cases[s.caseIndex];
 
   switch (a.type) {
-    case 'START': {
-      setupCase(s, c);
-      s.log.push(`run 시작 — ${def.title}`);
-      break;
-    }
-
-    case 'SET_LOCK_MODE': {
-      // 판을 갈아엎지 않고 시점만 바꾼다 — 같은 사건에서 세 모드를 직접 비교하기 위해.
-      s.lockMode = a.mode;
-      if (a.mode === 'submit') {
-        for (const p of Object.values(s.placed)) if (p) p.locked = false;
-      }
-      s.log.push(`잠금 시점 변경 → ${a.mode}`);
-      break;
-    }
-
-    case 'PLACE': {
-      if (s.screen !== 'case' || s.confirmed[a.slotId]) break;
-      const idx = def.slots.findIndex((sl) => sl.id === a.slotId);
-      if (idx < 0) break;
-      const existing = s.placed[a.slotId];
-      if (existing?.locked) break; // 잠긴 수는 되돌리기(CLEAR_SLOT)로만 뺀다
-      // 한 카드는 한 슬롯에만 — 다른 곳에 가늠으로 놓여 있으면 회수(잠긴 건 못 뺀다).
-      for (const k of Object.keys(s.placed)) {
-        const p = s.placed[k];
-        if (p && p.cardId === a.cardId && !p.locked) s.placed[k] = null;
-      }
-      s.placed[a.slotId] = { cardId: a.cardId, facetKey: a.facetKey, locked: false };
-      // 즉시 잠금(12 §3) — 놓는 것이 곧 수를 두는 것.
-      if (s.lockMode === 'immediate') lockPlacement(s, c, idx);
-      break;
-    }
-
-    case 'LOCK_SLOT': {
-      if (s.screen !== 'case' || s.lockMode !== 'commit') break;
-      const idx = def.slots.findIndex((sl) => sl.id === a.slotId);
-      if (idx < 0 || !s.placed[a.slotId] || s.placed[a.slotId]!.locked) break;
-      lockPlacement(s, c, idx);
-      break;
-    }
-
-    case 'CLEAR_SLOT': {
-      if (s.screen !== 'case' || s.confirmed[a.slotId]) break;
-      const idx = def.slots.findIndex((sl) => sl.id === a.slotId);
-      if (idx < 0) break;
-      const p = s.placed[a.slotId];
-      if (!p) break;
-      if (p.locked) {
-        const released = unlockCascade(s, c, idx);
-        s.log.push(`되돌리기 — 뒤의 수 ${released - 1}개가 연쇄로 풀렸다 (주목 +1)`);
-      } else {
-        s.placed[a.slotId] = null;
-      }
-      break;
-    }
-
-    case 'DECLARE': {
-      if (s.screen !== 'case' || s.patternJudged) break;
-      if (s.declared.includes(a.pattern)) {
-        s.declared = s.declared.filter((p) => p !== a.pattern);
-      } else if (s.declared.length < def.patterns.length) {
-        s.declared.push(a.pattern);
-      }
-      break;
-    }
-
-    case 'SUBMIT': {
-      if (s.screen !== 'case') break;
-      const open = def.slots.filter((sl) => !s.confirmed[sl.id]);
-      if (open.some((sl) => !s.placed[sl.id])) break;
-      s.submits++;
-
-      // 가설 선언 — 첫 제출에서만 판정. 적중 시 근접도 상세화 + 패턴 카드 검증.
-      if (!s.patternJudged && s.declared.length > 0) {
-        s.patternJudged = true;
-        s.patternHit =
-          s.declared.length === def.patterns.length &&
-          def.patterns.every((p) => s.declared.includes(p));
-        if (s.patternHit) {
-          addUnique(s.verified, def.patterns);
-          s.log.push(`가설 적중: ${def.patterns.join('+')} — 근접도 상세 해금`);
-        } else {
-          s.log.push('가설 빗나감 — 이 case에서는 재선언 불가');
-        }
-      }
-
-      // 남은 가늠은 여기서 전부 수가 된다 — 제출은 곧 커밋(모드 불문).
-      for (let i = 0; i < def.slots.length; i++) {
-        if (!s.confirmed[def.slots[i].id]) lockPlacement(s, c, i);
-      }
-
-      // v10: 정답 = **맞는 카드 + 맞는 얼굴**. 카드가 맞아도 역할이 어긋난 얼굴로 읽었으면 오답.
-      const judge = (sl: Slot) => {
-        const p = s.placed[sl.id]!;
-        const cardRight = p.cardId === resolveAnswer(sl, s);
-        const f = facetOf(p.cardId, p.facetKey, c);
-        const faceRight = !sl.role || f?.frame === sl.role.frame;
-        return { p, f, cardRight, faceRight, correct: cardRight && faceRight };
-      };
-      const rights = open.filter((sl) => judge(sl).correct);
-      // 슬롯별 반응 — 정오 판정과 같은 상태로 계산.
-      const reactions: SlotReaction[] = open.map((sl) => {
-        const j = judge(sl);
-        if (j.cardRight && !j.faceRight) {
-          // 새 실패 양태: 맞는 카드를 틀린 얼굴로 읽었다.
-          return {
-            slotId: sl.id, cardId: j.p.cardId, correct: false, special: true,
-            pattern: '오독', meaning: j.f?.meaning,
-            rightCardWrongFace: true,
-            line: `${c.clues[j.p.cardId].name}은 여기 맞네. 그런데 자네는 그걸 "${j.f?.meaning}"으로 읽었어 — 이 자리가 묻는 건 그게 아닐세.`,
-          };
-        }
-        const r = reactionLine(def, sl, j.p.cardId, j.correct, s, c);
-        return {
-          slotId: sl.id, cardId: j.p.cardId, correct: j.correct,
-          line: r.line, special: r.special, pattern: r.pattern, meaning: j.f?.meaning,
-        };
-      });
-      // 노트 판정 — 맞은 해석은 지식, 틀린 해석은 줄 그어진 자산(12 §4).
-      for (const r of reactions) {
-        const n = s.notebook.find((x) => x.correct === null && x.cardId === r.cardId && x.caseId === def.id);
-        if (n) {
-          n.correct = r.correct;
-          if (!r.correct) n.line = r.line;
-        }
-      }
-      const perSuit = s.patternHit
-        ? SUITS.map((suit) => ({
-            suit,
-            placed: open.filter((sl) => c.clues[s.placed[sl.id]!.cardId]?.suit === suit).length,
-            right: rights.filter((sl) => c.clues[s.placed[sl.id]!.cardId]?.suit === suit).length,
-          })).filter((x) => x.placed > 0)
-        : null;
-
-      if (rights.length === open.length || rights.length >= 3) {
-        const cleared = rights.length === open.length;
-        const cardIds = rights.map((sl) => s.placed[sl.id]!.cardId);
-        for (const sl of rights) {
-          s.confirmed[sl.id] = s.placed[sl.id]!;
-          s.placed[sl.id] = null;
-          s.reveals = s.reveals.filter((r) => r.slotId !== sl.id);
-        }
-        addUnique(s.verified, cardIds); // 수사 노트 해금
-        s.lastSubmit = {
-          seq: s.seq, kind: cleared ? 'clear' : 'confirm',
-          total: rights.length, outOf: open.length, perSuit,
-          confirmedNow: cardIds, reactions,
-        };
-        if (cleared) {
-          addUnique(s.ownedClues, def.guestClues);
-          // 게스트는 카드뿐 아니라 **얼굴도** 빌려줬다 — 해결하면 그 해석까지 영구히 배운다(12 §4).
-          for (const id of def.guestClues) {
-            if (c.clues[id]?.facets[0]) addUnique(s.knownFacets, [c.clues[id].facets[0].key]);
-          }
-          addUnique(s.knownFacets, def.guestFacets ?? []);
-          if (def.guestPattern) addUnique(s.ownedPatterns, [def.guestPattern]);
-          s.history.push({ caseId: def.id, submits: s.submits, heatAfter: s.heat });
-          s.log.push(`${def.title} 해결 (${s.submits}회 제출)`);
-          // 라우팅은 ADVANCE로 미룬다 — 클리어 순간의 반응·영향력 피드백을 보여주기 위해.
-          s.awaitingAdvance = true;
-        }
-      } else {
-        // v10(12 §6): 오답 플랫 페널티 **제거**. 오염은 놓은 얼굴의 태그가 이미 냈다 —
-        // 이중처벌이 아니며, 오답조차 "세계를 어느 방향으로 밀 것인가"의 수가 된다.
-        s.lastSubmit = {
-          seq: s.seq, kind: 'wrong',
-          total: rights.length, outOf: open.length, perSuit,
-          confirmedNow: [], reactions,
-        };
-      }
-      break;
-    }
-
-    case 'HINT': {
-      if (s.screen !== 'case') break;
-      const idx = s.hints.indexOf(a.hintId);
-      if (idx < 0 || s.confirmed[a.slotId]) break;
-      const slot = def.slots.find((sl) => sl.id === a.slotId);
-      if (!slot) break;
-      const answer = resolveAnswer(slot, s);
-      let text: string;
-      if (a.hintId === 'analysis') {
-        if (!s.placed[a.slotId]) break;
-        text = s.placed[a.slotId]!.cardId === answer ? '감식 결과: 맞다' : '감식 결과: 아니다';
-      } else {
-        text = `제보: 정답은 [${SUIT_LABEL[c.clues[answer].suit]}] 슈트`;
-      }
-      s.hints.splice(idx, 1);
-      // v10(12 §6): 힌트는 트랙을 오염시키지 않는다 — 자원 경제와 상태 경제를 분리.
-      // (오답 이중처벌 회피 원칙, 10)
-      s.reveals = s.reveals.filter((r) => r.slotId !== a.slotId);
-      s.reveals.push({ slotId: a.slotId, text: `${text} (현재 상태 기준)` });
-      break;
-    }
-
-    case 'PICK_REWARD': {
-      if (s.screen !== 'reward' || !s.packOffer.includes(a.cardId)) break;
-      addUnique(s.ownedClues, [a.cardId]);
-      // 카드를 얻으면 **명백한 얼굴 하나**만 안다 — 나머지는 써보며 발견한다(12 §4).
-      if (c.clues[a.cardId].facets[0]) addUnique(s.knownFacets, [c.clues[a.cardId].facets[0].key]);
-      s.log.push(`보상팩: ${c.clues[a.cardId].name} 획득 — 얼굴 하나만 안다`);
-      s.packOffer = [];
-      pickInterlude(s, c);
-      break;
-    }
-
-    case 'ADVANCE': {
-      if (!s.awaitingAdvance) break;
-      s.awaitingAdvance = false;
-      if (s.caseIndex === c.cases.length - 1) {
-        s.ending = {
-          kind: 'GOOD',
-          title: '사건부 완결',
-          desc: '보스 case까지 전부 재구성했다. 수사 노트가 두꺼워졌다.',
-        };
-        s.screen = 'end';
-      } else {
-        s.packOffer = def.packPool.filter((id) => !s.ownedClues.includes(id)).slice(0, 3);
-        s.screen = s.packOffer.length > 0 ? 'reward' : 'interlude';
-        if (s.screen === 'interlude') pickInterlude(s, c);
-      }
-      break;
-    }
-
-    case 'INVESTIGATE': {
-      if (s.screen !== 'interlude' || !s.interlude) break;
-      const ev = c.interludeEvents.find((e) => e.id === s.interlude!.eventId);
-      const lead = ev?.investigation?.find((l) => l.id === a.leadId);
-      if (!lead || s.interlude.revealed.includes(lead.id)) break;
-      if (s.interlude.ap < 1) break; // 행동력 부족 — 기회비용
-      s.interlude.ap -= 1;
-      s.interlude.revealed.push(lead.id);
-      break;
-    }
-
-    case 'INTERLUDE_ACTION': {
-      if (s.screen !== 'interlude' || !s.interlude) break;
-      const act = c.interludeActions.find((x) => x.id === a.actionId);
-      if (!act) break;
-      if (act.once && s.interlude.usedActions.includes(act.id)) break;
-      if (s.interlude.ap < act.cost) break; // 행동력 부족
-      s.interlude.ap -= act.cost;
-      s.interlude.usedActions.push(act.id);
-      s.heat = clamp(s.heat + (act.effects.heat ?? 0));
-      s.trust = clamp(s.trust + (act.effects.trust ?? 0));
-      if (act.effects.gainHint) s.hints.push(act.effects.gainHint);
-      break;
-    }
-
-    case 'INTERLUDE_CHOICE': {
-      if (s.screen !== 'interlude' || !s.interlude || s.interlude.choiceId) break;
-      const ev = c.interludeEvents.find((e) => e.id === s.interlude!.eventId);
-      const ch = ev?.choices?.find((x) => x.id === a.choiceId);
-      if (!ev || !ch) break;
-      if (ch.requires && countVerifiedTag(s, c, ch.requires.tag) < ch.requires.count) break;
-      s.heat = clamp(s.heat + (ch.effects.heat ?? 0));
-      s.trust = clamp(s.trust + (ch.effects.trust ?? 0));
-      if (ch.effects.gainHint) s.hints.push(ch.effects.gainHint);
-      s.interlude.choiceId = ch.id;
-      s.interlude.result = ch.result;
-      break;
-    }
-
-    case 'CONTINUE': {
-      if (s.screen !== 'interlude' || !s.interlude?.choiceId) break;
-      s.interlude = null;
-      s.caseIndex++;
-      setupCase(s, c);
-      s.log.push(`다음 사건 — ${c.cases[s.caseIndex].title}`);
-      break;
-    }
-
-    case 'RESTART':
-      return initGame(c);
+    case 'START': handleStart(s, a, c); break;
+    case 'SET_LOCK_MODE': handleSetLockMode(s, a, c); break;
+    case 'PLACE': handlePlace(s, a, c); break;
+    case 'LOCK_SLOT': handleLockSlot(s, a, c); break;
+    case 'CLEAR_SLOT': handleClearSlot(s, a, c); break;
+    case 'DECLARE': handleDeclare(s, a, c); break;
+    case 'SUBMIT': handleSubmit(s, a, c); break;
+    case 'HINT': handleHint(s, a, c); break;
+    case 'PICK_REWARD': handlePickReward(s, a, c); break;
+    case 'ADVANCE': handleAdvance(s, a, c); break;
+    case 'INVESTIGATE': handleInvestigate(s, a, c); break;
+    case 'INTERLUDE_ACTION': handleInterludeAction(s, a, c); break;
+    case 'INTERLUDE_CHOICE': handleInterludeChoice(s, a, c); break;
+    case 'CONTINUE': handleContinue(s, a, c); break;
+    case 'RESTART': return initGame(c);
   }
   return s;
 }

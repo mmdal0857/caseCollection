@@ -20,9 +20,11 @@ const ASIDES_HARSH = [
   '레이든은 아무 말 없이 그 카드를 도로 밀어놨다.',
 ];
 
+const HASH_MULTIPLIER = 31;
+
 function pick(pool: string[], seed: string): string {
   let h = 0;
-  for (const ch of seed) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  for (const ch of seed) h = (h * HASH_MULTIPLIER + ch.charCodeAt(0)) >>> 0;
   return pool[h % pool.length];
 }
 

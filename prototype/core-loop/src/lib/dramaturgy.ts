@@ -4,6 +4,7 @@
 // 이것이 문맥 태그 의미론(티켓 12)이 규칙으로 반응을 만드는 방식의 프로토.
 import type { ClueCard, Slot } from './engine';
 import { SUIT_LABEL } from './engine';
+import { eun, ga, ro } from './josa';
 import { raidenAside } from './persona';
 
 export interface ComicHit {
@@ -19,17 +20,6 @@ interface Ctx {
 }
 
 const P = (pattern: string, line: string): ComicHit => ({ line, pattern, special: true });
-
-// 한국어 조사 자동 선택 — 생성 템플릿이 받침에 맞는 조사를 붙이게 한다.
-function jong(word: string): number {
-  const c = word.charCodeAt(word.length - 1);
-  if (c < 0xac00 || c > 0xd7a3) return -1; // 한글 음절이 아니면 받침 없음 취급
-  return (c - 0xac00) % 28;
-}
-const ga = (w: string): string => (jong(w) > 0 ? '이' : '가');
-const eun = (w: string): string => (jong(w) > 0 ? '은' : '는');
-/** 로/으로 — 받침 없음 또는 ㄹ(8)은 '로', 그 외 받침은 '으로'. */
-const ro = (w: string): string => { const j = jong(w); return j <= 0 || j === 8 ? '로' : '으로'; };
 
 /** ① 정반대 — 슬롯이 배격하는 태그를 가진 카드. 최우선. */
 function opposition(ctx: Ctx): ComicHit | null {

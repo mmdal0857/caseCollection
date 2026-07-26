@@ -185,7 +185,7 @@ function validateSlot(sl: unknown, path: string, out: Issues): void {
 
 const FACET_KEY_RE = /^[^:]+:[^:]+$/;
 /** smoke.ts 섹션 F와 동일 규칙(정본은 그쪽) — 조사 뒤 한글이 바로 이어지면 다른 낱말(예: '이유')일 수 있어 제외. */
-const JOSA_LEAD_RE = /^(이|가|은|는|을|를|로|과|와|이다|다)(?![가-힣])/;
+const JOSA_LEAD_RE = /^(이|가|은|는|을|를|로|으로|과|와|이다|다)(?![가-힣])/;
 
 function validateCase(k: unknown, path: string, out: Issues): void {
   if (!needObj(k, path, 'case가 객체가 아니다', out)) return;
