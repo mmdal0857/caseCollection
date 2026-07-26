@@ -1,7 +1,12 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { buildModelArgs, chunkJobs, resolveHiggsfieldEntrypoint } from './cardart-compare.mjs';
+import {
+  buildModelArgs,
+  chunkJobs,
+  parseCompareArgs,
+  resolveHiggsfieldEntrypoint,
+} from './cardart-compare.mjs';
 
 test('uses the style reference for Nano Banana 2 Lite', () => {
   assert.deepEqual(buildModelArgs('nano_banana_2_lite', 'style.png', 'prompt'), [
@@ -37,4 +42,20 @@ test('chunks comparison jobs to the Plus image concurrency limit', () => {
     [0, 1, 2, 3, 4, 5, 6, 7],
     [8, 9, 10, 11, 12, 13, 14, 15],
   ]);
+});
+
+test('parses model and template filters separately from card IDs', () => {
+  assert.deepEqual(
+    parseCompareArgs([
+      '--models=gpt_image_2',
+      '--templates=noir-specimen',
+      'thread_fiber',
+      'venom_trace',
+    ]),
+    {
+      models: ['gpt_image_2'],
+      templates: ['noir-specimen'],
+      ids: ['thread_fiber', 'venom_trace'],
+    },
+  );
 });

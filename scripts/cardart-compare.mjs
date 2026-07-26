@@ -82,6 +82,32 @@ export function chunkJobs(jobs, size) {
   return chunks;
 }
 
+export function parseCompareArgs(args) {
+  let models = MODELS;
+  let templates = Object.keys(TEMPLATES);
+  const ids = [];
+
+  for (const arg of args) {
+    if (arg.startsWith('--models=')) {
+      models = arg.slice('--models='.length).split(',').filter(Boolean);
+    } else if (arg.startsWith('--templates=')) {
+      templates = arg.slice('--templates='.length).split(',').filter(Boolean);
+    } else if (arg.startsWith('--')) {
+      throw new Error(`unknown option: ${arg}`);
+    } else {
+      ids.push(arg);
+    }
+  }
+
+  for (const model of models) {
+    if (!MODELS.includes(model)) throw new Error(`unsupported comparison model: ${model}`);
+  }
+  for (const template of templates) {
+    if (!(template in TEMPLATES)) throw new Error(`unknown template: ${template}`);
+  }
+  return { models, templates, ids };
+}
+
 function runCli(bin, args, cwd) {
   return new Promise((resolve, reject) => {
     const entrypoint = resolveHiggsfieldEntrypoint(bin);
@@ -125,8 +151,8 @@ async function main() {
   const root = path.resolve(scriptDir, '..');
   const bin = resolveHiggsfieldBin(process.env);
   if (!bin) throw new Error('Higgsfield CLI를 찾을 수 없다.');
-  const requestedIds = process.argv.slice(2);
-  const ids = requestedIds.length > 0 ? requestedIds : ['forged_ledger', 'omitted_witness'];
+  const options = parseCompareArgs(process.argv.slice(2));
+  const ids = options.ids.length > 0 ? options.ids : ['forged_ledger', 'omitted_witness'];
   const rowsById = new Map(loadManifest(path.join(scriptDir, 'cardart-manifest.jsonl')).map((row) => [row.id, row]));
   const rows = ids.map((id) => {
     const row = rowsById.get(id);
@@ -137,8 +163,8 @@ async function main() {
   const outputRoot = path.join(root, 'prototype/core-loop/public/cardart/benchmark');
   const jobs = [];
   for (const row of rows) {
-    for (const model of MODELS) {
-      for (const template of Object.keys(TEMPLATES)) {
+    for (const model of options.models) {
+      for (const template of options.templates) {
         jobs.push({ bin, root, styleKey, outputRoot, row, model, template });
       }
     }
