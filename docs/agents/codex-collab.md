@@ -12,6 +12,19 @@ Three distinct authorities, not two:
 2. **Execution authority — Codex.** Reviews, diagnoses, implements within an explicit file scope handed to it. Changes source and tests only, unless the user directly asks for a documentation task. Does not commit delegated work. Returns unresolved design questions instead of guessing.
 3. **Evidence authority — project docs and the OUT LLM wiki.** A ticket `## Resolution` is the decision authority for a project decision — `MAP.md` is an index, never a substitute for the ticket text. This repo's `CONTEXT.md` is authoritative for caseCollection terminology. The OUT wiki supplies source-domain facts, not project decisions.
 
+### 예외 — Claude 한도 시 Codex의 제한적 설계 (사용자 결정, 2026-07-27)
+
+Claude가 세션·토큰 한도에 걸려 설계를 이어갈 수 없을 때, **Codex가 설계 티켓을 제한적으로 진행할 수 있다.** 진행이 멈추는 것보다 낫다는 판단이며, 실제로 [18](../../.scratch/case-collection/issues/18-case-generator-shape.md)이 그렇게 해소됐다.
+
+**대가는 검토가 의무가 되는 것이다.** 예외로 만들어진 결정은 Claude 검토 전까지 **잠정**이다.
+
+- 예외로 설계 티켓을 진행할 때 헤더에 **`Reviewed-by:`** 줄을 추가한다(비워 둠 = 검토 대기).
+- Claude는 검토 후 `## Claude 검토` 절을 붙이고 `Reviewed-by: Claude (YYYY-MM-DD)`를 채운다. 검토는 **최소 4가지**를 대조한다: ⓐ 기존 closed 결정과의 정합 ⓑ `CONTEXT.md` 용어 ⓒ 인용한 자산의 실재(dead pointer) ⓓ 수용 조건 재실행.
+- **`Status: closed`이면서 `Reviewed-by:`가 빈 티켓은 "닫혔지만 미검토"다.** 하류 작업은 진행해도 되지만 그 결정 위에 **스펙을 쓰기 전에** 검토를 끝낸다.
+- 검토 대기 조회: `grep -L "^Reviewed-by: Claude" $(grep -l "^Reviewed-by:" .scratch/case-collection/issues/*.md)`
+
+**이 예외가 넓히지 않는 것**: 커밋 권한, 거버넌스 파일(`CLAUDE.md`·`docs/agents/`·`MAP.md`) 편집, 사용자 결정 사항의 대리 판단. 이것들은 한도와 무관하게 그대로다.
+
 ## Entry Lane A — Claude-led work
 
 ```

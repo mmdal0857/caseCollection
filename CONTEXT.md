@@ -15,6 +15,34 @@ _Avoid_: 판, 스테이지, incident, mystery
 case의 구조 골격. OUT 위키의 case_pattern 노드(4종)가 원천.
 _Avoid_: 템플릿, 시나리오 유형
 
+**patternEvidence (패턴 근거)**:
+승인된 위키에서 재생성되는 case_pattern의 문학적 근거 묶음—전형적 구조·단서·장소·변형과 그 출처. 원문 스냅샷이 갱신되면 다시 만들 수 있지만 게임 규칙 자체는 아니다.
+_Avoid_: patternRecipe, 실행 규칙
+
+**patternRecipe (패턴 조립법)**:
+patternEvidence를 근거로 승인된, case의 실행 가능한 버전 고정 조립법—슬롯 순서·역할·의존 관계·가변축 후보를 정의한다. 새 근거는 기존 조립법을 덮어쓰지 않고 새 버전 후보를 만든다.
+_Avoid_: case_pattern 원문, 템플릿, 자동 최신본
+
+**storySeed (서사 씨앗)**:
+case 생성 전에 선택하는 서사 소재와 의미 제약의 묶음. `requires`는 사건 논리·공개 순서가 성립하기 위한 필수 조건이고, `prefers`는 소재 적합성·분위기·다양성을 평가하는 선호 조건이다.
+_Avoid_: story, presentation(검증된 truth를 플레이어에게 표현하는 별도 층)
+
+**합법 후보 (legal candidate)**:
+승인된 patternRecipe와 `storySeed.requires`를 만족하도록 엔진이 기존 카드·측면에서 결정론적으로 찾아낸 truth 조합. 삼중 제약과 취향 평가를 모두 통과한 emit case와는 구별한다.
+_Avoid_: LLM 초안, 완성 case, 유효 case
+
+**슬롯 해답 (slot solution)**:
+truth의 한 슬롯에서 채택 가능한 단서 카드와 측면의 명시적 쌍. 상태 조건이 붙을 수 있지만, 상태 변화가 이미 확정된 해답을 사후에 오답으로 바꿔서는 안 된다.
+_Avoid_: 카드 ID만인 answer, frame으로 추론한 정답 측면
+
+**원문 스냅샷 (source snapshot)**:
+계속 갱신되는 원문에서 특정 시점의 내용을 출처 식별자·수정 시각·내용 해시와 함께 고정한 생성 입력. 새 원문 버전은 기존 case를 바꾸지 않고 새 생성 후보를 만든다.
+_Avoid_: 최신본, 라이브 원문
+
+**위키 후보 (wiki candidate)**:
+원문 스냅샷에서 OpenWiki나 LLM이 추출했지만 아직 OUT 정본으로 승인되지 않은 패턴·단서·story 해석. 정본 승격 전에는 generic pack과 case 생성기의 입력이 될 수 없다.
+_Avoid_: 위키 페이지, 자동 생성 정본
+
 **보스 case (복합 패턴 case)**:
 case_pattern 2개를 결합해 생성된 상위 난이도 case. run의 클라이맥스.
 
@@ -74,8 +102,16 @@ _Avoid_: 제출, 선택
 _Avoid_: 도감 설명, 카드 해설
 
 **가변축 (case axis)**:
-case마다 하나씩 붙는 고유 배경 상태 축. 재사용 풀(6~8종)에서 선택되며 — 밀실엔 봉인, 실종엔 시간 — 그 사건만의 압박을 만든다. 고정축(주목·신뢰)과 함께 작동한다.
+case마다 하나씩 붙는 고유 배경 상태 축. 재사용 `axisProfile` 하나를 고르고 `axisPresentation`으로 사건에 맞게 표현해, 고정축(주목·신뢰)과 함께 그 사건만의 압박을 만든다.
 _Avoid_: 사건 변수, 모디파이어
+
+**axisProfile (가변축 프로필)**:
+플레이어가 여러 case에 걸쳐 익히는 6~8종의 재사용 기계 규칙—축을 미는 태그·범위·임계값·측면 gate를 정의한다. story는 기존 프로필을 고를 수 있지만 새 규칙을 즉석에서 만들 수 없다.
+_Avoid_: 가변축 이름, case별 규칙
+
+**axisPresentation (가변축 표현)**:
+선택된 axisProfile을 해당 case의 서사로 보여주는 이름·양극 문구·힌트. 표현은 달라도 기계 규칙은 바꾸지 않는다.
+_Avoid_: axisProfile, 모디파이어
 
 **검증 (verified)**:
 카드 발견 상태의 완성 단계 — 그 카드가 정답 확정에 포함되면 검증된다(미확인 → 검증됨). 컬렉션 진행도의 두 번째 축(보유율과 별개).
