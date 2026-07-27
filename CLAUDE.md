@@ -13,6 +13,7 @@ OUT 프로젝트(`f:/Project/out`)의 LLM 위키를 기반으로 하는 웹 카�
 > - **GitHub Pages가 정본 호스팅.** Higgsfield는 정본이 될 수 없다 — 약관 §3.4(30일 미활동 시 cold storage)·§16.2(무통보 해지권)·§16.4(콘텐츠 삭제 무책임)가 막는다. **병행은 선호가 아니라 약관이 만든 제약.**
 > - Higgsfield 마켓플레이스 등재는 [ticket 08](.scratch/case-collection/issues/08-mvp-scope.md) §⑥으로 **2026-07-27 정식 Resolution 확정**(closed) — GitHub Pages+Higgsfield 병행 유지, itch.io·Patreon 미사용 재확인, 유료 채널은 여전히 Steam 후보([18](.scratch/case-collection/issues/18-case-generator-shape.md) 이후 사안). **게시는 비가역**이다(약관 §4.3 영구·취소불가 실시권, CLI에 게임 삭제 커맨드 없음).
 > - **유료 채널은 미확정.** Steam이 후보이나 [18](.scratch/case-collection/issues/18-case-generator-shape.md) 이후 사안(리드타임 6주+). Higgsfield 웹사이트+Stripe 직판은 검증 완료 후 후순위 대기 → [ticket 10001](.scratch/case-collection/issues/10001-higgsfield-stripe-storefront.md).
+> - **채널은 결정됐고 파이프라인은 아직 없다** (2026-07-28 확인): `.github/workflows/`가 없고 배포를 다루는 티켓도 없다. `npm run build`(vite)까지가 현재 존재하는 전부이므로, GitHub Pages 배포가 자동화돼 있다고 가정하지 말 것.
 > - 근거·실측: [docs/research/2026-07-25-higgsfield-games-marketplace.md](docs/research/2026-07-25-higgsfield-games-marketplace.md). `higgsfield game deploy/publish` 사용법은 전역 CLAUDE.md 참조.
 
 - **Svelte 5 `$state` 프록시는 `structuredClone`으로 복제 불가** (`DataCloneError`). 순수 리듀서에 상태를 넘길 땐 반드시 `$state.snapshot(state)`로 평범한 객체를 만들어 전달할 것. 이걸 놓치면 모든 dispatch가 조용히 예외로 죽어 화면이 멈춘다 (프로토 v1에서 실제 발생).
@@ -53,7 +54,7 @@ scripts\sync-cardart.cmd push|pull "G:\내 드라이브\caseCollection\cardart\c
 
 > **예외 하나 — `docs/art/style-key.png`는 커밋한다.** 이건 산출물이 아니라 **입력**이고 생성이 확률적이라 레시피로 재현되지 않는다. 키가 없으면 카드마다 다른 스타일로 구워진다. 2026-07-26에 실제로 키가 부재했고 `cardart-generate.sh`가 **경고 없이 레퍼런스 없이 생성**하도록 돼 있었다(지금은 키 부재 시 exit 2). 배경도 같은 키를 문다. 근거·재생성 절차·Drive 동기화 세부: [docs/art/README.md](docs/art/README.md).
 
-**프로토 하네스는 THROWAWAY** — `src/lib/protoart.svelte.ts`, `src/lib/ui/ArtSwitcher.svelte`는 시안 비교용이므로 UI 재작성 시 삭제한다. 반면 `CardChip.svelte`의 아트 슬롯 + 슈트 폴백과 `app.css`의 프레임·태그 처리 CSS는 **승격된 실물**이다.
+**프로토 하네스는 이미 폐기됐다** — 시안 비교용이던 `src/lib/protoart.svelte.ts`·`src/lib/ui/ArtSwitcher.svelte`는 `6ba2bd1`(위계 A 재작성)에서 삭제됐다. 두 파일을 찾지 말 것. 반면 `CardChip.svelte`의 아트 슬롯 + 슈트 폴백과 `app.css`의 프레임·태그 처리 CSS는 **승격된 실물**로 살아 있다.
 
 ## Agent skills
 
