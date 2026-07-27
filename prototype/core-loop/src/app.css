@@ -65,7 +65,11 @@ body {
 .play-layers {
   min-height: calc(100vh - var(--topbar-h) - 12px);
   display: grid;
-  grid-template-rows: auto minmax(45vh, 1fr) 112px auto minmax(92px, 180px);
+  /* 마지막 행의 상한을 180px 상수가 아니라 `max-content`로 둔다. 상수로 두면 핸드가
+     92px만 필요할 때도 행이 180px을 끝까지 차지해, 진행 대기 층이 뜨는 순간 컨테이너가
+     뷰포트를 38px 넘겼다(2026-07-28 실측 938 > 900). 위계 규정의 "핸드 ≤180px"은
+     `.hand-rail`의 max-height가 이미 지키므로, 여기서 한 번 더 박을 이유가 없다. */
+  grid-template-rows: auto minmax(45vh, 1fr) 112px auto minmax(92px, max-content);
   gap: 8px;
   padding: 0;
 }
@@ -95,12 +99,20 @@ body {
 .reaction-wait { color: #8f849b; font: italic 13px 'Nanum Myeongjo', 'Batang', serif; }
 .reaction-summary { margin-bottom: 4px; color: var(--gold); font-size: 12px; }
 .hand-rail {
+  /* 마지막 행에 **못 박는다.** 4행(진행 대기 층)이 `{#if game.awaitingAdvance}`라 평소엔
+     없는데, 자동 배치는 그걸 모르고 핸드를 4행으로 끌어올렸다 → 마지막 180px 행이 빈 채
+     남아 페이지가 뷰포트를 64px 넘겼다(2026-07-28 실측 964 > 900). 그 초과가 곧
+     "컨테이너가 뷰포트를 넘지 않는다"(ticket 20 파생 규칙) 위반이자, 펼침이 매직 넘버로
+     어긋난 뿌리였다. `-2 / -1`은 행이 늘거나 줄어도 항상 마지막 행을 가리킨다. */
+  grid-row: -2 / -1;
   position: relative; z-index: 4; max-height: 180px; min-height: 92px;
   padding: 8px; border: 1px solid var(--line); border-radius: 10px 10px 0 0;
   background: rgb(16 14 12 / 96%);
 }
 .suit-stacks { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
-.suit-stack { position: relative; min-width: 0; }
+/* 펼침의 기준은 **레일**이지 개별 슈트 칸이 아니다 — 칸을 기준으로 잡으면 폭 1060px짜리
+   패널이 한 칸 중앙에 걸려 어긋난다. 그래서 여기에 position을 두지 않는다. */
+.suit-stack { min-width: 0; }
 .stack-tab {
   width: 100%; min-height: 72px; display: grid; grid-template-columns: auto 1fr auto;
   align-items: center; gap: 6px; padding: 8px 10px; color: var(--ink);
@@ -113,8 +125,15 @@ body {
 .stack-tab.suit-forensic { border-top-color: var(--forensic); }
 .stack-tab i { grid-column: 2 / 4; font-size: 9px; color: var(--dim); font-style: normal; text-align: right; }
 .stack-count { color: var(--gold); font-weight: 700; }
+/* 펼침을 뷰포트에 `fixed`로 붙이고 `bottom: 174px`로 띄웠더니, 레일 상단의 실제 위치는
+   234px여서 **탭 72px 중 51px을 덮었다** — 네 탭 모두 중앙이 죽고 아래 21px 띠만 눌렸다
+   (2026-07-28 플레이 판정: "핸드창이 선택 위치를 가려서 닫을 수가 없음").
+   상단바 13px 겹침(위 --topbar-h)과 **같은 병**이다: 한 요소의 위치를 다른 요소의 높이로
+   추정해 상수에 박은 것. 고치는 방법도 같다 — 추정을 지우고 실물에 붙인다.
+   `.hand-rail`을 기준으로 `bottom: 100%`면 레일이 몇 px이든 항상 그 위에 정확히 앉는다.
+   레일의 z-index 4 안에 있으므로 반응 띠(3)는 덮고 수사 상태(5) 아래 남는 것도 자동이다. */
 .stack-fan {
-  position: fixed; z-index: 4; left: 50%; bottom: 174px; transform: translateX(-50%);
+  position: absolute; z-index: 4; left: 50%; bottom: 100%; transform: translateX(-50%);
   width: min(94vw, 1060px); min-height: 230px; display: flex; align-items: flex-end; justify-content: center;
   gap: 0; padding: 18px 32px; background: rgb(12 10 9 / 96%); border: 1px solid var(--gold);
   border-radius: 12px 12px 0 0; box-shadow: 0 -18px 50px rgb(0 0 0 / 65%);
@@ -135,7 +154,9 @@ body {
   .hand-rail { max-height: 120px; }
   .stack-tab { min-height: 58px; grid-template-columns: 1fr; }
   .stack-tab i { display: none; }
-  .stack-fan { bottom: 112px; overflow-x: auto; justify-content: flex-start; }
+  /* bottom은 재정의하지 않는다 — `bottom: 100%`가 레일 높이를 따라가므로 화면 폭과 무관하다.
+     예전엔 여기서도 112px을 따로 박아, 데스크톱과 모바일이 각자 다른 상수를 갖고 있었다. */
+  .stack-fan { overflow-x: auto; justify-content: flex-start; }
 }
 .proto-mark { font-size: 11px; letter-spacing: 1px; color: var(--dim); }
 .run-progress { margin-left: auto; font-size: 13px; color: var(--dim); }
