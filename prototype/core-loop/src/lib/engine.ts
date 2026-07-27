@@ -161,7 +161,7 @@ export function influenceOf(
 
 /**
  * v10: 슬롯에 놓인 것은 이제 카드가 아니라 **카드의 한 측면**이다(12 §1·§3).
- * `locked`가 곧 "수(手)를 뒀다" — 확정된 측면만 앞으로 전파해 다음 슬롯의 해석 공간을 연다.
+ * `locked`가 곧 "확정했다" — 확정된 측면만 앞으로 전파해 다음 슬롯의 해석 공간을 연다.
  */
 export interface Placement {
   cardId: string;
