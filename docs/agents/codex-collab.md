@@ -22,6 +22,7 @@ Claude가 세션·토큰 한도에 걸려 설계를 이어갈 수 없을 때, **
 - Claude는 검토 후 `## Claude 검토` 절을 붙이고 `Reviewed-by: Claude (YYYY-MM-DD)`를 채운다. 검토는 **최소 4가지**를 대조한다: ⓐ 기존 closed 결정과의 정합 ⓑ `CONTEXT.md` 용어 ⓒ 인용한 자산의 실재(dead pointer) ⓓ 수용 조건 재실행.
 - **`Status: closed`이면서 `Reviewed-by:`가 빈 티켓은 "닫혔지만 미검토"다.** 하류 작업은 진행해도 되지만 그 결정 위에 **스펙을 쓰기 전에** 검토를 끝낸다.
 - 검토 대기 조회: `grep -L "^Reviewed-by: Claude" $(grep -l "^Reviewed-by:" .scratch/case-collection/issues/*.md)`
+  — **필드 자체가 빠진 티켓은 이 조회에 안 걸린다** ([26](../../.scratch/case-collection/issues/26-openwiki-candidate-discovery-pilot.md)에서 실측: `Reviewed-by:` 줄을 아예 안 단 채 Codex가 closed시켜 사각지대가 됨, housekeeping 중 소급 발견·처리). 필드 누락 자체를 잡으려면 `Assignee: Codex` 패턴으로 넓혀서 대조: `grep -L "^Reviewed-by:" .scratch/case-collection/issues/*.md | xargs grep -l "^Assignee: Codex"`
 
 **이 예외가 넓히지 않는 것**: 커밋 권한, 거버넌스 파일(`CLAUDE.md`·`docs/agents/`·`MAP.md`) 편집, 사용자 결정 사항의 대리 판단. 이것들은 한도와 무관하게 그대로다.
 
