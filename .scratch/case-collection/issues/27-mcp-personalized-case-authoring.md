@@ -1,8 +1,9 @@
 # MCP 기반 맞춤형 case 저작
 
 Status: open
-Labels: wayfinder:design
+Labels: wayfinder:grilling
 Assignee: Codex (GPT-5.6, 2026-07-27)
+Reviewed-by: 
 Blocked-by: 18
 
 ## Question

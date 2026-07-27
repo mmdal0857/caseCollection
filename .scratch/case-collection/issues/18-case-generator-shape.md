@@ -3,6 +3,7 @@
 Status: closed
 Labels: wayfinder:grilling
 Assignee: Codex (GPT-5.6, 2026-07-27)
+Reviewed-by: Claude (2026-07-27)
 Blocked-by: 25
 
 ## Question
@@ -60,8 +61,26 @@ case는 `truth / presentation / obstacles`로 나눈다. `truth`는 슬롯별 `s
 
 격리 logic prototype(`prototype/case-generator-shape`, `2d4f42d`)으로 수제 c1~c3·boss 이관, 명시적 solution 검증, case별 합법 후보, 삼중 제약, candidate fingerprint 재현, LLM allowlist, 조건부 답의 배치시점 고정을 검증했다. TypeScript 검사, 기존 smoke, data pack smoke, build도 통과했다. 세부 결과와 스키마는 `docs/superpowers/specs/2026-07-27-case-generator-foundation-design.md`가 정본이다.
 
-실제 원문 snapshot에서 pattern evidence·recipe를 만들고 실제 sLLM과 최종 emit까지 잇는 경계는 [case 생성 E2E 데이터팩 프로토타입](28-case-generator-e2e-datapack-prototype.md)으로 넘긴다. [OpenWiki 후보 발견 최소 파일럿](26-openwiki-candidate-discovery-pilot.md)은 코어와 격리하고, 인터루드·BAD 엔딩은 [인터루드·BAD 엔딩 콘텐츠 생성 규약](27-interlude-bad-ending-content-contract.md)에서 별도 구체화한다.
+실제 원문 snapshot에서 pattern evidence·recipe를 만들고 실제 sLLM과 최종 emit까지 잇는 경계는 [case 생성 E2E 데이터팩 프로토타입](28-case-generator-e2e-datapack-prototype.md)으로 넘긴다. [OpenWiki 후보 발견 최소 파일럿](26-openwiki-candidate-discovery-pilot.md)은 코어와 격리하고, 인터루드·BAD 엔딩은 [인터루드·BAD 엔딩 콘텐츠 생성 규약](29-interlude-bad-ending-content-contract.md)에서 별도 구체화한다.
 
 검토 후 배제한 방식은 mutable Drive 최신본 직접 소비, OpenWiki 정본·필수 의존화, OUT `case_pattern` 직접 실행, story별 카드 ID 매핑, LLM의 truth 작성, 조건부 답의 live 재평가, case마다 새 축 규칙 생성이다.
 
 초기 `axisProfile` 카탈로그의 정확한 구성과 `prefers` 가중치는 유효성 계약이 아닌 튜닝값이다. logic prototype은 현재 관찰된 3개 profile로 시작해 콘텐츠가 요구할 때 6~8개까지 승인 확장하는 안과 전체 tag 기반 5개 bootstrap 안을 모두 전환 가능하게 제공한다.
+
+## Claude 검토 (2026-07-27)
+
+Claude 한도로 Codex가 예외 진행한 결정이므로 [codex-collab.md](../../../docs/agents/codex-collab.md) "예외" 절이 요구하는 4가지를 대조했다.
+
+**ⓐ 기존 closed 결정과의 정합 — 통과.** 삼중 제약([17](17-context-semantics-prototype.md)발 이중→삼중), 가변축 재사용 풀 6~8종([12 §5](12-context-tag-semantics.md)), 조사 중립화 출력 규약([19](19-josa-leak-neutralization.md)), `frame`/`accepts` 슬롯([03](03-core-loop.md) 재개정 요건)을 모두 인용하고 어긋나는 곳이 없다. 블로커였던 [25](25-openwiki-collection-fit-research.md)가 먼저 닫힌 것도 확인했다.
+
+**ⓑ `CONTEXT.md` 용어 — 통과.** 이 티켓이 등재한 신규 용어 9종(`patternEvidence`·`patternRecipe`·`storySeed`·`합법 후보`·`슬롯 해답`·`원문 스냅샷`·`위키 후보`·`axisProfile`·`axisPresentation`)이 같은 날 확정된 측면 3축(`확정`/`아는·모르는`/`막힘`)과 충돌하지 않는다. 오히려 `슬롯 해답` 정의가 "이미 **확정**된 해답"으로 새 어휘를 정확히 쓰고 있다.
+
+**ⓒ 인용 자산 실재 — 조건부 통과.** 스펙 문서·커밋 해시 모두 실재하고 신규 문서의 상대 링크 33건 중 dead 0건이다. **단 격리 프로토타입 `prototype/case-generator-shape`(`2d4f42d`, 1,200줄+)은 main에 없다** — 별도 브랜치 + `.worktrees/case-generator-shape` 워크트리에만 있다.
+
+**ⓓ 수용 조건 재실행 — 통과하되 범위 주의.** main에서 `npm run smoke`(FAIL 0)·`tsc --noEmit` 클린·`vite build` 클린을 직접 확인했다. **그러나 생성기 프로토가 main에 없으므로 이 게이트는 생성기 작업을 전혀 검증하지 않는다.** Resolution이 인용한 "TypeScript 검사·smoke·build 통과"는 브랜치에서의 결과이고 main에서 재현할 수 없다.
+
+### 검토 결과: 수용. 단 조건 하나.
+
+설계 내용에 반증할 지점을 찾지 못했다. 다만 **[지도](../MAP.md) 26행이 "프로토 브랜치 귀멸화 — prototype/ 스킬의 기본값(throwaway, out of main)을 이 효과가 명시적으로 오버라이드"라고 적어둔 것과 이 작업이 배치된다.** 코어 루프 때 해소한 브랜치 분기가 다시 생겼다.
+
+의도적 격리라면 문제가 아니지만 **지도 26행에 예외를 명시해야** 다음 세션이 "프로토는 main에 있다"는 서술을 믿고 헤매지 않는다. 이 판단은 사용자 소관으로 남긴다 — 격리 유지 / main 병합 / 지도 문언 개정 중 어느 쪽인지.
