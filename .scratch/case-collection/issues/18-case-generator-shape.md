@@ -84,3 +84,7 @@ Claude 한도로 Codex가 예외 진행한 결정이므로 [codex-collab.md](../
 설계 내용에 반증할 지점을 찾지 못했다. 다만 **[지도](../MAP.md) 26행이 "프로토 브랜치 귀멸화 — prototype/ 스킬의 기본값(throwaway, out of main)을 이 효과가 명시적으로 오버라이드"라고 적어둔 것과 이 작업이 배치된다.** 코어 루프 때 해소한 브랜치 분기가 다시 생겼다.
 
 의도적 격리라면 문제가 아니지만 **지도 26행에 예외를 명시해야** 다음 세션이 "프로토는 main에 있다"는 서술을 믿고 헤매지 않는다. 이 판단은 사용자 소관으로 남긴다 — 격리 유지 / main 병합 / 지도 문언 개정 중 어느 쪽인지.
+
+## Comments
+
+- 2026-07-27 **사용자 결정 — 판단을 [28](28-case-generator-e2e-datapack-prototype.md)로 위임**: 지금 병합/격리를 정책으로 굳히지 않는다. [case 생성 E2E 데이터팩 프로토타입](28-case-generator-e2e-datapack-prototype.md)이 실 sLLM·실 원문까지 이어붙일 때 그 세션에서 병합 여부를 다시 판단한다(28의 Comments에 동일 기록). 지도 Notes 26행은 그 시점까지 `prototype/case-generator-shape`를 core-loop 전례의 예외로 명시해 둔다.

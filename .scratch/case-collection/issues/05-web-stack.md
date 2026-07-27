@@ -25,7 +25,7 @@ DOM 프레임워크(Svelte/React 등) vs 캔버스 엔진(Phaser/PixiJS) — 코
 
 - 2026-07-25 **배포 체인 파급 — 위 Resolution의 "itch.io butler 재사용" 부분은 무효.** 사용자 결정: **itch.io·Patreon 미사용.** 프레임워크·렌더링·디바이스 타깃 결정은 그대로 유효하고, 무효화된 것은 배포 체인 한 항목뿐이다(프레임워크 근거에 적힌 "itch.io 임베드 경로 단순"도 이제 근거로서 작동하지 않지만, 단일 페이지 정적 빌드 결정 자체는 다른 근거로 충분히 선다).
   - **살아남는 것**: GitHub Pages(무료 정적 호스팅 + Actions 자동화). 이것이 **정본 호스팅**이다.
-  - **추가되는 것**: Higgsfield 게임 마켓플레이스 — [08](08-mvp-scope.md) §⑥의 결의. 단 08은 의도적 open 상태이므로 아직 정식 Resolution이 아니다. 그리고 정본이 될 수 없다: 약관 §3.4(30일 미활동 시 cold storage)·§16.2(회사의 무통보 해지권)·§16.4(콘텐츠 삭제에 대한 무책임 조항)가 그것을 막는다. 즉 **병행은 선호가 아니라 약관이 만든 제약**이다.
+  - **추가되는 것**: Higgsfield 게임 마켓플레이스 — [08 MVP 스코프](08-mvp-scope.md) §⑥의 결의. 그리고 정본이 될 수 없다: 약관 §3.4(30일 미활동 시 cold storage)·§16.2(회사의 무통보 해지권)·§16.4(콘텐츠 삭제에 대한 무책임 조항)가 그것을 막는다. 즉 **병행은 선호가 아니라 약관이 만든 제약**이다. (2026-07-27: 08 closed — §⑥ Resolution으로 정식 확정됨.)
   - **유료 채널**: 미확정. [Steam](https://partner.steamgames.com/steamdirect)이 현재 후보($100/제품, AGR $1,000 달성 시 회수, 심사 1~5일 + 결제 후 30일 대기 + 출시 2주 전 coming soon → **최소 6주 리드타임**). 콘텐츠 분량 문제로 [18](18-case-generator-shape.md) 이후 사안. Higgsfield 웹사이트+Stripe 직판은 검증까지 끝내고 후순위 대기로 내렸다([10001](10001-higgsfield-stripe-storefront.md)).
   - **웹 빌드에 걸리는 실제 제약 하나**: 데스크톱 래핑(Tauri/Electron) 가능성을 열어두려면 `dist/`가 `file://`에서도 떠야 한다 → **절대 경로·CORS·fetch 의존을 만들지 않는 것.** [16](16-external-data-pack-loading.md)의 외부 데이터 팩 로딩을 `fetch()` 기반으로 설계하면 여기서 걸린다. 비용 0이므로 지금부터 지킬 것.
   - 근거·실측: [docs/research/2026-07-25-higgsfield-games-marketplace.md](../../../docs/research/2026-07-25-higgsfield-games-marketplace.md)

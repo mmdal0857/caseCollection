@@ -24,6 +24,7 @@ Labels: wayfinder:map
 - **스킬**: 티켓 해소는 /grilling + /domain-modeling 기본, prototype 티켓은 /prototype. 용어는 OUT `CONTEXT.md` 준수. 주의: OUT 용어집에서 "case"는 기피어(에피소드 인스턴스와 혼동) — 이 프로젝트에서 "case"를 핵심 명사로 재정의하려면 /domain-modeling으로 명시적 결정하고 이 레포의 `CONTEXT.md`에 기록.
 - **트래커**: 로컬 마크다운 — 운영 규약은 `docs/agents/issue-tracker.md`의 "Wayfinding operations".
 - **프로토 브랜치 귀멸화** (2026-07-23): `prototype/core-loop`가 `main`에 병합됨(머지 커밋 b2596bf) — 코어 루프가 [17](issues/17-context-semantics-prototype.md)로 전면 검증됐고 사용자 방향("코어 유지+퍼즐 추가+시각화")이 확정되면서, prototype/ 스킬의 기본값("throwaway, out of main")을 이 효과가 명시적으로 오버라이드. `prototype/core-loop/`는 이제 main의 정식 작업 트리 일부 — 향후 세션은 그 안에서 직접 이어서 구현한다. 단 다른 세션이 병행 중인 데이터팩 작업(`datapack.ts`·`schema/`, 티켓 16·14 소관)에 tsc 타입 에러가 있음 — 내 작업(engine·facets·josa·content·CaseScreen) 범위 밖이라 손대지 않음, 16·14 세션이 정리할 것.
+- **⚠️ 예외 — `prototype/case-generator-shape`는 아직 격리 유지** (2026-07-27): [18](issues/18-case-generator-shape.md)의 순수 로직 프로토(`2d4f42d`)는 위 오버라이드 대상이 **아니다** — main에 없고 별도 브랜치+워크트리(`.worktrees/case-generator-shape`)에만 있다. 병합 여부는 사용자 판단으로 [28](issues/28-case-generator-e2e-datapack-prototype.md)이 실 sLLM·실 원문까지 이어붙일 때로 미뤄졌다(28의 Comments 참조) — 지금 시점에 "프로토는 main에 있다"고 가정하지 말 것.
 
 ## Decisions so far
 
@@ -61,10 +62,10 @@ Labels: wayfinder:map
 
 - `[종이]` [플레이 화면 정보 위계 재설계](issues/20-play-screen-hierarchy.md) — **변형 A(수직 적층) 채택**. 진단: v10의 병은 관찰 7건의 합이 아니라 **화면이 패널 모음**이라는 한 가지 — 추리문·카드 그리드·미터·디버그가 형제 패널로 면적을 다툰다. 그래서 크게 만드는 대신 **층을 나눈다**(배경=상태 / 추리문=주인공 / 핸드=대기). 원리 3: **①배경이 미터다** — 13의 신뢰 장면 × 주목 그레이딩이 방을 미터로 만들면 문제 2(배경 없음)·3(미터 눌림)이 한 수로 풀리고 12 §7의 "실패 방향 예고"가 방이 조여드는 것으로 나타난다(정밀 판독 스트립은 **임계 접근 시에만 승격** — v10은 가장 중요한 정보가 가장 안 보였다). **②핸드는 슈트 4스택으로 접힌다** — 장수가 늘어도 슬롯은 4개, 슈트가 곧 추림 어휘여서 21과 공유, 가용/보유 뱃지가 어휘 게이트의 효과를 숫자로 보여준다. **③전파는 카드가 표시한다** — 13의 태그 처리 전이 + 이웃 순차 전이로 "배치=수"가 애니메이션 경로가 되므로 전용 위젯 금지. 규약 8개(면적 예산·z-order·모바일 적층)는 스펙 ① 편입. 검증은 [24 플레이 화면 구현](issues/24-play-screen-build.md)에서. **/ 기각**: B 추리문 전면+핸드 오버레이(배치가 "보드 위의 수"보다 "목록에서 골라 닫기"로 느껴져 12와 배치), C 좌우 분할(배경 면적이 줄어 원리 ①의 지렛대가 약해짐 — 17 총평의 "시각화"와 역행). **/ 유예**: 펼침 각도·승격 임계·반응 띠 높이는 24에서 튜닝.
 - `[조사]` [OpenWiki 수집·위키 보강 적합성 리서치](issues/25-openwiki-collection-fit-research.md) — 0.2.3은 기존 rclone→버전 고정 원문 뒤의 **비정본 후보 발견 레이어**로만 격리 파일럿 권고; Drive/임의파일 커넥터·OUT typed 관계 검증·claim 출처 보장은 없으며, 대표 2~3권의 초기/no-op/단일변경 3회 gate로 판단. **/ 기각**: Drive 직접 수집, `pd_wiki` 정본 대체, 전권 체계 추출, 자동 승격.
+- `[종이]` [MVP 스코프](issues/08-mvp-scope.md) — 8월 빌드 8개 항목 전부 확정: ①목적=토대(재미검증 아님) ②코드=순수모듈 승격+UI 전면 재작성 ③메커닉=run 완주 전체+컬렉션 영구화 ④**콘텐츠 볼륨=24장(단서20+패턴4)·case 4개(c1~c3+보스)로 최종 확정, 확장 없음**(2026-07-27 — 18의 재검증은 새 콘텐츠가 아니라 기존 세트였음이 드러남) ⑤아트=전부(배경은 상태귀속 3장×그레이딩, 인물은 레이든 1명) ⑥배포=Higgsfield+GitHub Pages 병행 ⑦순서=스타일 키 우선 ⑧MVP 밖=생성기·태그추출·외부팩·리플레이성·itch.io. **/ 기각**: 외부 플레이테스트·계측+설문, [10](issues/10-acquisition-detail.md) 경제 수치 전량, 수집 없는 순수 퍼즐. **/ 유예**: 리플레이성 검증([01](issues/01-mechanic-survey.md) 최대 과제).
 
 ## Not yet specified
 
-- 사운드/BGM — Amuse 파이프라인 재사용 여부. MVP 스코프 이후.
 - 수익화 — **유료 채널의 시점과 형태만 남았다.** 채널 후보는 Steam으로 좁혀졌고(콘텐츠 분량 때문에 [18](issues/18-case-generator-shape.md) 이후, 리드타임 6주+), 무료 배포는 GitHub Pages+Higgsfield로 확정. itch.io·Patreon은 미사용 결정, Stripe 직판은 후순위 대기([10001](issues/10001-higgsfield-stripe-storefront.md))이므로 이 줄에서 빠졌다. 남은 fog는 "유료판이 무엇을 담는가" — 무료 게시본과의 경계이고 18의 산출에 달렸다.
 - 영어 지원 시점 — 파이프라인 슬롯 설계는 스펙에 포함, 실제 지원은 재미 검증 후. 조사 상당(a/an 등 문법 단서) 렌더 처리는 [19의 P2](issues/19-josa-leak-neutralization.md)가 원리(언어별 particle resolver를 렌더 계층에)만 미리 잡아둠 — 실제 지원 시점에 구체화.
 - 일반화 추출 플로우 스킬의 형태 세부 — 골격 확정(06 경계 + 07 패키징: 자기완결 패키지→CLI generic 팩→하류 변환·번들·분리빌드). 남은 것은 결정이 아니라 **스펙 ② 작성 시 스킬로 문서화**(집필 항목).

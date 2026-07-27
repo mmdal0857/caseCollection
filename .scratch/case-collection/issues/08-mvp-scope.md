@@ -1,8 +1,8 @@
 # MVP 스코프 (8월 마일스톤)
 
-Status: open
+Status: closed
 Labels: wayfinder:grilling
-Assignee:
+Assignee: MMDAL (sonnet session, 2026-07-27)
 Blocked-by: 03, 04
 
 ## Question
@@ -47,3 +47,27 @@ Blocked-by: 03, 04
   **미처리로 남은 것**: §ⓐ(05에 배포 채널 파급 코멘트)는 08 소관이라 13이 대신 랜딩하지 않았다 — 08 닫을 때 실행할 것. 참고로 채널 자체는 CLI로 실재 확인됨(`higgsfield game deploy <zip> --title --description [--thumbnail] [--favicon] [--game-id]` → `game publish <id> [--cover-url] [--logo-url]`).
 
   **스코프 변경 알림**: §⑤의 "레이든 표정 3~4종"이 지도 Out of scope("Dead Letters 캐릭터 재사용 배제")와 충돌하는 것을 13 세션이 발견했고, 사용자 판단으로 **레이든 1명만 차용하도록 경계를 다시 그었다**(지도 Out of scope·Notes 개정 완료). 세계관·다른 캐릭터는 여전히 배제. → §⑤의 인물 아트 항목은 유효하며, OUT 기존 스프라이트 재사용으로 코스트가 거의 0이다.
+
+- 2026-07-27 **§④ 재개 세션 — 잠가 24장·4 case를 최종 확정 (사용자 결정).** [18](18-case-generator-shape.md)의 logic prototype이 재이관·재검증한 콘텐츠는 정확히 현재 `prototype/core-loop`의 기존 세트다: 물리 6·행동 6·기록물 4·감식 4 = 단서 20장 + 패턴 4종(밀실·거짓 알리바이·투명인간·연출된 실종) = **24장**, case는 c1~c3+보스 **4개**. 즉 18이 "재검증"한 것은 새 콘텐츠가 아니라 이미 3회(11→17→18) 재생된 기존 세트이므로, §④가 "18 이후 재측정"으로 미뤄둔 질문은 사실상 이미 답이 나와 있었다. 확장하지 않는 근거: (a) case 생성기 자체가 §⑧에서 이미 MVP 밖이라 자동 확장 경로가 없다 (b) ①에서 이번 빌드가 "재미있는가"만 답하고 "리플레이성"은 명시적으로 미검증 수용했으므로 4 case(런 1회분)로 충분하다 (c) 24장은 이미 3중 제약을 포함해 반증 없이 재검증됐다. **08의 유일한 미확정 항목이 해소되어 8개 전부 확정 — 아래 Resolution 작성.**
+
+## Resolution
+
+8개 항목 전부 확정. 세부는 위 Comments가 정본이며 아래는 색인이다.
+
+① **목적 = 토대, 재미 검증 아님.** 완료 조건 = 다음 스테이지로 넘어갈 진짜 코드베이스 + 올려둔 빌드. 판정 = 마켓플레이스 관심 신호(정밀 계측 아님). **/ 기각**: 외부 관찰 플레이테스트, 로컬 계측+설문, 파이프라인 전 과정 관통, 상품성 완성. **/ 유예**: 리플레이성 검증([01](01-mechanic-survey.md) 최대 과제) — 이번 빌드는 답하지 않음.
+
+② **코드 토대 = 순수 모듈 승격 + UI 전면 재작성.** `engine·facets·scenario·dramaturgy·josa·persona` + `smoke`/`smoke-datapack`을 정식 소스로 승격, Svelte UI(~1,100줄)는 폐기 후 재작성([20](20-play-screen-hierarchy.md)·[24](24-play-screen-build.md)에서 착수). **/ 기각**: 프로토 전체 승격, 전면 재작성.
+
+③ **메커닉 범위 = run 완주 전체 + 컬렉션 영구화.** 측면 선택·이웃 전파·연쇄 해제·태그 다수결·드라마투르기 반응·가설 선언·수사 노트·인터루드 AP·보스·엔딩 + 컬렉션 화면(보유×검증 2축)·게스트 영구 획득. **/ 기각**: [10](10-acquisition-detail.md)의 미검증 경제 수치 전량(화폐·진열 구매·완주팩·힌트 크래프팅), 수집 없는 순수 퍼즐.
+
+④ **콘텐츠 볼륨 = 24장(단서 20 + 패턴 4)·case 4개(c1~c3+보스)로 최종 확정, 확장 없음.** [18](18-case-generator-shape.md)의 logic prototype이 재검증한 것은 정확히 이 기존 세트이지 새 콘텐츠가 아니며, 생성기 자체가 §⑧에서 MVP 밖이라 자동 확장 경로가 없다. ①의 리플레이성 미검증 수용과 정합.
+
+⑤ **아트 수준 = 전부(카드+배경+인물+UI 장식).** 배경은 case가 아니라 배경 상태([12](12-context-tag-semantics.md) §5의 주목×신뢰 2축)에 귀속 — 신뢰축 장면 3장 × 주목축 CSS 그레이딩. 인물은 레이든 1명만(지도 Out of scope 개정). **/ 기각**: case별 전용 배경, case_pattern 귀속 배경.
+
+⑥ **배포 = Higgsfield 마켓플레이스 + GitHub Pages 병행.** GitHub Pages가 정본 호스팅(약관상 Higgsfield는 정본 불가). 유료 채널 미확정 — Steam 후보([18](18-case-generator-shape.md) 이후, 리드타임 6주+), Stripe 직판은 후순위 대기([10001](10001-higgsfield-stripe-storefront.md)). itch.io·Patreon은 05에서 이미 미사용 결정. **/ 기각**: itch.io, Patreon.
+
+⑦ **순서 = 스타일 키 우선 확정 → 코드 승격·UI 재작성 병행.** [13](13-card-art-pipeline.md)에서 스타일 키 확정 완료 → [20](20-play-screen-hierarchy.md)·[24](24-play-screen-build.md)가 후속 착수.
+
+⑧ **MVP 밖**: [18](18-case-generator-shape.md) 생성기 · [14](14-tag-extraction-promotion.md) 태그 추출 · [16](16-external-data-pack-loading.md) 외부 팩 · 리플레이성 검증 · itch.io.
+
+**미처리 파급 실행**: ⓐ(05에 배포 채널 파급 코멘트)는 2026-07-25 세션에서 이미 랜딩됨([05](05-web-stack.md) Comments 참조, "08 §⑥의 결의" 인용) — 이 세션에서 05의 "08은 의도적 open" 문구만 갱신.

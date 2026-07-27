@@ -19,3 +19,7 @@ Blocked-by: 18
 - 기존 수제 case data pack과 나란히 smoke를 통과시킨다.
 
 완료 조건은 재현 가능한 실행 명령, 입력 fixture, 최종 `GeneratedCase`, validator 보고서, 두 번의 동일성 비교 결과다.
+
+## Comments
+
+- 2026-07-27 **브랜치 병합 시점 결정 — 이 티켓에서 판단**: [case 생성 파이프라인의 형태](18-case-generator-shape.md) 검토가 `prototype/case-generator-shape`(격리 브랜치·워크트리)를 지도 Notes의 "프로토 브랜치는 main에 병합"(core-loop 전례)과 배치된다고 지적했다. 사용자 판단(2026-07-27): **지금은 격리 유지, 이 티켓이 실 sLLM·실 원문까지 이어붙일 때 병합 여부를 다시 판단**한다. 이 세션을 여는 사람은 착수 전에 먼저 이 판단부터 할 것 — 미리 정책으로 굳히지 않았으므로 자동으로 병합/격리 어느 쪽도 아니다.
