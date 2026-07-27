@@ -14,7 +14,7 @@ export const eul = (w: string): string => (jong(w) > 0 ? '을' : '를');
 export const ro = (w: string): string => { const j = jong(w); return j <= 0 || j === 8 ? '로' : '으로'; };
 /** 와/과 — 받침 없음은 '와', 받침 있으면 '과'. */
 export const gwa = (w: string): string => (jong(w) > 0 ? '과' : '와');
-/** 이다/다 — 서술격 조사(두루마리 마지막 슬롯이 문장을 맺을 때). 받침 있으면 '이다', 없으면 '다'. */
+/** 이다/다 — 서술격 조사(추리문 마지막 슬롯이 문장을 맺을 때). 받침 있으면 '이다', 없으면 '다'. */
 export const ida = (w: string): string => (jong(w) > 0 ? '이다' : '다');
 
 export type JosaKind = '이가' | '은는' | '을를' | '으로' | '와과' | '이다';

@@ -171,7 +171,7 @@ export interface Placement {
 
 /**
  * case별 가변축(12 §5) — 재사용 풀에서 하나를 고른다. 매번 새 축을 발명하면 학습이 불가능해진다.
- * 축은 측면을 게이트하고(`gate.stat === 'axis'`), 특정 태그의 측면이 잠길 때마다 밀린다.
+ * 축은 측면을 게이트하고(`gate.stat === 'axis'`), 특정 태그의 측면이 확정될 때마다 밀린다.
  */
 export interface AxisDef {
   id: string;
@@ -318,7 +318,7 @@ export interface NoteEntry {
   cardId: string;
   facetKey: string;
   meaning: string;
-  /** 잠글 때 두루마리에 새겨진 서사 한 줄, 또는 오답 반응. */
+  /** 확정할 때 추리문에 새겨진 서사 한 줄, 또는 오답 반응. */
   line: string;
   /** null = 아직 판정 전(잠겼지만 제출 안 됨). */
   correct: boolean | null;
@@ -330,7 +330,7 @@ export interface LockFeedback {
   seq: number;
   slotId: string;
   meaning: string;
-  /** 두루마리에 새겨진 서사 한 줄. */
+  /** 추리문에 새겨진 서사 한 줄. */
   line: string;
   /** 이 수가 트랙을 민 양. */
   heat: number;
@@ -527,7 +527,7 @@ function resonant(a: Facet, b: Facet): boolean {
 
 /**
  * 수를 둔다 — 측면을 잠그고, 대가를 치르고, 보상을 준다.
- * 보상: 노트 해금 + 두루마리 서사 한 줄 + (강한 링크일 때만) 새 측면 발견.
+ * 보상: 노트 해금 + 추리문 서사 한 줄 + (강한 링크일 때만) 새 측면 발견.
  */
 function lockPlacement(s: GameState, c: RunContent, slotIdx: number): void {
   const def = c.cases[s.caseIndex];

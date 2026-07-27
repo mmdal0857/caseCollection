@@ -24,7 +24,7 @@ OUT 프로젝트(`f:/Project/out`)의 LLM 위키를 기반으로 하는 웹 카�
 
 > **예외 — 격리 프로토는 다시 생겼다 (2026-07-27, 사용자 소관 미결).** [ticket 18](.scratch/case-collection/issues/18-case-generator-shape.md)의 case 생성기 로직과 [ticket 26](.scratch/case-collection/issues/26-openwiki-candidate-discovery-pilot.md)의 OpenWiki 파일럿은 각각 `.worktrees/case-generator-shape`·`.worktrees/openwiki-candidate-pilot` 워크트리에만 있고 main엔 없다 — 위 문단의 "프로토는 main"이 전면 무효는 아니지만 **이 둘은 예외**다. 18의 검증(smoke·tsc·build 통과)은 이 격리 브랜치에서 얻은 결과라 main에서 재현되지 않는다. 격리 유지/main 병합/이 문단 자체의 개정 중 무엇을 할지는 아직 미정 — 다음 세션이 이 상태를 "정리가 덜 됐다"로 오판하지 않도록 남겨둔다.
 
-검증된 **순수 모듈**은 스펙 입력이자 **빌드 파이프라인의 콘텐츠 검증기**로 승격 예정 — `engine.ts`(솔버빌리티), `facets.ts`(얼굴 합법성·해석 공간), `dramaturgy.ts`(코믹 반응 생성), `scenario.ts`(서사 응집), `persona.ts`, `josa.ts`, `datapack.ts`(데이터 팩 로더).
+검증된 **순수 모듈**은 스펙 입력이자 **빌드 파이프라인의 콘텐츠 검증기**로 승격 예정 — `engine.ts`(솔버빌리티), `facets.ts`(측면 합법성·해석 공간), `dramaturgy.ts`(코믹 반응 생성), `scenario.ts`(서사 응집), `persona.ts`, `josa.ts`, `datapack.ts`(데이터 팩 로더).
 
 **기계 검증기 실행**:
 
@@ -34,7 +34,7 @@ npm run smoke
 npm run smoke:datapack
 ```
 
-데이터 팩 추출 파이프라인(티켓 14 뼈대 — 3·4단계 STUB): `py scripts/extract_game_data_pack.py`
+데이터 팩 추출 파이프라인(티켓 14 뼈대 — 3·4단계 STUB): `py scripts/extract_game_data_pack.py` — 후보 49건·패턴 4종을 보고한다(49는 위키 천장이고 MVP 절단은 08 §④의 24장이다). `py`가 "Python was not found"로 죽으면 Store 별칭에 걸린 것이니 `python.exe` 전체 경로로 실행할 것(전역 CLAUDE.md 참조) — 이 기계에서는 `py -m`·`py -`는 되는데 `py <script>`만 별칭에 걸렸다.
 
 ## 카드 아트 (ticket 13 확정, ticket 08로 볼륨 최종화)
 

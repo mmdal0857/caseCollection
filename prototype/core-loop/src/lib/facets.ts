@@ -42,7 +42,7 @@ export interface Facet {
    * 앞→뒤 단방향이라 순환이 없다.
    */
   needsPrev?: SlotFrame[];
-  /** 두루마리에 새겨질 서사 한 줄(12 §3 확정 보상). */
+  /** 추리문에 새겨질 서사 한 줄(12 §3 확정 보상). */
   line?: string;
 }
 

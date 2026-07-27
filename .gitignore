@@ -18,3 +18,6 @@ prototype/core-loop/.vite/
 prototype/core-loop/public/protoart/
 prototype/core-loop/public/cardart/
 prototype/core-loop/public/assets/backgrounds/
+
+# Python 부산물
+__pycache__/

@@ -15,7 +15,7 @@ OUT 코어(f:/Project/out)의 산출물을 소비해 게임 데이터 팩(game-d
 스테이지:
   1. load_sources        소스 존재 확인·적재
   2. select_candidates   clue_type -> 카드 후보 (suit = 파일명)
-  3. extract_facets      원문 기반 얼굴·문맥 태그 추출  [STUB — LLM 스테이지, 티켓 14 미결]
+  3. extract_facets      원문 기반 측면·문맥 태그 추출  [STUB — LLM 스테이지, 티켓 14 미결]
   4. assemble_cases      case_pattern -> case 생성      [STUB — 티켓 14 미결]
   5. validate            schema/game-data-pack.json 대조 (enum은 스키마에서 읽어 자동 동기화)
   6. emit                팩 JSON 출력
@@ -26,7 +26,7 @@ base 팩 위에 병합해야 플레이 가능하다.
 
 실행:
   py scripts/extract_game_data_pack.py                  # 인벤토리·계획 리포트만 (기본)
-  py scripts/extract_game_data_pack.py --emit-draft     # 자리표시자 얼굴로 초안 팩 생성+검증
+  py scripts/extract_game_data_pack.py --emit-draft     # 자리표시자 측면으로 초안 팩 생성+검증
 """
 
 from __future__ import annotations
@@ -45,7 +45,7 @@ PACK_FORMAT = "game-data-pack"
 PACK_FORMAT_VERSION = 1
 
 # 슈트 -> 초안 기본값 휴리스틱. LLM 추출(스테이지 3)이 확정하기 전의 자리표시자일 뿐이다.
-# TODO(14): 단서 유형별 태그·얼굴 매핑은 LLM 추출·검증 절차가 확정되면 교체.
+# TODO(14): 단서 유형별 태그·측면 매핑은 LLM 추출·검증 절차가 확정되면 교체.
 DRAFT_KIND = {"physical": "사물", "behavioral": "행위", "documentary": "기록", "forensic": "현상"}
 DRAFT_FRAME = {"physical": "trace", "behavioral": "action", "documentary": "record", "forensic": "record"}
 
@@ -118,7 +118,7 @@ def select_candidates(s: Sources) -> list[dict]:
 # ── 스테이지 3·4 — LLM 추출 STUB ─────────────────────────────────────────────
 
 def extract_facets(candidate: dict, cid: str, s: Sources, draft: bool) -> list[dict]:
-    """원문 기반 얼굴·문맥 태그 추출 — 티켓 14의 심장. 아직 뼈대다.
+    """원문 기반 측면·문맥 태그 추출 — 티켓 14의 심장. 아직 뼈대다.
 
     확정되면 여기서: candidate가 등장하는 원문 구절을 cleaned_texts/에서 찾고
     (catalog pg_id -> 파일), LLM으로 (frame, meaning, tags)를 뽑아 검증한다.
@@ -170,7 +170,7 @@ def validate_pack(pack: dict, enums: dict[str, set[str]]) -> list[str]:
             errs.append(f"{path}: 미정의 tag")
         facets = clue.get("facets", [])
         if not facets:
-            errs.append(f"{path}: 얼굴이 최소 1개 필요")
+            errs.append(f"{path}: 측면이 최소 1개 필요")
         frames_seen = set()
         for f in facets:
             if f.get("frame") not in enums["frame"]:
@@ -212,19 +212,26 @@ def build_draft_pack(pack_id: str, s: Sources, id_prefix: str) -> dict:
         "format": PACK_FORMAT,
         "formatVersion": PACK_FORMAT_VERSION,
         "id": pack_id,
-        "name": "초안 — 태그·얼굴은 LLM 추출 전 자리표시자",
+        "name": "초안 — 태그·측면은 LLM 추출 전 자리표시자",
         "clues": clues,
         "cases": assemble_cases(s, clues),
     }
 
 
 def main() -> int:
+    # Windows 콘솔 기본 코드페이지는 cp949라 이 스크립트가 찍는 em dash(—)를 인코딩하지
+    # 못해 UnicodeEncodeError로 죽었다 — CLAUDE.md가 안내하는 실행 커맨드 자체가 이 기계에서
+    # 동작하지 않던 원인이다(2026-07-27 실측). 출력 스트림을 UTF-8로 고정한다.
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(encoding="utf-8")
+
     ap = argparse.ArgumentParser(description="OUT 산출물 -> 게임 데이터 팩 변환 파이프라인 (뼈대)")
     ap.add_argument("--out-root", type=Path, default=Path("F:/Project/out"), help="OUT 코어 레포 경로")
     ap.add_argument("--pack-id", default="extracted.wiki", help="산출 팩의 네임스페이스 id")
     ap.add_argument("--out", type=Path, default=REPO_ROOT / "build" / "game-data-pack.draft.json")
     ap.add_argument("--emit-draft", action="store_true",
-                    help="자리표시자 얼굴로 초안 팩을 생성·검증·저장 (기본은 인벤토리 리포트만)")
+                    help="자리표시자 측면으로 초안 팩을 생성·검증·저장 (기본은 인벤토리 리포트만)")
     ap.add_argument("--id-prefix", default="wiki.",
                     help="추출 카드 id 접두사. 기본 'wiki.'=병기 모드(수제 base와 충돌 방지), ''=승격 모드(의도적 상쇄)")
     args = ap.parse_args()
