@@ -56,6 +56,33 @@
       list: readFacets(selectedClue.facets, slot.role?.frame ?? null, facetCtxFor(game, content, index)),
     };
   });
+  // 집은 카드가 **실제로** 들어갈 수 있는 슬롯 집합. 목적은 힌트가 아니라 **헛클릭 제거**다
+  // — 네 슬롯을 다 눌러보며 어디가 받는지 알아내는 건 플레이가 아니라 반복노동이다.
+  // 다면성 발견은 여기서 죽지 않는다: 발견은 표기가 아니라 **놓은 뒤 피드백**(확정 보상·
+  // 전파·반응)에 있으므로, 어디에 놓을 수 있는지를 좁혀줘도 무엇이 되는지는 여전히 놓아야 안다.
+  // 예측을 새로 쓰지 않고 측면 피커가 쓰는 `readFacets`를 그대로 돌린다 — 컬티스트
+  // 시뮬레이터의 "하이라이트가 거짓말한다"는 예측과 판정이 다른 술어를 쓸 때만 생긴다
+  // (ticket 31 · docs/research/2026-07-28-cultist-simulator-affordance.md §2).
+  const placeableSlots = $derived.by(() => {
+    if (!selectedClue) return null;
+    const ok = new Set<string>();
+    def.slots.forEach((slot, index) => {
+      if (game.confirmed[slot.id]) return;
+      const list = readFacets(selectedClue.facets, slot.role?.frame ?? null, facetCtxFor(game, content, index));
+      // 술어를 두 번 틀리고 실측으로 잡았다(2026-07-28).
+      //   ① `list.length > 0` — `readFacets`는 **거르지 않고** 전부 판정해 돌려주고 정렬만
+      //      하므로 늘 참이다. 네 슬롯이 전부 켜졌다.
+      //   ② `list.some(v => v.usable)` — `usable`은 어휘 게이트·배경 게이트·앞 문맥만 보고
+      //      **슬롯 frame을 보지 않는다.** 역시 네 슬롯이 전부 켜졌다.
+      // 실제로 「환기구 틈」이 쓸 수 있는 읽기는 「밀실의 허점」(경로) 하나뿐이었다
+      // (「전달 통로」는 *아직 모르는 측면*). 그러므로 **아는 읽기가 이 슬롯의 역할과 맞는가**,
+      // 즉 `usable && fitsRole`이 요약의 술어다. 모르는 측면은 usable이 아니라 자동으로
+      // 침묵하므로, 이 요약은 **수사 노트가 자라면 함께 자란다** — 12 §4의 "보유 ≠ 앎"이
+      // 처음으로 화면에 드러나는 자리다.
+      if (list.some((v) => v.usable && v.fitsRole)) ok.add(slot.id);
+    });
+    return ok;
+  });
   const canSubmit = $derived(def.slots.every((slot) => game.confirmed[slot.id] || game.placed[slot.id]));
   const caseNotes = $derived(game.notebook.filter((note) => note.correct !== null));
   // 배경은 **case가 아니라 배경 상태에 귀속**한다(ticket 13 §⑦). case별로 굽는 순간
@@ -109,6 +136,10 @@
       dispatch({ type: 'HINT', hintId: hintMode, slotId });
       hintMode = null;
     } else if (selectedCard) {
+      // 못 받는 슬롯도 **클릭은 열어둔다.** 흐려놓은 것만으로 "네 칸 다 눌러보기"는 이미
+      // 사라졌고, 피커는 막힌 측면마다 이유를 말해준다("아직 모르는 측면" · "앞 문맥이 다른
+      // 이야기를 하고 있다"). 그 설명이 어휘 게이트를 가르치는 통로이므로, 필요를 없애되
+      // 통로까지 막지는 않는다.
       facetSlot = slotId;
     } else if (game.placed[slotId]) {
       dispatch({ type: 'CLEAR_SLOT', slotId });
@@ -164,6 +195,8 @@
             class:filled={!!placed}
             class:locked={!!placed?.locked || !!game.confirmed[slot.id]}
             class:choosing={facetSlot === slot.id}
+            class:can-take={!!placeableSlots?.has(slot.id)}
+            class:cannot-take={!!placeableSlots && !placeableSlots.has(slot.id) && !game.confirmed[slot.id]}
             onclick={() => clickSlot(slot.id)}
           >
             {#if placed}
