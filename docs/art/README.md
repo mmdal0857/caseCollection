@@ -8,6 +8,22 @@ CLAUDE.md의 원칙은 "생성 바이너리는 미커밋, 레시피가 정본"�
 
 게임 카드 PNG는 Google Drive에서 관리하고 `scripts/sync-cardart.cmd pull|push <Drive 폴더>`로 작업 사본과 복사한다. 어느 방향도 대상에만 있는 파일을 삭제하지 않는다. 비교 벤치마크를 포함한 `prototype/core-loop/public/cardart/` 전체는 Git에 커밋하지 않는다.
 
+## Google Drive 정본과 동기화
+
+현재 정본 경로는 `G:\내 드라이브\caseCollection\cardart\clues`다. `G:`는 공식 Google Drive for desktop의 스트리밍 드라이브이며, 드라이브 문자는 PC마다 다를 수 있으므로 스크립트에 하드코딩하지 않는다.
+
+```bat
+:: 로컬에서 확정한 최종본을 Drive로 보낸다.
+scripts\sync-cardart.cmd push "G:\내 드라이브\caseCollection\cardart\clues"
+
+:: 새 작업 사본이나 다른 PC에서 최종본을 받는다.
+scripts\sync-cardart.cmd pull "G:\내 드라이브\caseCollection\cardart\clues"
+```
+
+2026-07-27 기준 최종 clue 20장(19,711,637바이트)을 업로드하고 로컬과 Drive의 SHA-256을 전수 대조했다. 불일치는 0개였다. 모델·템플릿 비교용 48장은 정본에 올리지 않는다.
+
+Drive 커넥터 OAuth는 Google 보안 검증 오류로 사용할 수 없었으므로 재시도나 보안 우회를 하지 않는다. 프로젝트 전체를 Drive의 “컴퓨터 폴더”로 동기화하면 `.git`, 의존성, 빌드 산출물까지 감시하게 되므로 사용하지 않는다. Windows 정션·심볼릭 링크도 Drive의 안정적인 동기화 계약으로 간주하지 않는다. 카드 최종본만 위 폴더에 두고 명시적인 `push`/`pull`을 실행하는 방식이 정본 경계와 삭제 방향을 가장 분명하게 유지한다.
+
 실제로 2026-07-26 세션에서 이 파일이 부재한 상태였고, `scripts/cardart-generate.sh`가 **경고 없이 레퍼런스 없이 생성하도록** 되어 있었다. 13이 실측한 보장(키를 물리면 드리프트 0/12)이 조용히 사라지는 구조였다. 그래서 (1) 키를 커밋하고 (2) 스크립트가 키 부재 시 **중단**하도록 고쳤다.
 
 ## 정본 정보
