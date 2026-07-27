@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { ClueCard, Suit } from '../engine';
   import { SUIT_LABEL, SUIT_ICON } from '../engine';
+  import { eul } from '../josa';
   import CardChip from './CardChip.svelte';
 
   type HandCard = { card: ClueCard; guest: boolean; available: boolean };
@@ -14,9 +15,23 @@
 
   const suits: Suit[] = ['physical', 'behavioral', 'documentary', 'forensic'];
   let openSuit: Suit | null = $state(null);
+
+  // 집은 카드는 **펼침 밖에서도** 보여야 한다. `.card.selected`(금색 테두리)가 그려지는
+  // 유일한 자리가 펼침 안인데 선택 즉시 펼침이 닫히므로(결함 ③ 수정), 고른 순간 표시가
+  // 접힌 스택 안으로 숨었다 — "선택 후 클릭할 때까지 어떤 상태인지 알 수 없음"(ticket 31 ⓐ).
+  const picked = $derived(selected ? cards.find((item) => item.card.id === selected) ?? null : null);
 </script>
 
 <section class="hand-rail" aria-label="핸드">
+  {#if picked}
+    <p class="picked-readout" role="status">
+      <span class="picked-icon">{SUIT_ICON[picked.card.suit]}</span>
+      <!-- 조사는 이름에 **붙어야** 한다. flex 자식으로 떼어놓으면 gap이 끼어들어
+           "환기구 틈 을 집었다"가 된다 — 받침 계산이 맞아도 띄어쓰기가 틀리면 소용없다.
+           그래서 이름·조사·문장을 한 인라인 덩어리로 묶는다. 을/를 판정은 19의 josa 모듈. -->
+      <span><b>{picked.card.name}</b>{eul(picked.card.name)} 집었다<span class="picked-hint">— 놓을 슬롯을 고르거나, 다시 눌러 내려놓는다</span></span>
+    </p>
+  {/if}
   <div class="suit-stacks">
     {#each suits as suit (suit)}
       {@const held = cards.filter((item) => item.card.suit === suit)}
