@@ -25,7 +25,7 @@ OUT 프로젝트(`f:/Project/out`)의 LLM 위키를 기반으로 하는 웹 카�
 
 코어 루프 프로토타입(v1~v10.1, ticket 11·17·19)은 **main의 `prototype/core-loop/`**에 있다 — 2026-07-23 `b2596bf`로 병합됐고 동명 브랜치는 삭제됐다. **예전 문서의 `git checkout prototype/core-loop`는 무효.** 실행: `cd prototype/core-loop && npm install && npm run dev`.
 
-> **예외 — 격리 프로토는 다시 생겼다 (2026-07-27, 사용자 소관 미결).** [ticket 18](.scratch/case-collection/issues/18-case-generator-shape.md)의 case 생성기 로직과 [ticket 26](.scratch/case-collection/issues/26-openwiki-candidate-discovery-pilot.md)의 OpenWiki 파일럿은 각각 `.worktrees/case-generator-shape`·`.worktrees/openwiki-candidate-pilot` 워크트리에만 있고 main엔 없다 — 위 문단의 "프로토는 main"이 전면 무효는 아니지만 **이 둘은 예외**다. 18의 검증(smoke·tsc·build 통과)은 이 격리 브랜치에서 얻은 결과라 main에서 재현되지 않는다. 격리 유지/main 병합/이 문단 자체의 개정 중 무엇을 할지는 아직 미정 — 다음 세션이 이 상태를 "정리가 덜 됐다"로 오판하지 않도록 남겨둔다.
+> **예외 — 격리 프로토는 다시 생겼고, 그대로 둔다 (2026-07-28 결정).** [ticket 18](.scratch/case-collection/issues/18-case-generator-shape.md)의 case 생성기 로직과 [ticket 26](.scratch/case-collection/issues/26-openwiki-candidate-discovery-pilot.md)의 OpenWiki 파일럿은 각각 `.worktrees/case-generator-shape`·`.worktrees/openwiki-candidate-pilot` 워크트리에만 있고 main엔 없다 — 위 문단의 "프로토는 main"이 전면 무효는 아니지만 **이 둘은 예외**다. 18의 검증(smoke·tsc·build 통과)은 이 격리 브랜치에서 얻은 결과라 main에서 재현되지 않는다. **2026-07-28 사용자 결정: 격리 유지**("일단 유지"). 그러므로 이 상태는 정리가 덜 된 것이 **아니다** — 다음 세션이 병합하거나 워크트리를 지우지 말 것. **기각이 아니라 유예**이므로 병합은 다시 열릴 수 있고, 그때까지 두 브랜치의 검증 결과는 main에서 재현되지 않는다는 점만 기억하면 된다.
 
 검증된 **순수 모듈**은 스펙 입력이자 **빌드 파이프라인의 콘텐츠 검증기**로 승격 예정 — `engine.ts`(솔버빌리티), `facets.ts`(측면 합법성·해석 공간), `dramaturgy.ts`(코믹 반응 생성), `scenario.ts`(서사 응집), `persona.ts`, `josa.ts`, `datapack.ts`(데이터 팩 로더).
 
