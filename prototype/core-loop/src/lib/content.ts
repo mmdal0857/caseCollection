@@ -3,6 +3,7 @@
 // case 3건 + 복합 패턴 보스. 모든 case는 스타터+게스트만으로 풀리도록 튜닝(어휘 게이트 보장).
 import type { RunContent, SlotFrame, Tag } from './engine';
 import type { Facet } from './facets';
+import { BASE_ENDINGS, BASE_INTERLUDES } from './narrative-content';
 
 // v10(티켓 17): 카드마다 **측면 목록**. facets[0] = 카드를 얻을 때 함께 아는 "명백한" 측면,
 // 나머지는 게스트 대여·강한 링크 발견으로 열린다(12 §4 보유 ≠ 앎).
@@ -335,6 +336,7 @@ export const CONTENT: RunContent = {
       ],
       patterns: ['false-alibi'],
       guestClues: ['forged_ledger', 'burned_note'],
+      guestFacets: ['forged_ledger:motive'],
       guestPattern: 'false-alibi',
       axis: { id: 'clock', label: '시간', low: '여유', high: '촉박', init: 3, drivenBy: '공개',
         hint: '떠들썩하게 움직일수록 시계가 빨리 간다 — 촉박해져야 보이는 어긋남이 있다.' },
@@ -425,6 +427,7 @@ export const CONTENT: RunContent = {
       ],
       patterns: ['invisible-man', 'false-alibi'],
       guestClues: ['uniform_habit'],
+      guestFacets: ['uniform_habit:identity'],
       guestPattern: 'invisible-man',
       axis: { id: 'traffic', label: '인적', low: '한산', high: '붐빔', init: 3, drivenBy: '공개',
         hint: '떠들썩할수록 저택에 사람이 몰린다 — 붐빌수록 한 사람쯤 세지 않고 넘어간다.' },
@@ -557,14 +560,39 @@ export const CONTENT: RunContent = {
     },
   ],
 
-  // 템포·행동 경제: AP 3 — 조사 리드(각 1) + 아래 행동들. 전부는 못 한다.
-  interludeAP: 3,
+  // 인터루드 한 장면의 행동 예산. 세 행동 중 정확히 둘만 고르고 다음 장면으로 이월하지 않는다.
+  interludeAP: 2,
   interludeActions: [
-    { id: 'report', label: '보고서 정리', desc: '신뢰 +1', cost: 1, effects: { trust: 1 }, once: true },
-    { id: 'hush',   label: '소문 잠재우기', desc: '주목 -2', cost: 2, effects: { heat: -2 }, once: true },
-    { id: 'buy_tip', label: '정보원 매수', desc: '익명 제보 1장', cost: 2, effects: { gainHint: 'tipoff' }, once: true },
-    { id: 'lab',    label: '감식반 요청', desc: '감식 의뢰 1장', cost: 3, effects: { gainHint: 'analysis' }, once: true },
+    {
+      id: 'recon',
+      kind: 'recon',
+      label: '현장 정찰',
+      desc: '다음 사건의 공개 가능한 배경·역할·위험 방향 하나를 예고한다.',
+      cost: 1,
+      effects: {},
+      once: true,
+    },
+    {
+      id: 'interview',
+      kind: 'interview',
+      label: '참고인 면담',
+      desc: '다음 사건의 게스트 allowlist에서 측면 하나를 빌린다.',
+      cost: 1,
+      effects: {},
+      once: true,
+    },
+    {
+      id: 'stabilize',
+      kind: 'stabilize',
+      label: '수사 안정',
+      desc: '현재 실패축을 한 단계 완화한다.',
+      cost: 1,
+      effects: {},
+      once: true,
+    },
   ],
+  interludes: BASE_INTERLUDES,
+  endings: BASE_ENDINGS,
 
   starterClues: [
     'thread_fiber', 'mud_footprint',

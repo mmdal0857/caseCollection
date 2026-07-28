@@ -1,9 +1,32 @@
 # run 골격 비트와 화면 그래프
 
-Status: open
+Status: closed
 Labels: wayfinder:prototype
-Assignee:
+Assignee: Codex
+Reviewed-by: Claude (2026-07-29)
 Blocked-by: 20
+
+## Resolution
+
+- 화면 그래프를 `Home → Briefing → Case Compose → Case Review → Clear Feedback → Interlude → 다음 Briefing/Boss → Ending → Run Summary → Home`으로 구현했다.
+- 검토는 제출과 분리했다. 검토 중에는 패턴·슬롯·힌트가 잠기며, `수정하기`로 compose에 돌아가거나 `최종 제출`로만 판정을 확정할 수 있다.
+- 클리어 직후 별도 피드백 화면에서 마지막 제출 반응과 영구화된 게스트 카드를 보여준다. 보상팩·shop 상태, 액션, 화면은 제거했다.
+- 인터루드는 AP 2, `정찰/면담/안정` 세 행동 중 정확히 두 개만 선택하고 이월하지 않는다. 정찰은 공개 정보만, 면담은 다음 사건 allowlist의 측면 하나만, 안정은 실패축 한 단계만 다룬다.
+- 내부 측면 키는 신규·기존 snapshot 모두 표시 직전에 카드명과 측면명으로 바꾼다.
+- `RunSnapshot@1`은 strict envelope(`format/version/savedAt/actionSeq/game`)로 원자 저장하며 손상·미래 버전 원문을 보존하고 복구를 거부한다. 재개 뒤 같은 비가역 액션은 seq와 상태를 중복 변경하지 않는다.
+- BAD 임계 한 단계 전 경고를 상태에 기록하고, 경고 없이 BAD 이벤트로 진입하지 못하게 했다.
+
+검증: `npm run smoke:run-flow`, `npm run smoke:run-session`, 기존 `npm run smoke`, `npx tsc --noEmit`, `npm run build` 통과. 실제 브라우저에서 compose/review 잠금/수정/최종 제출/clear/interlude AP2/세 번째 행동 비활성/다음 briefing까지 완주했다.
+
+## Claude 검토 (2026-07-29)
+
+- [x] **review→final submit 우회 경로 없음** — `npm run smoke:run-flow` 독립 재실행 PASS: "review를 거치지 않은 FINAL_SUBMIT은 무시된다", "review 상태에서는 배치를 바꾸지 못한다".
+- [x] **interlude가 정답·내부 키를 누출하지 않음** — 같은 스모크의 "recon은 공개 허용 정보만 밝히고 AP 1을 쓴다", "interview 결과는 내부 키 대신 사람이 읽는 카드·측면 이름을 보여준다" PASS. `run-session.ts`도 직접 읽어 `validGameState`가 구조만 검증하고 truth를 노출하는 필드가 없음을 확인.
+- [x] **손상·미래 snapshot 보존 + 비가역 액션 멱등성** — `npm run smoke:run-session` 독립 재실행 PASS: "미래 버전 원문을 보존하고 복구를 거부한다", "새로고침 뒤 같은 irreversible action이 중복 적용되거나 checkpoint를 만들지 않는다". `run-session.ts` 코드도 직접 읽어 `actionSeq !== game.seq` 시 STATE_INVALID로 거부하는 경로를 확인.
+- [x] **reward/shop 제거와 데이터 팩 호환** — `smoke:datapack`이 여전히 전량 PASS하므로 팩 스키마와 충돌 없음.
+- [x] **인터루드 AP 경제가 08/10이 기각한 "인터루드 진열 구매"의 재탕이 아닌지** — 별도로 코드·티켓 10 원문을 대조해 판단: 10의 경제는 **화폐(수사 포인트) + 진열(여러 SKU 중 선택 구매) + 기회비용**이 핵심이었고 08이 이를 전량 기각했다. 이번 구현(`recon`/`interview`/`stabilize`)은 화폐도, 구매도, 진열도 없다 — 고정된 세 행동 중 두 개를 고르는 정보/완화 액션일 뿐이고 카드 획득 경로는 여전히 case 클리어의 게스트 영구화 하나뿐(Resolution 문구 "팩·화폐·상점은 없다"와 일치). **재탕이 아니라고 판단, 승인.**
+
+결론: **승인.**
 
 ## Question
 

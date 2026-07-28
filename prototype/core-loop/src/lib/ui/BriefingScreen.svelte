@@ -1,62 +1,29 @@
 <script lang="ts">
   import type { Action, GameState, RunContent } from '../engine';
-  import CardChip from './CardChip.svelte';
 
   let { game, content, dispatch }: {
     game: GameState;
     content: RunContent;
     dispatch: (a: Action) => void;
   } = $props();
-
-  const allClues = $derived(Object.values(content.clues));
-  const ownedCount = $derived(game.ownedClues.length);
-  const verifiedCount = $derived(game.verified.filter((id) => content.clues[id]).length);
+  const definition = $derived(content.cases[game.caseIndex]);
 </script>
 
 <section class="screen briefing">
-  <h1>사건부 — 미해결 4건</h1>
-  <p class="lede">
-    보유한 단서 카드만 추리에 쓸 수 있다(어휘 게이트). 제출하면 "몇 개 맞음"만 알려주고,
-    3개 이상 맞으면 그 자리에서 확정된다. 오답 제출과 요란한 카드는 <b>주목</b>을 끌어올리고 —
-    주목이 8을 넘긴 채 인터루드를 맞으면 run이 나쁘게 끝난다.
+  <p class="eyebrow">
+    {game.caseIndex === content.cases.length - 1 ? 'BOSS BRIEFING' : `CASE ${game.caseIndex + 1}`}
   </p>
+  <h1>{definition.title}</h1>
+  <p class="lede">{definition.intro}</p>
+  {#if definition.teaser}<p class="briefing-teaser">{definition.teaser}</p>{/if}
 
-  <div class="collection-head">
-    <h2>컬렉션</h2>
-    <span class="progress-2axis">보유 {ownedCount}/{allClues.length} · 검증 {verifiedCount}</span>
-  </div>
-  <div class="collection-grid">
-    {#each allClues as card (card.id)}
-      {#if game.ownedClues.includes(card.id)}
-        <CardChip {card} verified={game.verified.includes(card.id)} />
-      {:else}
-        <div class="card back" title="미보유">?</div>
-      {/if}
-    {/each}
-  </div>
+  <ol class="briefing-steps" aria-label="이번 사건의 세 동작">
+    <li><b>1. 카드 집기</b><span>핸드의 슈트 스택에서 카드를 고릅니다.</span></li>
+    <li><b>2. 측면 고르기</b><span>그 카드를 어떤 의미로 읽을지 정합니다.</span></li>
+    <li><b>3. 배치해 확정하기</b><span>빈칸에 놓으면 상태와 다음 고리에 전파됩니다.</span></li>
+  </ol>
 
-  <div class="collection-head"><h2>패턴 카드</h2></div>
-  <div class="pattern-list">
-    {#each Object.values(content.patterns) as p (p.id)}
-      {#if game.ownedPatterns.includes(p.id)}
-        <div class="pattern-card" class:verified={game.verified.includes(p.id)}>
-          <b>{p.name}</b>
-          <span class="card-note" class:locked={!game.verified.includes(p.id)}>
-            {game.verified.includes(p.id) ? p.text : '수사 노트 — 미해금'}
-          </span>
-        </div>
-      {:else}
-        <div class="pattern-card back">?</div>
-      {/if}
-    {/each}
-  </div>
-
-  <div class="hint-inventory">
-    소모품:
-    {#each game.hints as h, i (i)}
-      <span class="hint-token">{content.hintDefs[h].name}</span>
-    {/each}
-  </div>
-
-  <button class="primary" onclick={() => dispatch({ type: 'START' })}>run 시작</button>
+  <button class="primary" onclick={() => dispatch({ type: 'START' })}>
+    사건 시작
+  </button>
 </section>

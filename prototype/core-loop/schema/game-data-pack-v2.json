@@ -1,0 +1,229 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "case-collection/game-data-pack@2",
+  "title": "게임 데이터 팩 v2",
+  "type": "object",
+  "required": ["format", "formatVersion", "id", "mergeMode", "provenance"],
+  "additionalProperties": false,
+  "properties": {
+    "format": { "const": "game-data-pack" },
+    "formatVersion": { "const": 2 },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_.-]*$"
+    },
+    "name": { "type": "string" },
+    "version": { "type": "string" },
+    "mergeMode": {
+      "enum": ["base", "alongside", "promotion"]
+    },
+    "promotionTargets": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/promotionTarget" },
+      "uniqueItems": true
+    },
+    "provenance": { "$ref": "#/$defs/packProvenance" },
+    "clues": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "game-data-pack@1#/$defs/clue"
+      }
+    },
+    "patterns": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "game-data-pack@1#/$defs/pattern"
+      }
+    },
+    "hintDefs": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "game-data-pack@1#/$defs/hintDef"
+      }
+    },
+    "cases": {
+      "type": "array",
+      "items": {
+        "$ref": "game-data-pack@1#/$defs/case"
+      }
+    },
+    "run": {
+      "$ref": "game-data-pack@1#/$defs/run"
+    },
+    "interludes": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/interludeDefinition" }
+    },
+    "endings": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/endingDefinition" }
+    }
+  },
+  "$defs": {
+    "promotionTarget": {
+      "type": "object",
+      "required": ["kind", "id", "expectedSourcePack"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": ["clue", "pattern", "hint", "case", "run", "interlude", "ending"]
+        },
+        "id": { "type": "string", "minLength": 1 },
+        "expectedSourcePack": { "type": "string", "minLength": 1 }
+      }
+    },
+    "packProvenance": {
+      "type": "object",
+      "required": [
+        "sourceSnapshotIds",
+        "inputSha256",
+        "validatorVersion",
+        "outputSha256"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "sourceSnapshotIds": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "uniqueItems": true
+        },
+        "inputSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "modelId": { "type": "string" },
+        "promptVersion": { "type": "string" },
+        "seed": { "type": "integer" },
+        "rawResponseSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "validatorVersion": { "type": "string", "minLength": 1 },
+        "outputSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "interludeDefinition": {
+      "type": "object",
+      "required": [
+        "id",
+        "afterCaseId",
+        "beforeCaseId",
+        "apBudget",
+        "actions",
+        "presentation",
+        "provenance"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "afterCaseId": { "type": "string", "minLength": 1 },
+        "beforeCaseId": { "type": "string", "minLength": 1 },
+        "apBudget": { "const": 2 },
+        "actions": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "oneOf": [
+              { "$ref": "#/$defs/reconAction" },
+              { "$ref": "#/$defs/interviewAction" },
+              { "$ref": "#/$defs/stabilizeAction" }
+            ]
+          }
+        },
+        "presentation": { "type": "string", "minLength": 1 },
+        "provenance": { "$ref": "#/$defs/packProvenance" }
+      }
+    },
+    "reconAction": {
+      "type": "object",
+      "required": [
+        "id",
+        "kind",
+        "cost",
+        "label",
+        "resultText",
+        "revealKind",
+        "revealValue"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "kind": { "const": "recon" },
+        "cost": { "const": 1 },
+        "label": { "type": "string", "minLength": 1 },
+        "resultText": { "type": "string", "minLength": 1 },
+        "revealKind": {
+          "enum": ["background", "frame", "risk"]
+        },
+        "revealValue": { "type": "string", "minLength": 1 }
+      }
+    },
+    "interviewAction": {
+      "type": "object",
+      "required": [
+        "id",
+        "kind",
+        "cost",
+        "label",
+        "resultText",
+        "guestFacetKey"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "kind": { "const": "interview" },
+        "cost": { "const": 1 },
+        "label": { "type": "string", "minLength": 1 },
+        "resultText": { "type": "string", "minLength": 1 },
+        "guestFacetKey": {
+          "type": "string",
+          "pattern": "^[^:]+:[^:]+$"
+        }
+      }
+    },
+    "stabilizeAction": {
+      "type": "object",
+      "required": [
+        "id",
+        "kind",
+        "cost",
+        "label",
+        "resultText",
+        "stat",
+        "delta"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "kind": { "const": "stabilize" },
+        "cost": { "const": 1 },
+        "label": { "type": "string", "minLength": 1 },
+        "resultText": { "type": "string", "minLength": 1 },
+        "stat": { "enum": ["heat", "trust"] },
+        "delta": { "type": "number", "not": { "const": 0 } }
+      }
+    },
+    "endingDefinition": {
+      "type": "object",
+      "required": [
+        "id",
+        "triggerRuleId",
+        "warningRuleId",
+        "presentation",
+        "provenance"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "triggerRuleId": { "enum": ["bad-press", "bad-collapse"] },
+        "warningRuleId": { "enum": ["press", "collapse"] },
+        "presentation": { "type": "string", "minLength": 1 },
+        "provenance": { "$ref": "#/$defs/packProvenance" }
+      }
+    }
+  }
+}

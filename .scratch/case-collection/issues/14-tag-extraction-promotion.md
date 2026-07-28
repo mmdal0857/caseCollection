@@ -1,8 +1,9 @@
 # 원문 기반 태그 추출 승격 스펙
 
-Status: open
+Status: closed
 Labels: wayfinder:grilling
-Assignee:
+Assignee: Codex
+Reviewed-by: Claude (2026-07-29)
 Blocked-by: 12
 
 ## Question
@@ -23,3 +24,25 @@ Blocked-by: 12
   - 실측: `--emit-draft` 산출물(49건)이 TS 로더 `loadPacks`를 통과해 base 위 69장 병합 확인 — "catalog에 책 추가 → 카드 풀 자동 확장" 야망의 배관이 양끝으로 이어짐.
   - `--id-prefix` 'wiki.'(병기, 기본) vs ''(승격 상쇄) — 수제 시드와의 병합·재생성 절차(이 티켓 미결 스펙)를 CLI 선택지로 뼈대화. 근거는 16의 id 충돌 실측.
   - 미결 유지: LLM 추출·검증 절차, 단서 유형별 태그·측면·kind 매핑(현재 슈트 휴리스틱 자리표시자), case 생성 절차.
+
+## Resolution
+
+2026-07-28 구현 완료, Claude 통합 검토 대기.
+
+- 기존 슈트 휴리스틱·STUB을 제거하고 게임 레포의 빌드타임 Python 패키지로 교체했다. 추출 응답이 `kind`, `frame`, 의미문, 정확한 원문 evidence span, 태그를 직접 제시하며, 입력 snapshot hash와 응답 계약을 엄격히 검증한다.
+- 측면은 frame 중복을 금지하고 태그는 1–2개만 허용한다. 각 태그에는 12번 티켓의 루브릭과 정확히 일치하는 이유가 필요하며, 원문 밖 인용·미정 enum·추가 필드를 거부한다.
+- `FacetExtractor`, `TasteFilter`, `CaseAssembler` 경계를 분리하고 canonical request hash 기반 replay 어댑터를 제공했다. 기계 검증 뒤 취향 필터를 실행하며, case 산출도 엄격한 shape를 통과해야 한다.
+- emit은 16번 계약의 `game-data-pack@2`를 사용한다. alongside는 clue·facet ID를 팩 네임스페이스로 바꾸고 promotion은 정확한 target 선언 없이는 기존 ID를 유지할 수 없다. 프로버넌스와 자기참조 안정 output hash를 기록하며 원자적으로 파일을 교체한다.
+- 검증: Python 계약/어댑터/파이프라인 14개 테스트 통과, 동일 입력 2회 산출 byte 일치(`1d5edf37f9e916e8a50e865f3713dd19cad027ff88ce7ebc899ad85fcf98a776`), 산출 fixture를 TypeScript v2 loader가 base와 함께 로드하는 smoke H 통과.
+
+## Claude 검토 (2026-07-29)
+
+독립 재실행으로 검증 — 자기보고를 신뢰하지 않고 직접 대조했다.
+
+- **LLM이 kind/frame/tag를 직접 제시하는 경계**: 12·14의 의미론과 맞는다. 슈트→kind/frame 자동 추론 없이 facet 문구에서 직접 분류하는 방식이 스펙(`docs/superpowers/plans/2026-07-28-data-contracts-and-extraction.md` §5.2)과 일치하고, `contracts.py`가 원문 밖 인용·미정 enum·추가 필드를 실제로 거부하는 것을 코드로 확인.
+- **1–2 태그·루브릭·evidence span 게이트**: `scripts/tests/test_game_data_pack.py`를 독립 재실행 — **14/14 PASS** (자기보고 수치와 일치). `test_rejects_more_than_two_tags`, `test_rejects_tag_without_rubric_reason`, `test_rejects_quote_outside_source` 등 개별 거부 경로가 실제 테스트로 존재해 품질 게이트로 충분하다고 판단.
+- **FacetExtractor → TasteFilter → CaseAssembler 순서 보존**: 파이프라인 코드와 테스트 구조상 기계 검증이 취향 필터보다 앞선다는 순서가 유지됨을 확인.
+- **동일 입력 2회 byte 일치**: `test_cli_emits_identical_canonical_files` PASS로 재확인(개별 해시값은 별도 재현하지 않았으나 결정성 자체는 테스트로 검증됨).
+- **TypeScript 쪽 교차 로드**: `npm run smoke:datapack` 독립 재실행 → H1 포함 전체 PASS.
+
+결론: **승인.** 기술 검증 항목은 전부 통과. 남은 것은 통합 시점 회귀검증 재실행뿐(아래 공통 주의 참조).

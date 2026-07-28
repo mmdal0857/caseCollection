@@ -1,0 +1,47 @@
+{
+  "format": "NarrativeGenerationInput@1",
+  "id": "base.interlude.c1-c2",
+  "previous": {
+    "caseId": "c1",
+    "publicTags": ["논리", "은밀"],
+    "axisMove": 2,
+    "riskAxis": "heat"
+  },
+  "next": {
+    "caseId": "c2",
+    "title": "부두 창고의 알리바이",
+    "foreshadowAllowlist": [
+      "항구 쪽 창고에서 야간 경비가 죽었다. 용의자에겐 극장 표 한 장이 있다 — 너무 완벽한 알리바이."
+    ],
+    "guestFacetAllowlist": [
+      {
+        "key": "forged_ledger:motive",
+        "publicText": "다음 사건에서 위조 장부의 ‘금전 동기’ 측면을 빌린다."
+      }
+    ]
+  },
+  "storySeed": {
+    "publicPremise": "완벽한 알리바이의 시간 틈을 추적한다.",
+    "axisProfile": {
+      "id": "clock",
+      "label": "시간",
+      "low": "여유",
+      "high": "촉박"
+    }
+  },
+  "presentation": {
+    "title": "부두로 향하는 밤",
+    "reconLabel": "기사 스크랩 정찰",
+    "interviewLabel": "장부 담당자 면담",
+    "interviewResult": "다음 사건에서 장부 담당자의 공개된 측면을 빌린다.",
+    "stabilizeLabel": "수사선 정돈",
+    "stabilizeResult": "과열된 수사선을 한 단계 가라앉힌다."
+  },
+  "provenance": {
+    "sourceSnapshotIds": ["repo:CONTENT:c1", "repo:CONTENT:c2"],
+    "inputSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+    "promptVersion": "narrative-template@1",
+    "validatorVersion": "narrative-validator@1",
+    "outputSha256": "2222222222222222222222222222222222222222222222222222222222222222"
+  }
+}

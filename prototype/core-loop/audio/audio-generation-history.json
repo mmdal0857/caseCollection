@@ -1,0 +1,45 @@
+{
+  "format": "audio-generation-history@1",
+  "attempts": [
+    {
+      "provider": "local",
+      "musicModel": "ACE-Step/acestep-v15-xl-turbo-diffusers",
+      "sfxModel": "stabilityai/stable-audio-3-small-sfx",
+      "candidateCount": 18,
+      "mechanicalQa": "18/18 passed",
+      "humanReview": {
+        "status": "rejected",
+        "reviewedAt": "2026-07-28",
+        "reviewer": "user",
+        "reason": "사운드 퀄리티가 실제 사용이 어려운 수준"
+      },
+      "promotion": "prohibited"
+    },
+    {
+      "provider": "Higgsfield",
+      "musicModel": "sonilo_music",
+      "sfxModel": "seed_audio",
+      "candidateCount": 18,
+      "status": "promoted",
+      "mechanicalQa": "18/18 passed",
+      "humanReview": {
+        "status": "accepted",
+        "reviewer": "mmdal",
+        "reviewedAt": "2026-07-28T14:39:34.626Z",
+        "reason": "전체적인 톤이 비슷해서 일단 취향에 맞춰 선택"
+      },
+      "selectedCandidates": [
+        "card_pick_A",
+        "card_place_A",
+        "chain_release_B",
+        "facet_lock_A",
+        "interlude_action_B",
+        "music_case_B",
+        "music_title_B",
+        "review_fail_B",
+        "review_pass_B"
+      ],
+      "promotion": "completed"
+    }
+  ]
+}

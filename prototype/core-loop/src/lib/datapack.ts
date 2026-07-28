@@ -16,6 +16,12 @@ import type {
   CaseDef, ClueCard, HintDef, PatternCard, RunContent, Tag,
 } from './engine';
 import { SUITS } from './engine';
+import validatePackShape from './generated/game-data-pack-v2-validator.js';
+import {
+  validateNarrativeDefinitions,
+  type EndingDefinition,
+  type InterludeDefinition,
+} from './narrative-content';
 
 export { SUITS };
 export const TAGS = ['공개', '은밀', '강압', '신중', '논리'] as const;
@@ -27,10 +33,7 @@ export const FRAMES = [
 export const JOSA_KINDS = ['이가', '은는', '을를', '으로', '와과', '이다'] as const;
 
 export const PACK_FORMAT = 'game-data-pack';
-export const PACK_FORMAT_VERSION = 1;
-/** 팩 네임스페이스 id 규약 — base 팩은 'base', mod 팩은 'mod.<이름>' 관례. */
-const PACK_ID_RE = /^[a-z][a-z0-9_.-]*$/;
-
+export const PACK_FORMAT_VERSION = 2;
 /** run 전역 설정 — base 팩은 전부 채워야 하고, mod 팩은 바꿀 필드만 싣는다(필드 단위 상쇄). */
 export type RunTuning = Pick<
   RunContent,
@@ -43,23 +46,60 @@ const RUN_KEYS: (keyof RunTuning)[] = [
   'starterClues', 'starterPatterns', 'starterHints', 'initial', 'tagDeltas', 'badHeat',
 ];
 
+export type MergeMode = 'base' | 'alongside' | 'promotion';
+export type PackItemKind =
+  | 'clue' | 'pattern' | 'hint' | 'case' | 'run'
+  | 'interlude' | 'ending';
+
+export interface PromotionTarget {
+  kind: PackItemKind;
+  id: string;
+  expectedSourcePack: string;
+}
+
+export interface PackProvenance {
+  sourceSnapshotIds: string[];
+  inputSha256: string;
+  modelId?: string;
+  promptVersion?: string;
+  seed?: number;
+  rawResponseSha256?: string;
+  validatorVersion: string;
+  outputSha256: string;
+}
+
 export interface GameDataPack {
   format: typeof PACK_FORMAT;
   formatVersion: typeof PACK_FORMAT_VERSION;
   id: string;
   name?: string;
   version?: string;
+  mergeMode: MergeMode;
+  promotionTargets?: PromotionTarget[];
+  provenance: PackProvenance;
   clues?: Record<string, ClueCard>;
   patterns?: Record<string, PatternCard>;
   hintDefs?: Record<string, HintDef>;
   cases?: CaseDef[];
   run?: Partial<RunTuning>;
+  interludes?: InterludeDefinition[];
+  endings?: EndingDefinition[];
 }
 
+export type PackIssueCode =
+  | 'SCHEMA_INVALID'
+  | 'LEGACY_PACK_REQUIRES_MIGRATION'
+  | 'MERGE_POLICY_INVALID'
+  | 'REFERENCE_INVALID'
+  | 'ART_MISSING';
+
 export interface PackIssue {
+  code: PackIssueCode;
   /** 문제 위치 — `clues.thread_fiber.facets[0].key` 꼴. */
   path: string;
   msg: string;
+  packId?: string;
+  severity: 'error' | 'warning';
 }
 export interface PackValidation {
   ok: boolean;
@@ -71,55 +111,20 @@ export interface PackValidation {
 const isObj = (v: unknown): v is Record<string, unknown> =>
   typeof v === 'object' && v !== null && !Array.isArray(v);
 const isStr = (v: unknown): v is string => typeof v === 'string';
-const isNum = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v);
-const isStrArr = (v: unknown): v is string[] => Array.isArray(v) && v.every(isStr);
-const inEnum = (v: unknown, all: readonly string[]): boolean => isStr(v) && all.includes(v);
-const enumArr = (v: unknown, all: readonly string[]): boolean =>
-  Array.isArray(v) && v.every((x) => inEnum(x, all));
 
 class Issues {
   list: PackIssue[] = [];
-  add(path: string, msg: string): void {
-    this.list.push({ path, msg });
+  add(
+    path: string,
+    msg: string,
+    code: PackIssueCode = 'REFERENCE_INVALID',
+  ): void {
+    this.list.push({ code, path, msg, severity: 'error' });
   }
   /** 조건이 거짓이면 issue — 검증 본문을 선언형으로 유지한다. */
   need(ok: boolean, path: string, msg: string): boolean {
     if (!ok) this.add(path, msg);
     return ok;
-  }
-}
-
-/**
- * isObj 타입가드 + issue 기록을 한 번에 — `out.need(isObj(x), ...)`는 need()가 평범한
- * boolean을 받아 x의 타입을 좁혀주지 않는다(x는 계속 unknown으로 남아 이후 필드 접근이 전부 에러).
- * 이 함수 자체가 타입가드라 `if (!needObj(x, ...)) return;` 뒤에서 x가 실제로 좁혀진다.
- */
-function needObj(v: unknown, path: string, msg: string, out: Issues): v is Record<string, unknown> {
-  if (isObj(v)) return true;
-  out.add(path, msg);
-  return false;
-}
-
-function validateFacet(f: unknown, cardId: string, path: string, out: Issues): void {
-  if (!needObj(f, path, '측면이 객체가 아니다', out)) return;
-  if (out.need(inEnum(f.frame, FRAMES), `${path}.frame`, `frame은 ${FRAMES.join('|')} 중 하나여야 한다`)) {
-    out.need(f.key === `${cardId}:${f.frame}`, `${path}.key`, `facet key는 "${cardId}:${f.frame}"이어야 한다 (실제: ${JSON.stringify(f.key)})`);
-  }
-  out.need(isStr(f.meaning), `${path}.meaning`, 'meaning은 문자열이어야 한다');
-  out.need(isStr(f.note), `${path}.note`, 'note는 문자열이어야 한다');
-  out.need(enumArr(f.tags, TAGS), `${path}.tags`, `tags는 ${TAGS.join('|')}의 배열이어야 한다`);
-  if (f.line !== undefined) out.need(isStr(f.line), `${path}.line`, 'line은 문자열이어야 한다');
-  if (f.needsPrev !== undefined) {
-    out.need(enumArr(f.needsPrev, FRAMES), `${path}.needsPrev`, 'needsPrev는 frame의 배열이어야 한다');
-  }
-  if (f.gate !== undefined) {
-    const g = f.gate;
-    if (needObj(g, `${path}.gate`, 'gate는 객체여야 한다', out)) {
-      out.need(inEnum(g.stat, ['heat', 'trust', 'axis']), `${path}.gate.stat`, 'gate.stat은 heat|trust|axis');
-      out.need(isStr(g.why), `${path}.gate.why`, 'gate.why(막힌 이유)는 필수 문자열');
-      if (g.gte !== undefined) out.need(isNum(g.gte), `${path}.gate.gte`, 'gte는 숫자');
-      if (g.lt !== undefined) out.need(isNum(g.lt), `${path}.gate.lt`, 'lt는 숫자');
-    }
   }
 }
 
@@ -129,200 +134,177 @@ function isHangulSyllable(ch: string): boolean {
   return cp >= 0xac00 && cp <= 0xd7a3;
 }
 
-function validateClue(c: unknown, key: string, path: string, out: Issues): void {
-  if (!needObj(c, path, '단서가 객체가 아니다', out)) return;
-  out.need(c.id === key, `${path}.id`, `record 키와 id가 다르다 (키 "${key}" vs id ${JSON.stringify(c.id)})`);
-  if (out.need(isStr(c.name), `${path}.name`, 'name은 문자열이어야 한다')) {
-    const name = c.name as string;
-    out.need(
-      name.length > 0 && isHangulSyllable(name[name.length - 1]),
-      `${path}.name`,
-      `카드명은 완성형 한글로 끝나야 한다(티켓 19 저작 규약) — "${name}"`,
-    );
-  }
-  out.need(inEnum(c.suit, SUITS), `${path}.suit`, `suit는 ${SUITS.join('|')} 중 하나여야 한다`);
-  out.need(inEnum(c.kind, KINDS), `${path}.kind`, `kind는 ${KINDS.join('|')} 중 하나여야 한다`);
-  out.need(enumArr(c.tags, TAGS), `${path}.tags`, `tags는 ${TAGS.join('|')}의 배열이어야 한다`);
-  out.need(isStr(c.text), `${path}.text`, 'text는 문자열이어야 한다');
-  if (!out.need(Array.isArray(c.facets) && c.facets.length > 0, `${path}.facets`, '측면이 최소 1개 필요하다(facets[0] = 획득 시 아는 측면)')) return;
-  const seen = new Set<string>();
-  (c.facets as unknown[]).forEach((f, i) => {
-    validateFacet(f, key, `${path}.facets[${i}]`, out);
-    if (isObj(f) && isStr(f.frame)) {
-      out.need(!seen.has(f.frame), `${path}.facets[${i}].frame`, `frame "${f.frame}" 중복 — 한 카드의 측면 frame은 유일해야 한다`);
-      seen.add(f.frame);
-    }
-  });
-}
-
-function validateSlot(sl: unknown, path: string, out: Issues): void {
-  if (!needObj(sl, path, '슬롯이 객체가 아니다', out)) return;
-  out.need(isStr(sl.id), `${path}.id`, 'id는 문자열이어야 한다');
-  out.need(isStr(sl.label), `${path}.label`, 'label은 문자열이어야 한다');
-  const a = sl.answer;
-  if (!isStr(a)) {
-    if (needObj(a, `${path}.answer`, 'answer는 카드 id 또는 조건부 정답 객체여야 한다', out)) {
-      out.need(inEnum(a.stat, ['heat', 'trust']), `${path}.answer.stat`, '조건부 정답의 stat은 heat|trust');
-      out.need(isNum(a.gte), `${path}.answer.gte`, 'gte는 숫자');
-      out.need(isStr(a.then) && isStr(a.else), `${path}.answer`, 'then/else는 카드 id 문자열이어야 한다');
-    }
-  }
-  if (sl.hit !== undefined) out.need(isStr(sl.hit), `${path}.hit`, 'hit은 문자열이어야 한다');
-  if (sl.josaAfter !== undefined) {
-    out.need(inEnum(sl.josaAfter, JOSA_KINDS), `${path}.josaAfter`, `josaAfter는 ${JOSA_KINDS.join('|')} 중 하나여야 한다(티켓 19)`);
-  }
-  if (sl.role !== undefined) {
-    const r = sl.role;
-    if (needObj(r, `${path}.role`, 'role은 객체여야 한다', out)) {
-      out.need(inEnum(r.frame, FRAMES), `${path}.role.frame`, `role.frame은 ${FRAMES.join('|')} 중 하나여야 한다`);
-      if (r.noun !== undefined) out.need(isStr(r.noun), `${path}.role.noun`, 'noun은 문자열');
-      if (r.quality !== undefined) out.need(isStr(r.quality), `${path}.role.quality`, 'quality는 문자열');
-      if (r.avoidTags !== undefined) out.need(enumArr(r.avoidTags, TAGS), `${path}.role.avoidTags`, 'avoidTags는 tag의 배열');
-      if (r.accepts !== undefined) out.need(enumArr(r.accepts, KINDS), `${path}.role.accepts`, 'accepts는 kind의 배열');
-    }
-  }
-}
-
-const FACET_KEY_RE = /^[^:]+:[^:]+$/;
 /** smoke.ts 섹션 F와 동일 규칙(정본은 그쪽) — 조사 뒤 한글이 바로 이어지면 다른 낱말(예: '이유')일 수 있어 제외. */
 const JOSA_LEAD_RE = /^(이|가|은|는|을|를|로|으로|과|와|이다|다)(?![가-힣])/;
 
-function validateCase(k: unknown, path: string, out: Issues): void {
-  if (!needObj(k, path, 'case가 객체가 아니다', out)) return;
-  out.need(isStr(k.id), `${path}.id`, 'id는 문자열이어야 한다');
-  out.need(isStr(k.title), `${path}.title`, 'title은 문자열이어야 한다');
-  out.need(isStr(k.intro), `${path}.intro`, 'intro는 문자열이어야 한다');
-  for (const opt of ['teaser', 'contextHint', 'guestPattern'] as const) {
-    if (k[opt] !== undefined) out.need(isStr(k[opt]), `${path}.${opt}`, `${opt}은 문자열이어야 한다`);
+function schemaIssues(json: unknown): PackIssue[] {
+  if (validatePackShape(json)) return [];
+  const packId = isObj(json) && isStr(json.id) ? json.id : undefined;
+  return (validatePackShape.errors ?? []).map((error) => {
+    const path = error.instancePath
+      .replace(/^\//, '')
+      .replaceAll('/', '.');
+    return {
+      code: 'SCHEMA_INVALID',
+      path,
+      msg: `${path || '$'}: ${error.message ?? error.keyword}`,
+      packId,
+      severity: 'error',
+    };
+  });
+}
+
+function crossFieldIssues(pack: GameDataPack): PackIssue[] {
+  const out = new Issues();
+  for (const [id, clue] of Object.entries(pack.clues ?? {})) {
+    out.need(
+      clue.id === id,
+      `clues.${id}.id`,
+      `record 키와 id가 다르다 (키 "${id}" vs id "${clue.id}")`,
+    );
+    out.need(
+      clue.name.length > 0 &&
+        isHangulSyllable(clue.name[clue.name.length - 1]),
+      `clues.${id}.name`,
+      `카드명은 완성형 한글로 끝나야 한다 — "${clue.name}"`,
+    );
+    const frames = new Set<string>();
+    clue.facets.forEach((facet, index) => {
+      out.need(
+        facet.key === `${id}:${facet.frame}`,
+        `clues.${id}.facets[${index}].key`,
+        `facet key는 "${id}:${facet.frame}"이어야 한다`,
+      );
+      out.need(
+        !frames.has(facet.frame),
+        `clues.${id}.facets[${index}].frame`,
+        `frame "${facet.frame}" 중복`,
+      );
+      frames.add(facet.frame);
+    });
   }
-  const slots = Array.isArray(k.slots) ? (k.slots as unknown[]) : null;
-  if (out.need(slots !== null && slots.length > 0, `${path}.slots`, '슬롯이 최소 1개 필요하다')) {
-    const seen = new Set<string>();
-    slots!.forEach((sl, i) => {
-      validateSlot(sl, `${path}.slots[${i}]`, out);
-      if (isObj(sl) && isStr(sl.id)) {
-        out.need(!seen.has(sl.id), `${path}.slots[${i}].id`, `슬롯 id "${sl.id}" 중복`);
-        seen.add(sl.id);
+  for (const [id, pattern] of Object.entries(pack.patterns ?? {})) {
+    out.need(
+      pattern.id === id,
+      `patterns.${id}.id`,
+      'record 키와 id가 다르다',
+    );
+  }
+  for (const [id, hint] of Object.entries(pack.hintDefs ?? {})) {
+    out.need(
+      hint.id === id,
+      `hintDefs.${id}.id`,
+      'record 키와 id가 다르다',
+    );
+  }
+  const caseIds = new Set<string>();
+  (pack.cases ?? []).forEach((caseDef, caseIndex) => {
+    const path = `cases[${caseIndex}]`;
+    out.need(
+      !caseIds.has(caseDef.id),
+      `${path}.id`,
+      `case id "${caseDef.id}" 중복`,
+    );
+    caseIds.add(caseDef.id);
+    out.need(
+      caseDef.pieces.length === caseDef.slots.length + 1,
+      `${path}.pieces`,
+      `pieces는 slots + 1개(${caseDef.slots.length + 1})여야 한다`,
+    );
+    const slotIds = new Set<string>();
+    caseDef.slots.forEach((slot, slotIndex) => {
+      out.need(
+        !slotIds.has(slot.id),
+        `${path}.slots[${slotIndex}].id`,
+        `슬롯 id "${slot.id}" 중복`,
+      );
+      slotIds.add(slot.id);
+      const nextPiece = (caseDef.pieces[slotIndex + 1] ?? '')
+        .replace(/^\s+/, '');
+      if (JOSA_LEAD_RE.test(nextPiece) && slot.josaAfter === undefined) {
+        out.add(
+          `${path}.pieces[${slotIndex + 1}]`,
+          `조각 "${caseDef.pieces[slotIndex + 1]}"이 조사로 시작하는데 슬롯 "${slot.id}"에 josaAfter 미지정`,
+        );
       }
     });
-    const piecesOk = out.need(
-      isStrArr(k.pieces) && k.pieces.length === slots!.length + 1,
-      `${path}.pieces`,
-      `pieces는 slots + 1개(${slots!.length + 1})의 문자열이어야 한다 — 조각 사이에 슬롯이 낀다`,
-    );
-    // 티켓 19 P0 검증기 요건 — smoke.ts 섹션 F와 같은 규칙(정본은 그쪽): 슬롯 직후 조각이
-    // 리터럴 조사로 시작하면 정답 받침을 누출한다. josaAfter가 렌더에서 대신 계산해야 한다.
-    if (piecesOk) {
-      const pieces = k.pieces as string[];
-      slots!.forEach((sl, i) => {
-        const piece = (pieces[i + 1] ?? '').replace(/^\s+/, '');
-        if (JOSA_LEAD_RE.test(piece) && isObj(sl) && !sl.josaAfter) {
-          out.add(`${path}.pieces[${i + 1}]`, `조각 "${pieces[i + 1]}"이 조사로 시작하는데 슬롯 "${sl.id}"에 josaAfter 미지정 — 정답 받침 누출`);
-        }
-      });
-    }
-  }
-  out.need(isStrArr(k.patterns) && (k.patterns as string[]).length > 0, `${path}.patterns`, 'patterns는 골격 id 배열(최소 1)이어야 한다');
-  out.need(isStrArr(k.guestClues), `${path}.guestClues`, 'guestClues는 카드 id 배열이어야 한다');
-  out.need(isStrArr(k.packPool), `${path}.packPool`, 'packPool은 카드 id 배열이어야 한다');
-  if (k.guestFacets !== undefined) {
+  });
+  const interludeIds = new Set<string>();
+  (pack.interludes ?? []).forEach((definition, index) => {
+    const path = `interludes[${index}]`;
     out.need(
-      isStrArr(k.guestFacets) && (k.guestFacets as string[]).every((s) => FACET_KEY_RE.test(s)),
-      `${path}.guestFacets`,
-      'guestFacets는 "<cardId>:<frame>" 배열이어야 한다',
+      !interludeIds.has(definition.id),
+      `${path}.id`,
+      `interlude id "${definition.id}" 중복`,
     );
-  }
-  if (k.axis !== undefined) {
-    const ax = k.axis;
-    if (needObj(ax, `${path}.axis`, 'axis는 객체여야 한다', out)) {
-      for (const f of ['id', 'label', 'low', 'high', 'hint'] as const) {
-        out.need(isStr(ax[f]), `${path}.axis.${f}`, `${f}는 문자열이어야 한다`);
+    interludeIds.add(definition.id);
+    const kinds = definition.actions.map((action) => action.kind);
+    out.need(
+      definition.apBudget === 2 &&
+        kinds.length === 3 &&
+        new Set(kinds).size === 3 &&
+        ['recon', 'interview', 'stabilize'].every((kind) =>
+          kinds.includes(kind as typeof kinds[number])
+        ),
+      `${path}.actions`,
+      'AP 2와 recon/interview/stabilize 각 1개가 필요하다',
+    );
+    definition.actions.forEach((action, actionIndex) => {
+      if (action.kind === 'recon') {
+        out.need(
+          action.resultText === action.revealValue,
+          `${path}.actions[${actionIndex}].resultText`,
+          'recon 결과는 승인된 revealValue와 byte-identical이어야 한다',
+        );
       }
-      out.need(isNum(ax.init), `${path}.axis.init`, 'init은 숫자여야 한다');
-      out.need(inEnum(ax.drivenBy, TAGS), `${path}.axis.drivenBy`, `drivenBy는 ${TAGS.join('|')} 중 하나여야 한다`);
-    }
-  }
-  if (k.misfits !== undefined) {
-    const ok =
-      isObj(k.misfits) &&
-      Object.values(k.misfits).every((m) => isObj(m) && Object.values(m).every(isStr));
-    out.need(ok, `${path}.misfits`, 'misfits는 { slotId: { cardId: 반응문 } } 꼴이어야 한다');
-  }
+      if (action.kind === 'stabilize') {
+        out.need(
+          (action.stat === 'heat' && action.delta < 0) ||
+            (action.stat === 'trust' && action.delta > 0),
+          `${path}.actions[${actionIndex}].delta`,
+          'stabilize는 heat를 낮추거나 trust를 높여야 한다',
+        );
+      }
+    });
+  });
+  const endingIds = new Set<string>();
+  (pack.endings ?? []).forEach((ending, index) => {
+    const path = `endings[${index}]`;
+    out.need(
+      !endingIds.has(ending.id),
+      `${path}.id`,
+      `ending id "${ending.id}" 중복`,
+    );
+    endingIds.add(ending.id);
+    out.need(
+      (ending.triggerRuleId === 'bad-press' && ending.warningRuleId === 'press') ||
+        (ending.triggerRuleId === 'bad-collapse' && ending.warningRuleId === 'collapse'),
+      path,
+      'BAD trigger와 선행 warning 규칙이 맞지 않는다',
+    );
+  });
+  return out.list;
 }
 
-function validateRun(run: unknown, out: Issues): void {
-  if (!needObj(run, 'run', 'run은 객체여야 한다', out)) return;
-  for (const key of Object.keys(run)) {
-    out.need((RUN_KEYS as string[]).includes(key), `run.${key}`, '알 수 없는 run 필드');
-  }
-  // 프로토 단계: 인터루드 구조는 느슨히(객체 배열만) — TODO(16): 계약 확정 시 조인다.
-  if (run.interludeEvents !== undefined) {
-    out.need(Array.isArray(run.interludeEvents) && run.interludeEvents.every(isObj), 'run.interludeEvents', '객체 배열이어야 한다');
-  }
-  if (run.interludeActions !== undefined) {
-    out.need(Array.isArray(run.interludeActions) && run.interludeActions.every(isObj), 'run.interludeActions', '객체 배열이어야 한다');
-  }
-  if (run.interludeAP !== undefined) out.need(isNum(run.interludeAP), 'run.interludeAP', '숫자여야 한다');
-  if (run.badHeat !== undefined) out.need(isNum(run.badHeat), 'run.badHeat', '숫자여야 한다');
-  for (const f of ['starterClues', 'starterPatterns', 'starterHints'] as const) {
-    if (run[f] !== undefined) out.need(isStrArr(run[f]), `run.${f}`, 'id 문자열 배열이어야 한다');
-  }
-  if (run.initial !== undefined) {
-    const ini = run.initial;
-    out.need(isObj(ini) && isNum(ini.heat) && isNum(ini.trust), 'run.initial', '{ heat, trust } 숫자 쌍이어야 한다');
-  }
-  if (run.tagDeltas !== undefined) {
-    const td = run.tagDeltas;
-    const ok =
-      isObj(td) &&
-      Object.entries(td).every(
-        ([tag, d]) => inEnum(tag, TAGS) && isObj(d) && isNum(d.heat) && isNum(d.trust),
-      );
-    out.need(ok, 'run.tagDeltas', `{ ${TAGS.join('|')}: { heat, trust } } 꼴이어야 한다`);
-  }
-}
-
-/** 팩 한 개의 형태 검증 — schema/game-data-pack.json과 같은 규칙 + 교차 필드 불변식. */
+/** 팩 한 개의 형태 검증 — generated v2 schema + 교차 필드 불변식. */
 export function validatePack(json: unknown): PackValidation {
   const out = new Issues();
-  if (!needObj(json, '', '팩이 JSON 객체가 아니다', out)) return { ok: false, issues: out.list };
-  out.need(json.format === PACK_FORMAT, 'format', `format은 "${PACK_FORMAT}"이어야 한다 (실제: ${JSON.stringify(json.format)})`);
-  out.need(
-    json.formatVersion === PACK_FORMAT_VERSION,
-    'formatVersion',
-    `지원하는 formatVersion은 ${PACK_FORMAT_VERSION}뿐이다 (실제: ${JSON.stringify(json.formatVersion)}) — 버전 스큐`,
-  );
-  out.need(isStr(json.id) && PACK_ID_RE.test(json.id), 'id', '팩 id는 소문자로 시작하는 [a-z0-9_.-] 문자열이어야 한다');
-  for (const [field, fn] of [['clues', validateClue], ['patterns', null], ['hintDefs', null]] as const) {
-    const rec = json[field];
-    if (rec === undefined) continue;
-    if (!needObj(rec, field, 'id → 항목의 record여야 한다', out)) continue;
-    for (const [key, item] of Object.entries(rec)) {
-      if (fn) {
-        fn(item, key, `${field}.${key}`, out);
-      } else if (needObj(item, `${field}.${key}`, '항목이 객체가 아니다', out)) {
-        out.need(item.id === key, `${field}.${key}.id`, `record 키와 id가 다르다`);
-        out.need(isStr(item.name), `${field}.${key}.name`, 'name은 문자열이어야 한다');
-        const textField = field === 'patterns' ? 'text' : 'desc';
-        out.need(isStr(item[textField]), `${field}.${key}.${textField}`, `${textField}는 문자열이어야 한다`);
-        if (field === 'hintDefs') out.need(isNum(item.heatCost), `${field}.${key}.heatCost`, 'heatCost는 숫자여야 한다');
-      }
-    }
+  if (!isObj(json)) {
+    out.add('', '팩이 JSON 객체가 아니다', 'SCHEMA_INVALID');
+    return { ok: false, issues: out.list };
   }
-  if (json.cases !== undefined) {
-    if (out.need(Array.isArray(json.cases), 'cases', '배열이어야 한다')) {
-      const seen = new Set<string>();
-      (json.cases as unknown[]).forEach((k, i) => {
-        validateCase(k, `cases[${i}]`, out);
-        if (isObj(k) && isStr(k.id)) {
-          out.need(!seen.has(k.id), `cases[${i}].id`, `case id "${k.id}" 중복`);
-          seen.add(k.id);
-        }
-      });
-    }
+  if (json.formatVersion === 1) {
+    out.add(
+      'formatVersion',
+      'v1 팩은 명시적 migration이 필요하다',
+      'LEGACY_PACK_REQUIRES_MIGRATION',
+    );
+    return { ok: false, issues: out.list };
   }
-  if (json.run !== undefined) validateRun(json.run, out);
-  return { ok: out.list.length === 0, issues: out.list };
+  const shape = schemaIssues(json);
+  if (shape.length > 0) return { ok: false, issues: shape };
+  const cross = crossFieldIssues(json as unknown as GameDataPack);
+  return { ok: cross.length === 0, issues: cross };
 }
 
 /** 핸드오프 명세의 진입점 — 상세가 필요하면 validatePack을 쓴다. */
@@ -330,11 +312,216 @@ export function validateGameDataPack(json: unknown): boolean {
   return validatePack(json).ok;
 }
 
-// ── ② 병합 — base→mod 순서, 같은 id는 뒤가 상쇄 ─────────────────────────────
+export interface MigrationResult {
+  ok: boolean;
+  pack?: GameDataPack;
+  issues: PackIssue[];
+}
+
+export function canonicalJson(value: unknown): string {
+  const normalize = (item: unknown): unknown => {
+    if (Array.isArray(item)) return item.map(normalize);
+    if (item !== null && typeof item === 'object') {
+      return Object.fromEntries(
+        Object.entries(item as Record<string, unknown>)
+          .sort(([a], [b]) => a.localeCompare(b))
+          .map(([key, nested]) => [key, normalize(nested)]),
+      );
+    }
+    return item;
+  };
+  return `${JSON.stringify(normalize(value))}\n`;
+}
+
+async function sha256Hex(value: unknown): Promise<string> {
+  const digest = await globalThis.crypto.subtle.digest(
+    'SHA-256',
+    new TextEncoder().encode(canonicalJson(value)),
+  );
+  return Array.from(new Uint8Array(digest))
+    .map((byte) => byte.toString(16).padStart(2, '0'))
+    .join('');
+}
+
+export async function migrateV1BasePack(
+  data: unknown,
+): Promise<MigrationResult> {
+  if (!isObj(data) || data.formatVersion !== 1 || data.id !== 'base') {
+    return {
+      ok: false,
+      issues: [{
+        code: 'LEGACY_PACK_REQUIRES_MIGRATION',
+        path: 'formatVersion',
+        msg: 'v1 migration은 base pack에만 허용된다',
+        severity: 'error',
+      }],
+    };
+  }
+  const inputSha256 = await sha256Hex(data);
+  const pack = {
+    ...data,
+    formatVersion: 2,
+    mergeMode: 'base',
+    provenance: {
+      sourceSnapshotIds: ['migration:v1-base'],
+      inputSha256,
+      validatorVersion: 'pack-v2',
+      outputSha256: '0'.repeat(64),
+    },
+  };
+  pack.provenance.outputSha256 = await sha256Hex(pack);
+  const validation = validatePack(pack);
+  return validation.ok
+    ? { ok: true, pack: pack as GameDataPack, issues: [] }
+    : { ok: false, issues: validation.issues };
+}
+
+// ── ② 병합 정책 — base→external 순서, 충돌은 명시적 promotion만 허용 ───────
+
+export interface PackAddition {
+  kind: PackItemKind;
+  id: string;
+  by: string;
+}
+
+export interface PackPreflight {
+  ok: boolean;
+  issues: PackIssue[];
+  additions: PackAddition[];
+  overrides: MergeReport['overrides'];
+  orderedPackIds: string[];
+}
+
+interface PackItemRef {
+  kind: PackItemKind;
+  id: string;
+}
+
+function policyIssue(
+  packId: string,
+  path: string,
+  msg: string,
+): PackIssue {
+  return {
+    code: 'MERGE_POLICY_INVALID',
+    path,
+    msg,
+    packId,
+    severity: 'error',
+  };
+}
+
+function visitPackItems(
+  pack: GameDataPack,
+  visit: (item: PackItemRef) => void,
+): void {
+  Object.keys(pack.clues ?? {}).forEach((id) => visit({ kind: 'clue', id }));
+  Object.keys(pack.patterns ?? {}).forEach((id) => visit({ kind: 'pattern', id }));
+  Object.keys(pack.hintDefs ?? {}).forEach((id) => visit({ kind: 'hint', id }));
+  (pack.cases ?? []).forEach(({ id }) => visit({ kind: 'case', id }));
+  (pack.interludes ?? []).forEach(({ id }) => visit({ kind: 'interlude', id }));
+  (pack.endings ?? []).forEach(({ id }) => visit({ kind: 'ending', id }));
+  for (const id of RUN_KEYS) {
+    if (pack.run?.[id] !== undefined) visit({ kind: 'run', id });
+  }
+}
+
+export function preflightPacks(packs: GameDataPack[]): PackPreflight {
+  const issues: PackIssue[] = [];
+  const additions: PackAddition[] = [];
+  const provenance: Record<string, string> = {};
+  const overrides: MergeReport['overrides'] = [];
+  const seenPackIds = new Set<string>();
+
+  packs.forEach((pack, index) => {
+    if (seenPackIds.has(pack.id)) {
+      issues.push(policyIssue(pack.id, 'id', 'pack ID가 중복됐다'));
+    }
+    seenPackIds.add(pack.id);
+    if (index === 0 && (pack.id !== 'base' || pack.mergeMode !== 'base')) {
+      issues.push(policyIssue(
+        pack.id,
+        'mergeMode',
+        '첫 팩은 id와 mergeMode가 모두 base여야 한다',
+      ));
+    }
+    if (index > 0 && pack.mergeMode === 'base') {
+      issues.push(policyIssue(
+        pack.id,
+        'mergeMode',
+        'base는 첫 팩 하나뿐이다',
+      ));
+    }
+
+    visitPackItems(pack, ({ kind, id }) => {
+      const key = `${kind}:${id}`;
+      const from = provenance[key];
+      if (from === undefined) {
+        if (
+          index > 0 &&
+          kind !== 'run' &&
+          !id.startsWith(`${pack.id}.`)
+        ) {
+          issues.push(policyIssue(
+            pack.id,
+            `${kind}.${id}`,
+            `새 콘텐츠 ID는 "${pack.id}."로 시작해야 한다`,
+          ));
+        }
+        additions.push({ kind, id, by: pack.id });
+        provenance[key] = pack.id;
+        return;
+      }
+
+      const target = pack.promotionTargets?.find(
+        (item) => item.kind === kind && item.id === id,
+      );
+      if (
+        pack.mergeMode !== 'promotion' ||
+        target?.expectedSourcePack !== from
+      ) {
+        issues.push(policyIssue(
+          pack.id,
+          `${kind}.${id}`,
+          `상쇄 대상 ${kind}:${id}의 현재 소유자는 ${from}이다`,
+        ));
+        return;
+      }
+      overrides.push({ kind, id, from, by: pack.id });
+      provenance[key] = pack.id;
+    });
+
+    for (const target of pack.promotionTargets ?? []) {
+      const used = overrides.some(
+        (item) =>
+          item.by === pack.id &&
+          item.kind === target.kind &&
+          item.id === target.id,
+      );
+      if (!used) {
+        issues.push(policyIssue(
+          pack.id,
+          `promotionTargets.${target.kind}.${target.id}`,
+          '선언한 상쇄 대상에 대응하는 payload가 없다',
+        ));
+      }
+    }
+  });
+
+  return {
+    ok: issues.every((issue) => issue.severity !== 'error'),
+    issues,
+    additions,
+    overrides,
+    orderedPackIds: packs.map((pack) => pack.id),
+  };
+}
+
+// ── ③ 병합 — preflight를 통과한 팩에만 호출한다 ─────────────────────────────
 
 export interface MergeReport {
   /** 상쇄 이력 — 로드 UX가 "이 mod가 공식 카드 N장을 덮어썼다"를 보여줄 근거. */
-  overrides: { kind: 'clue' | 'pattern' | 'hint' | 'case' | 'run'; id: string; from: string; by: string }[];
+  overrides: { kind: PackItemKind; id: string; from: string; by: string }[];
   /** `${kind}:${id}` → 최종 소유 팩 id. */
   provenance: Record<string, string>;
 }
@@ -346,6 +533,10 @@ export function mergePacks(packs: GameDataPack[]): { content: RunContent; report
   const hintDefs: Record<string, HintDef> = {};
   const cases: CaseDef[] = [];
   const caseIdx = new Map<string, number>();
+  const interludes: InterludeDefinition[] = [];
+  const interludeIdx = new Map<string, number>();
+  const endings: EndingDefinition[] = [];
+  const endingIdx = new Map<string, number>();
   const run: Partial<RunTuning> = {};
 
   const put = <T>(target: Record<string, T>, kind: MergeReport['overrides'][0]['kind'], id: string, item: T, by: string) => {
@@ -372,6 +563,40 @@ export function mergePacks(packs: GameDataPack[]): { content: RunContent; report
       }
       report.provenance[pkey] = p.id;
     }
+    for (const definition of p.interludes ?? []) {
+      const pkey = `interlude:${definition.id}`;
+      const prev = report.provenance[pkey];
+      if (prev !== undefined) {
+        report.overrides.push({
+          kind: 'interlude',
+          id: definition.id,
+          from: prev,
+          by: p.id,
+        });
+        interludes[interludeIdx.get(definition.id)!] = definition;
+      } else {
+        interludeIdx.set(definition.id, interludes.length);
+        interludes.push(definition);
+      }
+      report.provenance[pkey] = p.id;
+    }
+    for (const definition of p.endings ?? []) {
+      const pkey = `ending:${definition.id}`;
+      const prev = report.provenance[pkey];
+      if (prev !== undefined) {
+        report.overrides.push({
+          kind: 'ending',
+          id: definition.id,
+          from: prev,
+          by: p.id,
+        });
+        endings[endingIdx.get(definition.id)!] = definition;
+      } else {
+        endingIdx.set(definition.id, endings.length);
+        endings.push(definition);
+      }
+      report.provenance[pkey] = p.id;
+    }
     for (const key of RUN_KEYS) {
       const v = p.run?.[key];
       if (v === undefined) continue;
@@ -389,6 +614,8 @@ export function mergePacks(packs: GameDataPack[]): { content: RunContent; report
     interludeEvents: run.interludeEvents ?? [],
     interludeAP: run.interludeAP ?? 0,
     interludeActions: run.interludeActions ?? [],
+    interludes,
+    endings,
     starterClues: run.starterClues ?? [],
     starterPatterns: run.starterPatterns ?? [],
     starterHints: run.starterHints ?? [],
@@ -403,7 +630,16 @@ export function mergePacks(packs: GameDataPack[]): { content: RunContent; report
 export function packFromContent(id: string, c: RunContent): GameDataPack {
   return {
     format: PACK_FORMAT, formatVersion: PACK_FORMAT_VERSION, id,
+    mergeMode: 'base',
+    provenance: {
+      sourceSnapshotIds: ['repo:CONTENT'],
+      inputSha256: '0'.repeat(64),
+      validatorVersion: 'pack-v2',
+      outputSha256: '0'.repeat(64),
+    },
     clues: c.clues, patterns: c.patterns, hintDefs: c.hintDefs, cases: c.cases,
+    interludes: c.interludes,
+    endings: c.endings,
     run: {
       interludeEvents: c.interludeEvents, interludeAP: c.interludeAP, interludeActions: c.interludeActions,
       starterClues: c.starterClues, starterPatterns: c.starterPatterns, starterHints: c.starterHints,
@@ -412,7 +648,7 @@ export function packFromContent(id: string, c: RunContent): GameDataPack {
   };
 }
 
-// ── ③ 병합 후 참조 무결성 ────────────────────────────────────────────────────
+// ── ④ 병합 후 참조 무결성 ────────────────────────────────────────────────────
 
 export function checkIntegrity(content: RunContent): PackIssue[] {
   const out = new Issues();
@@ -482,6 +718,9 @@ export function checkIntegrity(content: RunContent): PackIssue[] {
     'run.tagDeltas',
     `tagDeltas는 ${TAGS.join('·')} 전부를 정의해야 한다`,
   );
+  for (const issue of validateNarrativeDefinitions(content)) {
+    out.add(issue.path, issue.msg);
+  }
   return out.list;
 }
 
@@ -491,6 +730,7 @@ export interface LoadResult {
   ok: boolean;
   content?: RunContent;
   report?: MergeReport;
+  preflight?: PackPreflight;
   issues: PackIssue[];
 }
 
@@ -504,11 +744,29 @@ export function loadPacks(baseJson: unknown, modJsons: unknown[] = []): LoadResu
     if (v.ok) {
       packs.push(json as unknown as GameDataPack);
     } else {
-      issues.push(...v.issues.map((x) => ({ path: `${label}:${x.path}`, msg: x.msg })));
+      issues.push(...v.issues.map((x) => ({
+        ...x,
+        path: `${label}:${x.path}`,
+        packId: label,
+      })));
     }
   });
   if (issues.length > 0) return { ok: false, issues };
+  const preflight = preflightPacks(packs);
+  if (!preflight.ok) {
+    return {
+      ok: false,
+      preflight,
+      issues: preflight.issues,
+    };
+  }
   const { content, report } = mergePacks(packs);
   const integrity = checkIntegrity(content);
-  return { ok: integrity.length === 0, content, report, issues: integrity };
+  return {
+    ok: integrity.length === 0,
+    content,
+    report,
+    preflight,
+    issues: integrity,
+  };
 }

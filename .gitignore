@@ -8,7 +8,18 @@ dist/
 #  npm install·esbuild가 남기는 산출물만 무시한다.)
 prototype/core-loop/smoke.mjs
 prototype/core-loop/smoke-datapack.mjs
+prototype/core-loop/smoke-pack-storage.mjs
+prototype/core-loop/smoke-collection.mjs
+prototype/core-loop/smoke-run-flow.mjs
+prototype/core-loop/smoke-run-session.mjs
+prototype/core-loop/smoke-narrative-content.mjs
+prototype/core-loop/smoke-audio.mjs
+prototype/core-loop/check-pack-file.mjs
+prototype/core-loop/migrate-pack-v1-to-v2.mjs
 prototype/core-loop/.vite/
+prototype/core-loop/.audio-candidates/
+prototype/core-loop/public/audio-candidates/
+prototype/core-loop/.audio-*.log
 
 # 티켓 13 아트 — 생성 바이너리는 미커밋(레시피가 정본).
 #   시안 재현: scripts/protoart-prompts.sh   카드: scripts/cardart-generate.sh

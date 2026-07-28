@@ -1,9 +1,28 @@
 # 인터페이스 비주얼 시스템
 
-Status: open
+Status: closed
 Labels: wayfinder:prototype
-Assignee:
+Assignee: Codex
+Reviewed-by: Claude (2026-07-29)
 Blocked-by: 20
+
+## Resolution
+
+- 인터페이스를 flat cell-noir 규칙으로 정리했다. gradient, glass, backdrop blur, gloss, 장식용 confetti를 제거하고 단색 면·잉크 선·절제된 그림자로 계층을 표현한다.
+- 태그는 의미 색을 유지하고, 슈트는 색뿐 아니라 아이콘·레이블·테두리 패턴(실선/점선/이중선/점선형)으로 중복 부호화했다.
+- 4px 기반 spacing token과 44px 최소 상호작용 높이, 명확한 focus-visible 링을 적용했다.
+- 움직임은 측면 확정·전파·잠금 해제·화면 전환처럼 상태 변화에만 남겼다. `prefers-reduced-motion`에서는 애니메이션과 transform을 제거한다.
+- Home, Briefing, Case Review, Clear, Interlude, Collection, Notebook Drawer, Summary의 반응형 규칙을 추가했다.
+- 브라우저 검증 중 배경 레이어가 상단 버튼을 가로채던 `pointer-events` 결함과 후행 규칙이 sticky 상단바를 덮던 cascade 결함을 발견해 수정했다.
+
+검증: 소스 검색에서 `gradient`, `backdrop-filter`, 무한 애니메이션, confetti가 없음을 확인했다. 실제 Chrome에서 1280×720, 1024×768, 390×844 모두 가로 오버플로 없음, 최소 버튼/슬롯 높이 44px, 컬렉션 버튼 hit target 정상, 상단바 sticky 유지, 핵심 화면 스크롤 가능을 확인했다. `npm run build`와 TypeScript 검사도 통과했다.
+
+## Claude 검토 (2026-07-29)
+
+- [x] `npm run build`·`npx tsc --noEmit` 독립 재실행 PASS — 소스에 남은 gradient/backdrop-filter/confetti 여부는 코드 검색 결과(Codex 자기보고)를 신뢰했다.
+- [ ] **색각·뷰포트·reduced-motion·시각 회귀는 내가 직접 브라우저로 재구동하지 않았다.** 이 항목들은 자동화 스모크로 커버되지 않는 순수 시각 검증이라 Codex의 Chrome 확인 기록에 의존한 상태다 — 통합 전 실제로 `npm run dev`를 띄워 1280×720/1024×768/narrow와 reduced-motion을 한 번 더 사람이 봐야 한다.
+
+결론: **조건부 승인** — 코드·빌드 레벨은 문제없으나, 시각 회귀 확인은 아직 사람 눈으로 재확인되지 않은 항목으로 남겨둔다.
 
 ## Question
 

@@ -1,120 +1,109 @@
 <script lang="ts">
-  import { fade, fly, slide } from 'svelte/transition';
-  import type { Action, GameState, RunContent, Tag } from '../engine';
+  import { humanizeInterludeResult } from '../engine';
+  import type {
+    Action,
+    GameState,
+    InterludeActionKind,
+    RunContent,
+  } from '../engine';
 
   let { game, content, dispatch }: {
     game: GameState;
     content: RunContent;
-    dispatch: (a: Action) => void;
+    dispatch: (action: Action) => void;
   } = $props();
 
-  const ev = $derived(content.interludeEvents.find((e) => e.id === game.interlude?.eventId));
+  const event = $derived(
+    content.interludeEvents.find((item) => item.id === game.interlude?.eventId),
+  );
+  const definition = $derived(
+    content.interludes.find((item) => item.id === game.interlude?.definitionId),
+  );
   const nextCase = $derived(content.cases[game.caseIndex + 1]);
-  const revealed = $derived(game.interlude?.revealed ?? []);
-  const decided = $derived(!!game.interlude?.choiceId);
   const ap = $derived(game.interlude?.ap ?? 0);
-  const usedActions = $derived(game.interlude?.usedActions ?? []);
+  const used = $derived(game.interlude?.usedActions ?? []);
+  const budget = $derived(definition?.apBudget ?? content.interludeAP);
+  const actions = $derived(definition?.actions ?? content.interludeActions);
+  const complete = $derived(used.length === budget);
 
-  function tagCount(tag: Tag): number {
-    return game.verified.filter((id) => content.clues[id]?.tags.includes(tag)).length;
-  }
-  function revealOf(leadId: string): string | null {
-    return ev?.investigation?.find((l) => l.id === leadId)?.reveal ?? null;
-  }
+  const kindLabel: Record<InterludeActionKind, string> = {
+    recon: '정찰',
+    interview: '면담',
+    stabilize: '안정',
+  };
+  const kindDescription: Record<InterludeActionKind, string> = {
+    recon: '다음 사건의 공개 허용 복선을 확인한다.',
+    interview: '다음 사건 guest allowlist의 측면 하나를 빌린다.',
+    stabilize: '현재 실패축을 한 단계 완화한다.',
+  };
 </script>
 
 <section class="screen interlude">
-  <span class="interlude-mark">인터루드</span>
-  {#if ev}
-    <h1 in:fly={{ y: 10, duration: 300 }}>{ev.title}</h1>
-    <p class="lede">{ev.desc}</p>
+  <p class="eyebrow">INTERLUDE · 3선 2택</p>
+  <h1>{definition?.presentation ?? event?.title ?? '다음 사건을 준비한다'}</h1>
+  <p class="lede">{event?.desc}</p>
 
-    {#if nextCase}
-      <div class="next-case">
-        <span class="next-label">다가오는 사건</span>
-        <b>{nextCase.title}</b>
-        <p>{nextCase.teaser ?? nextCase.intro}</p>
-      </div>
-    {/if}
-
-    <div class="ap-bar">
-      <span class="ap-label">행동력</span>
-      <span class="ap-pips">
-        {#each Array(content.interludeAP) as _, i (i)}
-          <i class="ap-pip" class:spent={i >= ap}></i>
-        {/each}
-      </span>
-      <b class="ap-num">{ap} / {content.interludeAP}</b>
-      <span class="ap-note">조사·행동에 배분한다 — 전부는 할 수 없다</span>
-    </div>
-
-    <div class="actions-grid">
-      <span class="section-head"><b>행동</b><i>비용을 치르고 판을 정비한다</i></span>
-      <div class="action-list">
-        {#each content.interludeActions as act (act.id)}
-          {@const used = usedActions.includes(act.id)}
-          {@const tooCostly = ap < act.cost}
-          <button
-            class="act"
-            class:used
-            disabled={used || tooCostly}
-            onclick={() => dispatch({ type: 'INTERLUDE_ACTION', actionId: act.id })}
-          >
-            <span class="act-cost">{act.cost}</span>
-            <span class="act-body"><b>{act.label}</b><i>{act.desc}</i></span>
-            {#if used}<span class="act-done">✓</span>{/if}
-          </button>
-        {/each}
-      </div>
-    </div>
-
-    {#if ev.investigation && ev.investigation.length > 0}
-      <div class="investigation">
-        <span class="section-head"><b>조사</b><i>리드 하나당 행동력 1 — 무엇을 캐고 무엇을 포기할 것인가</i></span>
-        <div class="lead-list">
-          {#each ev.investigation as lead (lead.id)}
-            {@const done = revealed.includes(lead.id)}
-            <button class="lead" class:done onclick={() => dispatch({ type: 'INVESTIGATE', leadId: lead.id })} disabled={done || ap < 1}>
-              <span class="lead-mark">{done ? '✓' : '🔎'}</span>
-              <span class="lead-label">{lead.label}</span>
-              <i class="lead-cost">1</i>
-              {#if lead.isHint}<i class="lead-hint-badge">힌트</i>{/if}
-            </button>
-          {/each}
-        </div>
-        {#each revealed as id (id)}
-          <p class="reveal-line" class:hint={ev.investigation.find((l) => l.id === id)?.isHint} transition:slide={{ duration: 220 }}>
-            {revealOf(id)}
-          </p>
-        {/each}
-      </div>
-    {/if}
-
-    {#if !decided}
-      <div class="choice-list">
-        <span class="section-head"><b>결정</b><i>이 국면을 어떻게 넘길 것인가</i></span>
-        {#each ev.choices ?? [] as ch (ch.id)}
-          {@const locked = ch.requires ? tagCount(ch.requires.tag) < ch.requires.count : false}
-          <button
-            class="choice"
-            class:locked
-            disabled={locked}
-            onclick={() => dispatch({ type: 'INTERLUDE_CHOICE', choiceId: ch.id })}
-          >
-            <b>{ch.label}</b>
-            {#if ch.requires}
-              <span class="req" class:met={!locked}>
-                검증된 [{ch.requires.tag}] 단서 {ch.requires.count}장 필요 — 현재 {tagCount(ch.requires.tag)}장
-              </span>
-            {/if}
-          </button>
-        {/each}
-      </div>
-    {:else}
-      <div class="interlude-result" in:fade={{ duration: 300 }}>
-        <p>{game.interlude?.result}</p>
-        <button class="primary" onclick={() => dispatch({ type: 'CONTINUE' })}>다음 사건으로</button>
-      </div>
-    {/if}
+  {#if game.riskWarnings.includes('press') || game.riskWarnings.includes('collapse')}
+    <aside class="risk-warning" role="alert">
+      <b>실패 임계 접근</b>
+      {#if game.riskWarnings.includes('press')}
+        <span>주목이 한 단계 더 오르면 언론 재판으로 끝날 수 있습니다.</span>
+      {/if}
+      {#if game.riskWarnings.includes('collapse')}
+        <span>신뢰가 한 단계 더 내려가면 수사반이 붕괴할 수 있습니다.</span>
+      {/if}
+      <span>`수사 안정`으로 현재 위험축을 한 단계 완화할 수 있습니다.</span>
+    </aside>
   {/if}
+
+  <div class="next-case">
+    <span class="next-label">다가오는 사건</span>
+    <b>{nextCase.title}</b>
+    <p>{nextCase.teaser ?? '브리핑 전에는 공개 가능한 배경만 확인할 수 있다.'}</p>
+  </div>
+
+  <div class="ap-bar" aria-label={`남은 행동력 ${ap}`}>
+    <span class="ap-label">장면 행동력</span>
+    <span class="ap-pips" aria-hidden="true">
+      {#each Array(budget) as _, index (index)}
+        <i class="ap-pip" class:spent={index >= ap}></i>
+      {/each}
+    </span>
+    <b>{ap}/{budget}</b>
+    <span>이 장면에서만 사용 · 다음 장면으로 이월되지 않음</span>
+  </div>
+
+  <div class="interlude-actions">
+    {#each actions as action (action.kind)}
+      {@const chosen = used.includes(action.kind)}
+      <button
+        class="interlude-action"
+        class:chosen
+        disabled={chosen || ap === 0}
+        onclick={() =>
+          dispatch({ type: 'INTERLUDE_ACTION', kind: action.kind })}
+      >
+        <span class="action-kind">{kindLabel[action.kind]}</span>
+        <b>{action.label}</b>
+        <span>{'desc' in action ? action.desc : kindDescription[action.kind]}</span>
+        <i>{chosen ? '선택 완료' : 'AP 1'}</i>
+      </button>
+    {/each}
+  </div>
+
+  {#if game.interlude && game.interlude.results.length > 0}
+    <div class="interlude-results" aria-live="polite">
+      {#each game.interlude.results as result, index (`${index}:${result}`)}
+        <p>{humanizeInterludeResult(result, content)}</p>
+      {/each}
+    </div>
+  {/if}
+
+  <button
+    class="primary"
+    disabled={!complete}
+    onclick={() => dispatch({ type: 'CONTINUE' })}
+  >
+    다음 브리핑
+  </button>
 </section>

@@ -29,20 +29,18 @@ function solveCase(g: GameState): GameState {
       const mv = answerMove(sl, g);
       if (mv) g = step(g, { type: 'PLACE', slotId: sl.id, cardId: mv.cardId, facetKey: mv.facetKey });
     }
-    g = step(g, { type: 'SUBMIT' });
-    if (g.awaitingAdvance) { g = step(g, { type: 'ADVANCE' }); break; }
+    g = step(g, { type: 'REQUEST_REVIEW' });
+    g = step(g, { type: 'FINAL_SUBMIT' });
+    if (g.screen === 'clear') { g = step(g, { type: 'ADVANCE' }); break; }
   }
   return g;
 }
 
 function advance(g: GameState): GameState {
-  if (g.screen === 'reward') g = step(g, { type: 'PICK_REWARD', cardId: g.packOffer[0] });
+  if (g.screen === 'briefing') g = step(g, { type: 'START' });
   if (g.screen === 'interlude') {
-    const ev = CONTENT.interludeEvents.find((e) => e.id === g.interlude!.eventId)!;
-    const ch = (ev.choices ?? []).find((c) =>
-      !c.requires || g.verified.filter((id) => CONTENT.clues[id]?.tags.includes(c.requires!.tag)).length >= c.requires!.count,
-    )!;
-    g = step(g, { type: 'INTERLUDE_CHOICE', choiceId: ch.id });
+    g = step(g, { type: 'INTERLUDE_ACTION', kind: 'recon' });
+    g = step(g, { type: 'INTERLUDE_ACTION', kind: 'interview' });
     g = step(g, { type: 'CONTINUE' });
   }
   return g;
@@ -150,10 +148,18 @@ console.log('\n=== C. 실패 방향 둘 (12 §7 등급형) ===');
 {
   // 공개 과다 → 언론 재판
   let c = initGame(CONTENT);
-  c.heat = 10;
+  c.heat = CONTENT.badHeat - 1;
   c = step(c, { type: 'START' });
-  c = solveCase(c);
-  if (c.screen === 'reward') c = step(c, { type: 'PICK_REWARD', cardId: c.packOffer[0] });
+  const pressCase = CONTENT.cases[c.caseIndex];
+  for (const pattern of pressCase.patterns) c = step(c, { type: 'DECLARE', pattern });
+  for (const slot of pressCase.slots) {
+    const move = answerMove(slot, c)!;
+    c = step(c, { type: 'PLACE', slotId: slot.id, ...move });
+  }
+  c = step(c, { type: 'REQUEST_REVIEW' });
+  c = step(c, { type: 'FINAL_SUBMIT' });
+  c.heat = CONTENT.badHeat;
+  c = step(c, { type: 'ADVANCE' });
   console.log(`[언론 재판] ${c.ending?.kind === 'BAD' ? 'PASS' : 'FAIL'} — 주목 ${c.heat} | ${c.ending?.title ?? c.screen}`);
 
   // 강압 과다 → 수사반 붕괴. 정직한 프로브: 신뢰를 낮게 시작한 뒤 **강압 얼굴을 골라** 놓는다

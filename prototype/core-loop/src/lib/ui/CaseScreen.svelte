@@ -1,25 +1,31 @@
 <script lang="ts">
   import { fly } from 'svelte/transition';
+  import type { CollectionStateV1 } from '../collection';
+  import type { SfxCue } from '../audio';
   import type { Action, GameState, PatternId, RunContent, Slot, Tag } from '../engine';
   import { FRAME_LABEL, facetCtxFor, facetOf } from '../engine';
   import { readFacets } from '../facets';
   import { josaPlaceholder, resolveJosa } from '../josa';
   import CardChip from './CardChip.svelte';
+  import CaseNotebookDrawer from './CaseNotebookDrawer.svelte';
   import HandRail from './HandRail.svelte';
   import Meters from './Meters.svelte';
   import ReactionBand from './ReactionBand.svelte';
   import StageBackground from './StageBackground.svelte';
 
-  let { game, content, dispatch }: {
+  let { game, content, collection, dispatch, playSfx }: {
     game: GameState;
     content: RunContent;
+    collection: CollectionStateV1;
     dispatch: (action: Action) => void;
+    playSfx: (cue: SfxCue) => void;
   } = $props();
 
   let selectedCard: string | null = $state(null);
   let facetSlot: string | null = $state(null);
   let hintMode: string | null = $state(null);
   let showNotebook = $state(false);
+  let notebookButton: HTMLButtonElement;
 
   const def = $derived(content.cases[game.caseIndex]);
   const inUse = $derived(new Set([
@@ -106,7 +112,6 @@
     return { judged, knownUnjudged, unknown, lit: placeableSlots?.size ?? 0 };
   });
   const canSubmit = $derived(def.slots.every((slot) => game.confirmed[slot.id] || game.placed[slot.id]));
-  const caseNotes = $derived(game.notebook.filter((note) => note.correct !== null));
   // 배경은 **case가 아니라 배경 상태에 귀속**한다(ticket 13 §⑦). case별로 굽는 순간
   // 장수가 case 수만큼 불어나 13이 9장을 3장으로 줄인 근거가 사라진다.
   const scenes = {
@@ -148,6 +153,7 @@
 
   function pickCard(id: string) {
     if (hintMode) return;
+    if (selectedCard !== id) playSfx('card_pick');
     selectedCard = selectedCard === id ? null : id;
     facetSlot = null;
   }
@@ -170,6 +176,7 @@
 
   function chooseFacet(facetKey: string) {
     if (!facetSlot || !selectedCard) return;
+    playSfx('card_place');
     dispatch({ type: 'PLACE', slotId: facetSlot, cardId: selectedCard, facetKey });
     selectedCard = null;
     facetSlot = null;
@@ -177,6 +184,11 @@
 
   function declare(pattern: PatternId) {
     dispatch({ type: 'DECLARE', pattern });
+  }
+
+  function closeNotebook(): void {
+    showNotebook = false;
+    requestAnimationFrame(() => notebookButton?.focus());
   }
 </script>
 
@@ -199,7 +211,7 @@
           class="pattern-chip"
           class:declared={game.declared.includes(pattern.id)}
           class:guest={pattern.guest}
-          disabled={game.patternJudged}
+          disabled={game.patternJudged || game.casePhase === 'review'}
           onclick={() => declare(pattern.id)}
         >
           {content.patterns[pattern.id].name}
@@ -219,6 +231,7 @@
             class:choosing={facetSlot === slot.id}
             class:can-take={!!placeableSlots?.has(slot.id)}
             class:cannot-take={!!placeableSlots && !placeableSlots.has(slot.id) && !game.confirmed[slot.id]}
+            disabled={game.casePhase === 'review'}
             onclick={() => clickSlot(slot.id)}
           >
             {#if placed}
@@ -244,7 +257,7 @@
       </p>
     </div>
 
-    {#if facetChoices && selectedClue}
+    {#if game.casePhase === 'compose' && facetChoices && selectedClue}
       <div class="facet-picker" in:fly={{ y: 8, duration: 200 }}>
         <div class="facet-head"><b>{selectedClue.name}</b> — {facetChoices.slot.label}에서 무엇으로 읽을 것인가</div>
         <ul class="facet-list">
@@ -264,27 +277,73 @@
     <div class="actions-row">
       {#each Object.values(content.hintDefs) as hint (hint.id)}
         {@const count = game.hints.filter((id) => id === hint.id).length}
-        <button class="hint-btn" class:arming={hintMode === hint.id} disabled={count === 0}
+        <button class="hint-btn" class:arming={hintMode === hint.id} disabled={count === 0 || game.casePhase === 'review'}
           onclick={() => (hintMode = hintMode === hint.id ? null : hint.id)}>
           {hint.name} ×{count}
         </button>
       {/each}
-      <button class="notebook-btn" onclick={() => (showNotebook = !showNotebook)}>수사 노트 ({caseNotes.length})</button>
-      <button class="primary submit" disabled={!canSubmit} onclick={() => dispatch({ type: 'SUBMIT' })}>추리 제출</button>
+      <button
+        bind:this={notebookButton}
+        class="notebook-btn"
+        onclick={() => (showNotebook = true)}
+      >
+        수사 노트 ({collection.rejectedInterpretations.length})
+      </button>
+      {#if game.casePhase === 'compose'}
+        <button
+          class="primary review"
+          onclick={() => dispatch({ type: 'REQUEST_REVIEW' })}
+        >
+          이론 검토
+        </button>
+      {/if}
     </div>
 
-    {#if showNotebook}
-      <div class="notebook">
-        {#each caseNotes as note, index (note.facetKey + index)}
-          <p class:struck={!note.correct}><b>{content.clues[note.cardId].name}</b> — [{note.meaning}] {note.line}</p>
-        {/each}
+    {#if game.casePhase === 'review' && game.review}
+      <div class="review-panel" role="status">
+        <p class="eyebrow">CASE REVIEW</p>
+        <h2>
+          {game.review.kind === 'sound'
+            ? '이론이 성립한다'
+            : game.review.kind === 'incomplete'
+              ? '아직 비어 있는 고리가 있다'
+              : '반증되는 고리가 있다'}
+        </h2>
+        <p>
+          대조된 고리 {game.review.total}/{game.review.outOf}
+          {#if game.review.weakSlotId}
+            · 약한 고리:
+            {slotLabel(game.review.weakSlotId)}
+          {/if}
+        </p>
+        <div class="review-actions">
+          <button onclick={() => dispatch({ type: 'RETURN_TO_COMPOSE' })}>
+            수정하기
+          </button>
+          <button
+            class="primary"
+            disabled={game.review.kind === 'incomplete' || !canSubmit}
+            onclick={() => dispatch({ type: 'FINAL_SUBMIT' })}
+          >
+            최종 제출
+          </button>
+        </div>
       </div>
     {/if}
   </main>
 
   <ReactionBand submit={game.lastSubmit} {slotLabel} />
-  {#if game.awaitingAdvance}
-    <div class="advance-row"><button class="primary" onclick={() => dispatch({ type: 'ADVANCE' })}>계속</button></div>
+  {#if game.casePhase === 'compose'}
+    <HandRail cards={hand} selected={selectedCard} verified={game.verified} onpick={pickCard} readings={pickedReadings} />
+  {:else}
+    <div class="review-hand-lock">검토 중 · 수정하려면 ‘수정하기’를 누르십시오.</div>
   {/if}
-  <HandRail cards={hand} selected={selectedCard} verified={game.verified} onpick={pickCard} readings={pickedReadings} />
 </section>
+
+<CaseNotebookDrawer
+  open={showNotebook}
+  {game}
+  {content}
+  {collection}
+  onclose={closeNotebook}
+/>

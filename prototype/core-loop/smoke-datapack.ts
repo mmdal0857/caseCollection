@@ -13,9 +13,9 @@ import { readFileSync } from 'node:fs';
 import { CONTENT } from './src/lib/content';
 import type { CaseDef, ClueCard } from './src/lib/engine';
 import {
-  FRAMES, JOSA_KINDS, KINDS, SUITS, TAGS,
+  FRAMES, JOSA_KINDS, KINDS, PACK_FORMAT_VERSION, SUITS, TAGS,
   checkIntegrity, loadPacks, mergePacks, packFromContent,
-  validateGameDataPack, validatePack,
+  migrateV1BasePack, validateGameDataPack, validatePack,
   type GameDataPack,
 } from './src/lib/datapack';
 
@@ -26,10 +26,22 @@ function check(label: string, ok: boolean, detail = ''): void {
 }
 
 /** JSON 왕복 — 외부 파일에서 온 팩을 흉내낸다(타입 정보·undefined 소실). */
-const roundtrip = (p: GameDataPack): unknown => JSON.parse(JSON.stringify(p));
+const roundtrip = (p: unknown): unknown => JSON.parse(JSON.stringify(p));
+
+const fixtureProvenance = () => ({
+  sourceSnapshotIds: ['fixture:test'],
+  inputSha256: 'a'.repeat(64),
+  validatorVersion: 'pack-v2',
+  outputSha256: 'b'.repeat(64),
+});
 
 const minimal = (over: Record<string, unknown> = {}): unknown => ({
-  format: 'game-data-pack', formatVersion: 1, id: 'mod.test', ...over,
+  format: 'game-data-pack',
+  formatVersion: 2,
+  id: 'mod.test',
+  mergeMode: 'alongside',
+  provenance: fixtureProvenance(),
+  ...over,
 });
 
 console.log('=== A. envelope 검증 ===');
@@ -37,9 +49,30 @@ console.log('=== A. envelope 검증 ===');
   check('A1 비객체 거부', !validateGameDataPack(null) && !validateGameDataPack('팩'));
   check('A2 최소 팩 통과', validateGameDataPack(minimal()));
   check('A3 format 표식 오류', !validateGameDataPack(minimal({ format: 'data-pack' })));
-  const v = validatePack(minimal({ formatVersion: 2 }));
+  const v = validatePack(minimal({ formatVersion: 3 }));
   check('A4 미래 버전 거부(이유 포함)', !v.ok && v.issues.some((i) => i.msg.includes('formatVersion')));
   check('A5 id 네임스페이스 규약', !validateGameDataPack(minimal({ id: 'Mod Pack!' })));
+  check('A6 v2가 현재 버전', PACK_FORMAT_VERSION === 2);
+  check('A7 v2 최소 팩 통과', validatePack(minimal()).ok);
+  check(
+    'A8 v1 외부 팩은 migration 요구',
+    validatePack({ ...(minimal() as Record<string, unknown>), formatVersion: 1 }).issues
+      .some((issue) => issue.code === 'LEGACY_PACK_REQUIRES_MIGRATION'),
+  );
+  const currentBase = packFromContent('base', CONTENT);
+  const {
+    mergeMode: _mergeMode,
+    provenance: _provenance,
+    promotionTargets: _promotionTargets,
+    ...legacyFields
+  } = currentBase;
+  const legacyBase = { ...legacyFields, formatVersion: 1 };
+  const migrated = await migrateV1BasePack(roundtrip(legacyBase));
+  check('A9 v1 base → v2', migrated.ok && migrated.pack?.mergeMode === 'base');
+  check(
+    'A10 외부 v1은 migration 거부',
+    !(await migrateV1BasePack({ ...legacyBase, id: 'mod.legacy' })).ok,
+  );
 }
 
 console.log('\n=== B. clue 형태 검증 ===');
@@ -135,39 +168,124 @@ console.log('\n=== D. base 팩 왕복 — 실제 CONTENT가 이 포맷으로 표
   check('D3 CONTENT 참조 무결성', issues.length === 0, issues.slice(0, 3).map((i) => `${i.path}: ${i.msg}`).join(' / '));
 }
 
-console.log('\n=== E. 병합 우선순위 — mod가 base를 상쇄하고 새 id를 더한다 ===');
+console.log('\n=== E. 명시적 병합 정책 — alongside 추가와 promotion 상쇄 ===');
 {
   const base = packFromContent('base', CONTENT);
-  const mod: GameDataPack = {
-    format: 'game-data-pack', formatVersion: 1, id: 'mod.ghost',
+  const makeV2Pack = (
+    overrides: Partial<GameDataPack>,
+  ): GameDataPack => ({
+    format: 'game-data-pack',
+    formatVersion: 2,
+    id: 'mod.test',
+    mergeMode: 'alongside',
+    provenance: fixtureProvenance(),
+    ...overrides,
+  });
+  const ghostBell: ClueCard = {
+    ...CONTENT.clues.thread_fiber,
+    id: 'mod.ghost.ghost_bell',
+    name: '유령의 종',
+    facets: CONTENT.clues.thread_fiber.facets.map((facet) => ({
+      ...facet,
+      key: `mod.ghost.ghost_bell:${facet.frame}`,
+    })),
+  };
+  const alongside = makeV2Pack({
+    id: 'mod.ghost',
     clues: {
-      // 상쇄: base의 thread_fiber를 같은 id로 덮어쓴다.
-      thread_fiber: { ...CONTENT.clues.thread_fiber, name: '유령의 실' },
-      // 추가: 새 네임스페이스 id.
-      ghost_bell: {
-        id: 'ghost_bell', name: '유령의 종', suit: 'forensic', kind: '현상', tags: ['논리'],
-        text: '울린 적 없는 종이 울렸다.',
-        facets: [{ key: 'ghost_bell:record', frame: 'record', meaning: '불가능한 기록', tags: ['논리'], note: '종루 기록.' }],
+      'mod.ghost.ghost_bell': ghostBell,
+    },
+  });
+  const accidentalCollision = makeV2Pack({
+    id: 'mod.ghost',
+    clues: { thread_fiber: CONTENT.clues.thread_fiber },
+  });
+  const promotion = makeV2Pack({
+    id: 'mod.promote',
+    mergeMode: 'promotion',
+    promotionTargets: [{
+      kind: 'clue',
+      id: 'thread_fiber',
+      expectedSourcePack: 'base',
+    }],
+    clues: {
+      thread_fiber: {
+        ...CONTENT.clues.thread_fiber,
+        name: '승격된 실',
       },
     },
-  };
-  const { content, report } = mergePacks([base, mod]);
-  check('E1 mod 상쇄 우선', content.clues.thread_fiber.name === '유령의 실');
-  check('E2 새 id 추가', content.clues.ghost_bell?.name === '유령의 종');
-  check('E3 비충돌 base 보존', content.clues.mud_footprint.name === CONTENT.clues.mud_footprint.name);
-  check('E4 상쇄 기록(리포트)', report.overrides.some((o) => o.kind === 'clue' && o.id === 'thread_fiber' && o.from === 'base' && o.by === 'mod.ghost'));
-  check('E5 프로버넌스', report.provenance['clue:ghost_bell'] === 'mod.ghost' && report.provenance['clue:mud_footprint'] === 'base');
-  const loaded = loadPacks(roundtrip(base), [roundtrip(mod)]);
-  check('E6 loadPacks 일괄 경로', loaded.ok && loaded.content?.clues.ghost_bell != null);
+  });
+
+  const alongsideResult = loadPacks(roundtrip(base), [roundtrip(alongside)]);
+  check(
+    'E1 alongside 추가',
+    alongsideResult.ok &&
+      alongsideResult.content?.clues['mod.ghost.ghost_bell']?.name === '유령의 종',
+  );
+  const collisionResult = loadPacks(
+    roundtrip(base),
+    [roundtrip(accidentalCollision)],
+  );
+  check(
+    'E2 alongside 충돌 거부',
+    !collisionResult.ok &&
+      collisionResult.issues.some((issue) => issue.code === 'MERGE_POLICY_INVALID'),
+  );
+  const promotionResult = loadPacks(roundtrip(base), [roundtrip(promotion)]);
+  check(
+    'E3 promotion 선언 상쇄',
+    promotionResult.ok &&
+      promotionResult.content?.clues.thread_fiber.name === '승격된 실',
+  );
+  check(
+    'E4 미신고 promotion 충돌 거부',
+    !loadPacks(
+      roundtrip(base),
+      [roundtrip({ ...promotion, promotionTargets: [] })],
+    ).ok,
+  );
+  check(
+    'E5 expectedSourcePack 불일치 거부',
+    !loadPacks(
+      roundtrip(base),
+      [roundtrip({
+        ...promotion,
+        promotionTargets: [{
+          kind: 'clue',
+          id: 'thread_fiber',
+          expectedSourcePack: 'mod.other',
+        }],
+      })],
+    ).ok,
+  );
+  check(
+    'E6 payload 없는 promotionTargets 거부',
+    !loadPacks(
+      roundtrip(base),
+      [roundtrip({
+        ...promotion,
+        clues: {},
+      })],
+    ).ok,
+  );
+  check(
+    'E7 pack ID 중복 거부',
+    !loadPacks(
+      roundtrip(base),
+      [roundtrip(alongside), roundtrip({ ...alongside, clues: {} })],
+    ).ok,
+  );
 }
 
 console.log('\n=== F. 병합 후 무결성 — 깨진 참조를 잡는다 ===');
 {
   const base = packFromContent('base', CONTENT);
   const broken: GameDataPack = {
-    format: 'game-data-pack', formatVersion: 1, id: 'mod.broken',
+    format: 'game-data-pack', formatVersion: 2, id: 'mod.broken',
+    mergeMode: 'alongside',
+    provenance: fixtureProvenance(),
     cases: [{
-      id: 'bad_case', title: '깨진 사건', intro: '…', pieces: ['', ''],
+      id: 'mod.broken.bad_case', title: '깨진 사건', intro: '…', pieces: ['', ''],
       slots: [{ id: 'x1', label: '슬롯', answer: 'no_such_card', role: { frame: 'route' } }],
       patterns: ['locked-room'], guestClues: ['also_missing'], packPool: [],
     }],
@@ -187,6 +305,26 @@ console.log('\n=== G. 스키마 동기화 — JSON Schema의 enum = 코드의 �
   check('G3 kind enum 일치', same(schema.$defs.kind.enum, KINDS));
   check('G4 frame enum 일치', same(schema.$defs.frame.enum, FRAMES));
   check('G5 josaKind enum 일치', same(schema.$defs.josaKind.enum, JOSA_KINDS));
+}
+
+console.log('\n=== H. Python emit → TypeScript loader 교차 검증 ===');
+{
+  const emitted = JSON.parse(readFileSync(
+    new URL(
+      '../../scripts/tests/fixtures/extraction/emitted-pack.json',
+      import.meta.url,
+    ),
+    'utf-8',
+  ));
+  const loaded = loadPacks(packFromContent('base', CONTENT), [emitted]);
+  check(
+    'H1 emitted alongside 팩 로드',
+    loaded.ok &&
+      loaded.content?.clues[
+        'extracted.fixture.fixture.time_gap'
+      ]?.name === '시각의 공백',
+    loaded.issues.map((issue) => `${issue.path}: ${issue.msg}`).join(' / '),
+  );
 }
 
 console.log(`\n[datapack] ${failures === 0 ? 'PASS — 팩 계약이 기계 판정으로 성립' : `FAIL — ${failures}건`}`);

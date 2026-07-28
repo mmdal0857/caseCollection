@@ -1,0 +1,102 @@
+{
+  "format": "AudioAssetSpec@2",
+  "models": {
+    "music": {
+      "provider": "Higgsfield",
+      "id": "sonilo_music",
+      "version": "Sonilo Music",
+      "license": "Higgsfield Terms of Use (commercial output use permitted; rights clearance remains the user's responsibility)",
+      "licenseUrl": "https://higgsfield.ai/terms-of-use-agreement"
+    },
+    "sfx": {
+      "provider": "Higgsfield",
+      "id": "seed_audio",
+      "version": "Seed Audio 1.0",
+      "license": "Higgsfield Terms of Use (commercial output use permitted; rights clearance remains the user's responsibility)",
+      "licenseUrl": "https://higgsfield.ai/terms-of-use-agreement"
+    }
+  },
+  "assets": [
+    {
+      "id": "music_title",
+      "role": "music",
+      "cue": "title",
+      "duration": 32,
+      "prompt": "instrumental detective noir menu loop, restrained brushed drums, muted upright bass, sparse vibraphone and felt piano, dusty tape texture, calm unresolved mystery, 76 BPM, seamless loop, no vocals, no speech",
+      "candidateLabels": ["A", "B"]
+    },
+    {
+      "id": "music_case",
+      "role": "music",
+      "cue": "case",
+      "duration": 32,
+      "prompt": "instrumental procedural noir investigation loop, low pulse, muted piano, pizzicato strings, brushed percussion, focused tension without climax, 88 BPM, seamless loop, no vocals, no speech",
+      "candidateLabels": ["A", "B"]
+    },
+    {
+      "id": "card_pick",
+      "role": "sfx",
+      "cue": "card-pick",
+      "duration": 1,
+      "prompt": "single dry paper evidence card lifted from a wooden desk, close microphone, soft tactile rustle, no music, no voice",
+      "candidateLabels": ["A", "B"]
+    },
+    {
+      "id": "card_place",
+      "role": "sfx",
+      "cue": "card-place",
+      "duration": 1,
+      "prompt": "single evidence card placed firmly on a wooden investigation board, paper slap with subtle wood contact, dry and concise, no music, no voice",
+      "candidateLabels": ["A", "B"]
+    },
+    {
+      "id": "facet_lock",
+      "role": "sfx",
+      "cue": "facet-lock",
+      "duration": 1,
+      "prompt": "small brass file latch clicks shut with one confident mechanical snap, intimate dry foley, no music, no voice",
+      "candidateLabels": ["A", "B"]
+    },
+    {
+      "id": "chain_release",
+      "role": "sfx",
+      "cue": "chain-release",
+      "duration": 2,
+      "prompt": "short sequence of three linked evidence pins releasing in reverse order, crisp metal and paper ticks, controlled cascade, no music, no voice",
+      "candidateLabels": ["A", "B"]
+    },
+    {
+      "id": "review_pass",
+      "role": "sfx",
+      "cue": "review-pass",
+      "duration": 2,
+      "prompt": "restrained positive detective deduction confirmation, two warm wooden taps and a brief soft tonal shimmer, serious not celebratory, no music bed, no voice",
+      "candidateLabels": ["A", "B"]
+    },
+    {
+      "id": "review_fail",
+      "role": "sfx",
+      "cue": "review-fail",
+      "duration": 2,
+      "prompt": "restrained failed deduction cue, one dull desk thud followed by a short descending muted metal resonance, serious, no music bed, no voice",
+      "candidateLabels": ["A", "B"]
+    },
+    {
+      "id": "interlude_action",
+      "role": "sfx",
+      "cue": "interlude-action",
+      "duration": 1,
+      "prompt": "single case file page turned and stamped, compact paper and rubber stamp foley, decisive transition, no music, no voice",
+      "candidateLabels": ["A", "B"]
+    }
+  ],
+  "quality": {
+    "musicTargetLufs": -20,
+    "sfxTargetLufs": -18,
+    "truePeakMaxDb": -1,
+    "silenceFloorLufs": -55,
+    "durationToleranceSeconds": 0.15,
+    "loopBoundaryDeltaMax": 0.08,
+    "formats": ["wav", "ogg", "mp3"]
+  }
+}

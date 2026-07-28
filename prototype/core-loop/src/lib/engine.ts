@@ -13,6 +13,11 @@ import {
   type LockMode,
 } from './facets';
 import type { JosaKind } from './josa';
+import type {
+  EndingDefinition,
+  InterludeDefinition,
+  NarrativeAction,
+} from './narrative-content';
 
 export type Suit = 'physical' | 'behavioral' | 'documentary' | 'forensic';
 export type Tag = '공개' | '은밀' | '강압' | '신중' | '논리';
@@ -253,6 +258,7 @@ export interface InvestigationLead {
  */
 export interface InterludeAction {
   id: string;
+  kind: InterludeActionKind;
   label: string;
   desc: string;
   cost: number;
@@ -284,6 +290,10 @@ export interface RunContent {
   interludeAP: number;
   /** 모든 인터루드에서 공통으로 열리는 행동들. */
   interludeActions: InterludeAction[];
+  /** pack v2의 빌드타임 생성 인터루드. case 전환별 공개 입력 allowlist를 고정한다. */
+  interludes: InterludeDefinition[];
+  /** 도달 가능한 실패 규칙과 선행 경고를 묶은 pack v2 BAD 엔딩. */
+  endings: EndingDefinition[];
   starterClues: string[];
   starterPatterns: PatternId[];
   starterHints: string[];
@@ -315,6 +325,7 @@ export interface SlotReaction {
  * 드라마투르기 반응이 휘발되지 않고 수집물이 된다. 실패가 자산.
  */
 export interface NoteEntry {
+  slotId: string;
   cardId: string;
   facetKey: string;
   meaning: string;
@@ -362,10 +373,27 @@ export interface HintReveal {
   text: string;
 }
 
-export type Screen = 'briefing' | 'case' | 'reward' | 'interlude' | 'end';
+export type InterludeActionKind = 'recon' | 'interview' | 'stabilize';
+export type CasePhase = 'compose' | 'review';
+export interface ReviewResult {
+  kind: 'sound' | 'incomplete' | 'countered';
+  weakSlotId: string | null;
+  total: number;
+  outOf: number;
+}
+
+export type Screen =
+  | 'briefing'
+  | 'case'
+  | 'clear'
+  | 'interlude'
+  | 'end'
+  | 'summary';
 
 export interface GameState {
   screen: Screen;
+  casePhase: CasePhase;
+  review: ReviewResult | null;
   caseIndex: number;
   heat: number;
   trust: number;
@@ -397,16 +425,19 @@ export interface GameState {
   lastSubmit: SubmitResult | null;
   reveals: HintReveal[];
   // ---- 흐름 ----
-  packOffer: string[];
   /** case를 클리어했으나 아직 다음 국면으로 넘어가지 않음 — 클리어 피드백을 보여주는 동안 true. */
   awaitingAdvance: boolean;
+  /** 다음 case 한정 대여 측면. 영구 컬렉션과 섞지 않는다. */
+  borrowedFacetKeys: string[];
+  /** BAD 엔딩 직전 예고를 실제로 거쳤는지 기록한다. */
+  riskWarnings: ('press' | 'collapse')[];
   interlude: {
     eventId: string;
-    choiceId: string | null;
-    result: string | null;
-    revealed: string[]; // 조사로 밝혀낸 리드 id
+    definitionId: string | null;
+    results: string[];
+    borrowedFacetKeys: string[];
     ap: number; // 남은 행동력
-    usedActions: string[];
+    usedActions: InterludeActionKind[];
   } | null;
   ending: { kind: 'GOOD' | 'BAD'; title: string; desc: string } | null;
   seq: number;
@@ -422,17 +453,32 @@ export type Action =
   | { type: 'CLEAR_SLOT'; slotId: string }
   | { type: 'SET_LOCK_MODE'; mode: LockMode }
   | { type: 'DECLARE'; pattern: PatternId }
-  | { type: 'SUBMIT' }
+  | { type: 'REQUEST_REVIEW' }
+  | { type: 'RETURN_TO_COMPOSE' }
+  | { type: 'FINAL_SUBMIT' }
   | { type: 'HINT'; hintId: string; slotId: string }
-  | { type: 'PICK_REWARD'; cardId: string }
-  | { type: 'INVESTIGATE'; leadId: string }
-  | { type: 'INTERLUDE_ACTION'; actionId: string }
-  | { type: 'INTERLUDE_CHOICE'; choiceId: string }
+  | { type: 'INTERLUDE_ACTION'; kind: InterludeActionKind }
   | { type: 'ADVANCE' }
   | { type: 'CONTINUE' }
+  | { type: 'SHOW_SUMMARY' }
   | { type: 'RESTART' };
 
 const clamp = (n: number) => Math.max(0, Math.min(10, n));
+
+export function humanizeInterludeResult(
+  result: string,
+  content: RunContent,
+): string {
+  return result.replace(/\[([^\]]+)\]/g, (_match, facetKey: string) => {
+    const source = Object.values(content.clues).find((clue) =>
+      clue.facets.some((facet) => facet.key === facetKey),
+    );
+    const facet = source?.facets.find((candidate) => candidate.key === facetKey);
+    return source !== undefined && facet !== undefined
+      ? `${source.name}의 ‘${facet.meaning}’`
+      : '게스트';
+  });
+}
 
 export function resolveAnswer(slot: Slot, s: { heat: number; trust: number }): string {
   if (typeof slot.answer === 'string') return slot.answer;
@@ -503,6 +549,7 @@ export function facetCtxFor(s: GameState, c: RunContent, slotIdx: number): Facet
     known: new Set(s.knownFacets),
     // 게스트가 빌려주는 것: 명시된 측면 + 게스트 카드의 명백한 측면(facets[0]).
     lent: new Set([
+      ...s.borrowedFacetKeys,
       ...(def.guestFacets ?? []),
       ...def.guestClues.flatMap((id) => (c.clues[id]?.facets[0] ? [c.clues[id].facets[0].key] : [])),
     ]),
@@ -572,7 +619,7 @@ function lockPlacement(s: GameState, c: RunContent, slotIdx: number): void {
 
   const line = f.line ?? `${c.clues[p.cardId].name} — ${f.meaning}.`;
   s.notebook.push({
-    cardId: p.cardId, facetKey: f.key, meaning: f.meaning,
+    slotId: slot.id, cardId: p.cardId, facetKey: f.key, meaning: f.meaning,
     line, correct: null, caseId: def.id,
   });
 
@@ -640,6 +687,8 @@ function setupCase(s: GameState, c: RunContent): void {
   s.lastSubmit = null;
   s.reveals = [];
   s.screen = 'case';
+  s.casePhase = 'compose';
+  s.review = null;
 }
 
 function addUnique<T>(arr: T[], items: T[]): void {
@@ -657,12 +706,39 @@ function pickInterlude(s: GameState, c: RunContent): void {
         (cond.trustLt === undefined || s.trust < cond.trustLt));
     if (!match) continue;
     if (ev.bad) {
-      s.ending = { kind: 'BAD', ...ev.bad };
+      const warning =
+        ev.id === 'bad-press'
+          ? 'press'
+          : ev.id === 'bad-collapse'
+            ? 'collapse'
+            : null;
+      if (warning !== null && !s.riskWarnings.includes(warning)) continue;
+      const authored = c.endings.find(
+        (ending) =>
+          ending.triggerRuleId === ev.id &&
+          ending.warningRuleId === warning,
+      );
+      s.ending = {
+        kind: 'BAD',
+        title: ev.bad.title,
+        desc: authored?.presentation ?? ev.bad.desc,
+      };
       s.screen = 'end';
     } else {
+      const currentCase = c.cases[s.caseIndex];
+      const nextCase = c.cases[s.caseIndex + 1];
+      const definition = c.interludes.find(
+        (item) =>
+          item.afterCaseId === currentCase.id &&
+          item.beforeCaseId === nextCase.id,
+      );
       s.interlude = {
-        eventId: ev.id, choiceId: null, result: null, revealed: [],
-        ap: c.interludeAP, usedActions: [],
+        eventId: ev.id,
+        definitionId: definition?.id ?? null,
+        results: [],
+        borrowedFacetKeys: [],
+        ap: definition?.apBudget ?? c.interludeAP,
+        usedActions: [],
       };
       s.screen = 'interlude';
     }
@@ -673,6 +749,8 @@ function pickInterlude(s: GameState, c: RunContent): void {
 export function initGame(c: RunContent): GameState {
   return {
     screen: 'briefing',
+    casePhase: 'compose',
+    review: null,
     caseIndex: 0,
     heat: c.initial.heat,
     trust: c.initial.trust,
@@ -696,8 +774,9 @@ export function initGame(c: RunContent): GameState {
     submits: 0,
     lastSubmit: null,
     reveals: [],
-    packOffer: [],
     awaitingAdvance: false,
+    borrowedFacetKeys: [],
+    riskWarnings: [],
     interlude: null,
     ending: null,
     seq: 0,
@@ -715,6 +794,7 @@ function handleStart(s: GameState, _a: ActionOf<'START'>, c: RunContent): void {
 }
 
 function handleSetLockMode(s: GameState, a: ActionOf<'SET_LOCK_MODE'>, _c: RunContent): void {
+  if (s.screen === 'case' && s.casePhase !== 'compose') return;
   // 판을 갈아엎지 않고 시점만 바꾼다 — 같은 사건에서 세 모드를 직접 비교하기 위해.
   s.lockMode = a.mode;
   if (a.mode === 'submit') {
@@ -725,7 +805,7 @@ function handleSetLockMode(s: GameState, a: ActionOf<'SET_LOCK_MODE'>, _c: RunCo
 
 function handlePlace(s: GameState, a: ActionOf<'PLACE'>, c: RunContent): void {
   const def = c.cases[s.caseIndex];
-  if (s.screen !== 'case' || s.confirmed[a.slotId]) return;
+  if (s.screen !== 'case' || s.casePhase !== 'compose' || s.confirmed[a.slotId]) return;
   const idx = def.slots.findIndex((sl) => sl.id === a.slotId);
   if (idx < 0) return;
   const existing = s.placed[a.slotId];
@@ -742,7 +822,7 @@ function handlePlace(s: GameState, a: ActionOf<'PLACE'>, c: RunContent): void {
 
 function handleLockSlot(s: GameState, a: ActionOf<'LOCK_SLOT'>, c: RunContent): void {
   const def = c.cases[s.caseIndex];
-  if (s.screen !== 'case' || s.lockMode !== 'commit') return;
+  if (s.screen !== 'case' || s.casePhase !== 'compose' || s.lockMode !== 'commit') return;
   const idx = def.slots.findIndex((sl) => sl.id === a.slotId);
   if (idx < 0 || !s.placed[a.slotId] || s.placed[a.slotId]!.locked) return;
   lockPlacement(s, c, idx);
@@ -750,7 +830,7 @@ function handleLockSlot(s: GameState, a: ActionOf<'LOCK_SLOT'>, c: RunContent): 
 
 function handleClearSlot(s: GameState, a: ActionOf<'CLEAR_SLOT'>, c: RunContent): void {
   const def = c.cases[s.caseIndex];
-  if (s.screen !== 'case' || s.confirmed[a.slotId]) return;
+  if (s.screen !== 'case' || s.casePhase !== 'compose' || s.confirmed[a.slotId]) return;
   const idx = def.slots.findIndex((sl) => sl.id === a.slotId);
   if (idx < 0) return;
   const p = s.placed[a.slotId];
@@ -765,7 +845,7 @@ function handleClearSlot(s: GameState, a: ActionOf<'CLEAR_SLOT'>, c: RunContent)
 
 function handleDeclare(s: GameState, a: ActionOf<'DECLARE'>, c: RunContent): void {
   const def = c.cases[s.caseIndex];
-  if (s.screen !== 'case' || s.patternJudged) return;
+  if (s.screen !== 'case' || s.casePhase !== 'compose' || s.patternJudged) return;
   if (s.declared.includes(a.pattern)) {
     s.declared = s.declared.filter((p) => p !== a.pattern);
   } else if (s.declared.length < def.patterns.length) {
@@ -788,8 +868,6 @@ interface SubmissionJudgment {
 }
 
 const PARTIAL_CONFIRM_THRESHOLD = 3;
-const REWARD_OFFER_SIZE = 3;
-const INVESTIGATION_AP_COST = 1;
 
 function judgeHypothesis(s: GameState, def: CaseDef): void {
   // 가설 선언 — 첫 제출에서만 판정. 적중 시 근접도 상세화 + 패턴 카드 검증.
@@ -933,11 +1011,65 @@ function decideSubmissionOutcome(
   s.awaitingAdvance = true;
 }
 
-function handleSubmit(s: GameState, _a: ActionOf<'SUBMIT'>, c: RunContent): void {
+function handleRequestReview(
+  s: GameState,
+  _a: ActionOf<'REQUEST_REVIEW'>,
+  c: RunContent,
+): void {
   const def = c.cases[s.caseIndex];
-  if (s.screen !== 'case') return;
+  if (s.screen !== 'case' || s.casePhase !== 'compose') return;
   const open = def.slots.filter((sl) => !s.confirmed[sl.id]);
-  if (open.some((sl) => !s.placed[sl.id])) return;
+  const missing = open.find((slot) => !s.placed[slot.id]);
+  if (missing !== undefined) {
+    s.review = {
+      kind: 'incomplete',
+      weakSlotId: missing.id,
+      total: open.filter((slot) => s.placed[slot.id] !== null).length,
+      outOf: open.length,
+    };
+    s.casePhase = 'review';
+    return;
+  }
+  const judgment = calculateSubmissionJudgment(s, def, open, c);
+  const patternSound =
+    s.declared.length === def.patterns.length &&
+    def.patterns.every((pattern) => s.declared.includes(pattern));
+  const weak = open.find((slot) => !judgment.rights.includes(slot));
+  s.review = {
+    kind:
+      judgment.rights.length === open.length && patternSound
+        ? 'sound'
+        : 'countered',
+    weakSlotId: weak?.id ?? (patternSound ? null : open[0]?.id ?? null),
+    total: judgment.rights.length,
+    outOf: open.length,
+  };
+  s.casePhase = 'review';
+}
+
+function handleReturnToCompose(
+  s: GameState,
+  _a: ActionOf<'RETURN_TO_COMPOSE'>,
+  _c: RunContent,
+): void {
+  if (s.screen !== 'case' || s.casePhase !== 'review') return;
+  s.casePhase = 'compose';
+  s.review = null;
+}
+
+function handleFinalSubmit(
+  s: GameState,
+  _a: ActionOf<'FINAL_SUBMIT'>,
+  c: RunContent,
+): void {
+  const def = c.cases[s.caseIndex];
+  if (s.screen !== 'case' || s.casePhase !== 'review' || s.review === null) return;
+  const open = def.slots.filter((sl) => !s.confirmed[sl.id]);
+  if (open.some((sl) => !s.placed[sl.id])) {
+    s.casePhase = 'compose';
+    s.review = null;
+    return;
+  }
   s.submits++;
 
   judgeHypothesis(s, def);
@@ -950,11 +1082,17 @@ function handleSubmit(s: GameState, _a: ActionOf<'SUBMIT'>, c: RunContent): void
   const judgment = calculateSubmissionJudgment(s, def, open, c);
   updateNotebookFromSubmission(s, def, judgment.reactions);
   decideSubmissionOutcome(s, def, open, judgment, c);
+  if (s.awaitingAdvance) {
+    s.screen = 'clear';
+  } else {
+    s.casePhase = 'compose';
+    s.review = null;
+  }
 }
 
 function handleHint(s: GameState, a: ActionOf<'HINT'>, c: RunContent): void {
   const def = c.cases[s.caseIndex];
-  if (s.screen !== 'case') return;
+  if (s.screen !== 'case' || s.casePhase !== 'compose') return;
   const idx = s.hints.indexOf(a.hintId);
   if (idx < 0 || s.confirmed[a.slotId]) return;
   const slot = def.slots.find((sl) => sl.id === a.slotId);
@@ -974,16 +1112,6 @@ function handleHint(s: GameState, a: ActionOf<'HINT'>, c: RunContent): void {
   s.reveals.push({ slotId: a.slotId, text: `${text} (현재 상태 기준)` });
 }
 
-function handlePickReward(s: GameState, a: ActionOf<'PICK_REWARD'>, c: RunContent): void {
-  if (s.screen !== 'reward' || !s.packOffer.includes(a.cardId)) return;
-  addUnique(s.ownedClues, [a.cardId]);
-  // 카드를 얻으면 **명백한 측면 하나**만 안다 — 나머지는 써보며 발견한다(12 §4).
-  if (c.clues[a.cardId].facets[0]) addUnique(s.knownFacets, [c.clues[a.cardId].facets[0].key]);
-  s.log.push(`보상팩: ${c.clues[a.cardId].name} 획득 — 측면 하나만 안다`);
-  s.packOffer = [];
-  pickInterlude(s, c);
-}
-
 function handleAdvance(s: GameState, _a: ActionOf<'ADVANCE'>, c: RunContent): void {
   const def = c.cases[s.caseIndex];
   if (!s.awaitingAdvance) return;
@@ -996,56 +1124,112 @@ function handleAdvance(s: GameState, _a: ActionOf<'ADVANCE'>, c: RunContent): vo
     };
     s.screen = 'end';
   } else {
-    s.packOffer = def.packPool
-      .filter((id) => !s.ownedClues.includes(id))
-      .slice(0, REWARD_OFFER_SIZE);
-    s.screen = s.packOffer.length > 0 ? 'reward' : 'interlude';
-    if (s.screen === 'interlude') pickInterlude(s, c);
+    pickInterlude(s, c);
   }
-}
-
-function handleInvestigate(s: GameState, a: ActionOf<'INVESTIGATE'>, c: RunContent): void {
-  if (s.screen !== 'interlude' || !s.interlude) return;
-  const ev = c.interludeEvents.find((e) => e.id === s.interlude!.eventId);
-  const lead = ev?.investigation?.find((l) => l.id === a.leadId);
-  if (!lead || s.interlude.revealed.includes(lead.id)) return;
-  if (s.interlude.ap < INVESTIGATION_AP_COST) return; // 행동력 부족 — 기회비용
-  s.interlude.ap -= INVESTIGATION_AP_COST;
-  s.interlude.revealed.push(lead.id);
 }
 
 function handleInterludeAction(s: GameState, a: ActionOf<'INTERLUDE_ACTION'>, c: RunContent): void {
   if (s.screen !== 'interlude' || !s.interlude) return;
-  const act = c.interludeActions.find((x) => x.id === a.actionId);
-  if (!act) return;
-  if (act.once && s.interlude.usedActions.includes(act.id)) return;
-  if (s.interlude.ap < act.cost) return; // 행동력 부족
-  s.interlude.ap -= act.cost;
-  s.interlude.usedActions.push(act.id);
-  s.heat = clamp(s.heat + (act.effects.heat ?? 0));
-  s.trust = clamp(s.trust + (act.effects.trust ?? 0));
-  if (act.effects.gainHint) s.hints.push(act.effects.gainHint);
-}
+  const definition = c.interludes.find(
+    (item) => item.id === s.interlude?.definitionId,
+  );
+  const authored = definition?.actions.find(
+    (item): item is NarrativeAction => item.kind === a.kind,
+  );
+  const legacy = c.interludeActions.find((item) => item.kind === a.kind);
+  const cost = authored?.cost ?? legacy?.cost;
+  if (cost === undefined) return;
+  if (s.interlude.usedActions.includes(a.kind)) return;
+  if (s.interlude.ap < cost) return; // 행동력 부족
+  s.interlude.ap -= cost;
+  s.interlude.usedActions.push(a.kind);
 
-function handleInterludeChoice(s: GameState, a: ActionOf<'INTERLUDE_CHOICE'>, c: RunContent): void {
-  if (s.screen !== 'interlude' || !s.interlude || s.interlude.choiceId) return;
-  const ev = c.interludeEvents.find((e) => e.id === s.interlude!.eventId);
-  const ch = ev?.choices?.find((x) => x.id === a.choiceId);
-  if (!ev || !ch) return;
-  if (ch.requires && countVerifiedTag(s, c, ch.requires.tag) < ch.requires.count) return;
-  s.heat = clamp(s.heat + (ch.effects.heat ?? 0));
-  s.trust = clamp(s.trust + (ch.effects.trust ?? 0));
-  if (ch.effects.gainHint) s.hints.push(ch.effects.gainHint);
-  s.interlude.choiceId = ch.id;
-  s.interlude.result = ch.result;
+  const nextCase = c.cases[s.caseIndex + 1];
+  if (a.kind === 'recon') {
+    if (authored?.kind === 'recon') {
+      s.interlude.results.push(authored.resultText);
+      return;
+    }
+    const frame = nextCase.slots[0]?.role?.frame;
+    const publicText =
+      nextCase.teaser ??
+      nextCase.contextHint ??
+      (frame === undefined
+        ? `다음 사건은 ${nextCase.title}이다.`
+        : `다음 사건은 ${FRAME_LABEL[frame]}부터 살펴야 한다.`);
+    s.interlude.results.push(publicText);
+    return;
+  }
+  if (a.kind === 'interview') {
+    const facetKey =
+      authored?.kind === 'interview'
+        ? authored.guestFacetKey
+        : nextCase.guestFacets?.[0] ??
+          nextCase.guestClues
+            .map((id) => c.clues[id]?.facets[0]?.key)
+            .find((key): key is string => key !== undefined);
+    if (facetKey !== undefined) {
+      addUnique(s.interlude.borrowedFacetKeys, [facetKey]);
+      s.interlude.results.push(
+        authored?.kind === 'interview'
+          ? authored.resultText
+          : humanizeInterludeResult(
+              `다음 사건에서 [${facetKey}] 측면을 빌린다.`,
+              c,
+            ),
+      );
+    } else {
+      s.interlude.results.push('빌릴 수 있는 게스트 측면이 없다.');
+    }
+    return;
+  }
+
+  if (authored?.kind === 'stabilize') {
+    if (authored.stat === 'heat') {
+      s.heat = clamp(s.heat + authored.delta);
+    } else {
+      s.trust = clamp(s.trust + authored.delta);
+    }
+    s.interlude.results.push(authored.resultText);
+    return;
+  }
+
+  if (s.heat >= c.badHeat - 1) {
+    s.heat = clamp(s.heat - 1);
+    s.interlude.results.push('소란을 한 단계 가라앉혔다. (주목 -1)');
+  } else {
+    s.trust = clamp(s.trust + 1);
+    s.interlude.results.push('수사반을 한 단계 안정시켰다. (신뢰 +1)');
+  }
 }
 
 function handleContinue(s: GameState, _a: ActionOf<'CONTINUE'>, c: RunContent): void {
-  if (s.screen !== 'interlude' || !s.interlude?.choiceId) return;
+  const definition = c.interludes.find(
+    (item) => item.id === s.interlude?.definitionId,
+  );
+  if (
+    s.screen !== 'interlude' ||
+    s.interlude === null ||
+    s.interlude.usedActions.length !== (definition?.apBudget ?? c.interludeAP)
+  ) return;
+  s.borrowedFacetKeys = [...s.interlude.borrowedFacetKeys];
   s.interlude = null;
   s.caseIndex++;
-  setupCase(s, c);
-  s.log.push(`다음 사건 — ${c.cases[s.caseIndex].title}`);
+  s.screen = 'briefing';
+  s.log.push(`다음 브리핑 — ${c.cases[s.caseIndex].title}`);
+}
+
+function updateRiskWarnings(s: GameState, c: RunContent): void {
+  if (s.heat === c.badHeat - 1) addUnique(s.riskWarnings, ['press']);
+  if (s.trust === 1) addUnique(s.riskWarnings, ['collapse']);
+}
+
+function handleShowSummary(
+  s: GameState,
+  _a: ActionOf<'SHOW_SUMMARY'>,
+  _c: RunContent,
+): void {
+  if (s.screen === 'end') s.screen = 'summary';
 }
 
 export function reduce(prev: GameState, a: Action, c: RunContent): GameState {
@@ -1059,15 +1243,20 @@ export function reduce(prev: GameState, a: Action, c: RunContent): GameState {
     case 'LOCK_SLOT': handleLockSlot(s, a, c); break;
     case 'CLEAR_SLOT': handleClearSlot(s, a, c); break;
     case 'DECLARE': handleDeclare(s, a, c); break;
-    case 'SUBMIT': handleSubmit(s, a, c); break;
+    case 'REQUEST_REVIEW': handleRequestReview(s, a, c); break;
+    case 'RETURN_TO_COMPOSE': handleReturnToCompose(s, a, c); break;
+    case 'FINAL_SUBMIT': handleFinalSubmit(s, a, c); break;
     case 'HINT': handleHint(s, a, c); break;
-    case 'PICK_REWARD': handlePickReward(s, a, c); break;
     case 'ADVANCE': handleAdvance(s, a, c); break;
-    case 'INVESTIGATE': handleInvestigate(s, a, c); break;
     case 'INTERLUDE_ACTION': handleInterludeAction(s, a, c); break;
-    case 'INTERLUDE_CHOICE': handleInterludeChoice(s, a, c); break;
     case 'CONTINUE': handleContinue(s, a, c); break;
+    case 'SHOW_SUMMARY': handleShowSummary(s, a, c); break;
     case 'RESTART': return initGame(c);
   }
-  return s;
+  updateRiskWarnings(s, c);
+  const nextSeq = s.seq;
+  s.seq = prev.seq;
+  const accepted = JSON.stringify(s) !== JSON.stringify(prev);
+  s.seq = nextSeq;
+  return accepted ? s : structuredClone(prev);
 }

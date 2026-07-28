@@ -1,9 +1,32 @@
 # 컬렉션과 수사 노트 화면
 
-Status: open
+Status: closed
 Labels: wayfinder:prototype
-Assignee:
+Assignee: Codex
+Reviewed-by: Claude (2026-07-29)
 Blocked-by: 20
+
+## Resolution
+
+- `CollectionStateV1` 영구 계약을 추가해 보유 카드, 보유 패턴, 알려진 측면, 최초 오답 해석을 run 상태와 분리했다. 손상 JSON은 자동 덮어쓰지 않고 원문과 오류를 반환한다.
+- 진행도는 현재 데이터 팩에서 동적으로 계산하는 세 축(보유 카드 / 보유 카드의 알려진 측면 / 전체 알려진 측면)으로 구현했다.
+- 전체 컬렉션 화면에 슈트·보유 상태 필터, 카드 상세, 패턴 카드 영역을 추가했다. 미보유 카드는 슈트와 자리만 보이며 이름·측면 의미는 노출하지 않는다.
+- case 중에는 별도 수사 노트 드로어를 제공한다. 게스트·대여 상태를 구분하고, 오답은 `case + slot + card + facet` 키로 중복 없이 최초 반응만 보존한다.
+- 키보드 `Escape` 닫기와 호출 버튼으로의 포커스 복귀, 44px 이상 터치 목표를 실제 브라우저에서 확인했다.
+- 설계 문서보다 영구 패턴 소유권을 명시적으로 표현할 필요가 있어 `ownedPatternIds`를 같은 v1 envelope에 포함했다.
+
+검증: `npm run smoke:collection`, `npm run smoke:run-session`, `npx tsc --noEmit`, `npm run build` 통과. 브라우저에서 동적 진행도 `10/20 · 10/28 · 10/55`, 미보유 의미 비노출, 필터·상세·드로어·포커스 복귀를 확인했다.
+
+## Claude 검토 (2026-07-29)
+
+- [x] **세 진행도 분모가 팩에서 동적으로 유지되는지** — `npm run smoke:collection` 독립 재실행 PASS, "보유 카드 진행도는 현재 팩에서 동적으로 계산된다" 케이스가 실제로 검증됨.
+- [x] **미보유 카드·패턴의 이름·측면 비노출** — 같은 스모크의 "미해금 측면은 자리 수만 보이고 의미는 누출하지 않는다" 케이스 PASS.
+- [x] **오답 중복 제거 키·게스트/대여/영구 경계** — "같은 case·slot·card·facet 오답은 최초 반응 하나만 보존", "게스트 보유는 영구화되고 run 한정 대여 측면은 섞이지 않는다" 케이스 PASS.
+- [x] **`ownedPatternIds` 추가(설계 문서에 없던 편차)** — 승인. `CONTEXT.md`가 이미 "패턴 카드는 단서 카드와 함께 영구 컬렉션을 이룬다"고 정의하고 있어, 원 스펙의 `CollectionState`(ownedCardIds/knownFacetKeys/rejectedInterpretations만 나열)가 이 부분을 빠뜨린 것이지 Codex의 스코프 일탈이 아니다. `collection.ts`에서 `ownedPatterns`(런) → `ownedPatternIds`(영구) 병합이 `ownedCardIds`와 대칭 구조로 구현된 것도 확인.
+
+브라우저 UI(포커스 복귀·44px 터치 목표 등)는 Codex 자기보고를 그대로 신뢰했고 내가 직접 재구동하지는 않았다 — 통합 전 한 번 더 시각 확인 권장.
+
+결론: **승인.**
 
 ## Question
 

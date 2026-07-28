@@ -1,0 +1,10 @@
+{
+  "id": "fixture:facet-contract",
+  "sha256": "a633e0b7b7f67fa058e5d63f89415cb7635309d5430720b2fd845f667ad14422",
+  "paragraphs": [
+    {
+      "id": "p1",
+      "text": "장부의 날짜와 기차표의 시각은 서로 맞지 않았다."
+    }
+  ]
+}

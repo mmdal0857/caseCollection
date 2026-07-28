@@ -1,0 +1,68 @@
+{
+  "format": "audio-picks@1",
+  "picks": [
+    {
+      "assetId": "card_pick",
+      "candidate": "card_pick_A",
+      "reviewer": "mmdal",
+      "reviewedAt": "2026-07-28T14:39:34.626Z",
+      "reason": "전체적인 톤이 비슷해서 일단 취향에 맞춰 선택"
+    },
+    {
+      "assetId": "card_place",
+      "candidate": "card_place_A",
+      "reviewer": "mmdal",
+      "reviewedAt": "2026-07-28T14:39:34.626Z",
+      "reason": "전체적인 톤이 비슷해서 일단 취향에 맞춰 선택"
+    },
+    {
+      "assetId": "chain_release",
+      "candidate": "chain_release_B",
+      "reviewer": "mmdal",
+      "reviewedAt": "2026-07-28T14:39:34.626Z",
+      "reason": "전체적인 톤이 비슷해서 일단 취향에 맞춰 선택"
+    },
+    {
+      "assetId": "facet_lock",
+      "candidate": "facet_lock_A",
+      "reviewer": "mmdal",
+      "reviewedAt": "2026-07-28T14:39:34.626Z",
+      "reason": "전체적인 톤이 비슷해서 일단 취향에 맞춰 선택"
+    },
+    {
+      "assetId": "interlude_action",
+      "candidate": "interlude_action_B",
+      "reviewer": "mmdal",
+      "reviewedAt": "2026-07-28T14:39:34.626Z",
+      "reason": "전체적인 톤이 비슷해서 일단 취향에 맞춰 선택"
+    },
+    {
+      "assetId": "music_case",
+      "candidate": "music_case_B",
+      "reviewer": "mmdal",
+      "reviewedAt": "2026-07-28T14:39:34.626Z",
+      "reason": "전체적인 톤이 비슷해서 일단 취향에 맞춰 선택"
+    },
+    {
+      "assetId": "music_title",
+      "candidate": "music_title_B",
+      "reviewer": "mmdal",
+      "reviewedAt": "2026-07-28T14:39:34.626Z",
+      "reason": "전체적인 톤이 비슷해서 일단 취향에 맞춰 선택"
+    },
+    {
+      "assetId": "review_fail",
+      "candidate": "review_fail_B",
+      "reviewer": "mmdal",
+      "reviewedAt": "2026-07-28T14:39:34.626Z",
+      "reason": "전체적인 톤이 비슷해서 일단 취향에 맞춰 선택"
+    },
+    {
+      "assetId": "review_pass",
+      "candidate": "review_pass_B",
+      "reviewer": "mmdal",
+      "reviewedAt": "2026-07-28T14:39:34.626Z",
+      "reason": "전체적인 톤이 비슷해서 일단 취향에 맞춰 선택"
+    }
+  ]
+}

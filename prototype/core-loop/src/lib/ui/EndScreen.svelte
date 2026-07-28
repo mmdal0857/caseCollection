@@ -1,7 +1,5 @@
 <script lang="ts">
-  import { fly } from 'svelte/transition';
   import type { Action, GameState, RunContent } from '../engine';
-  import CardChip from './CardChip.svelte';
 
   let { game, content, dispatch }: {
     game: GameState;
@@ -9,51 +7,27 @@
     dispatch: (a: Action) => void;
   } = $props();
 
-  const allClues = $derived(Object.values(content.clues));
-  const clueVerified = $derived(game.verified.filter((id) => content.clues[id]).length);
-  const totalSubmits = $derived(game.history.reduce((n, h) => n + h.submits, 0));
-
-  // GOOD 엔딩 컨페티 — UI 전용 장식, 엔진과 무관.
-  const confetti = Array.from({ length: 26 }, (_, i) => ({
-    left: Math.random() * 100,
-    delay: Math.random() * 0.8,
-    dur: 1.6 + Math.random() * 1.4,
-    hue: [42, 6, 205, 268][i % 4],
-  }));
+  const warningSeen = $derived(
+    game.ending?.kind !== 'BAD' ||
+      game.riskWarnings.includes('press') ||
+      game.riskWarnings.includes('collapse'),
+  );
 </script>
 
 <section class="screen end {game.ending?.kind === 'GOOD' ? 'good' : 'bad'}">
-  {#if game.ending?.kind === 'GOOD'}
-    <div class="confetti-layer" aria-hidden="true">
-      {#each confetti as c, i (i)}
-        <i
-          class="confetti"
-          style="left:{c.left}%; animation-delay:{c.delay}s; animation-duration:{c.dur}s; background:hsl({c.hue} 70% 60%)"
-        ></i>
-      {/each}
-    </div>
-  {/if}
-
-  <h1 in:fly={{ y: 14, duration: 400 }}>{game.ending?.title}</h1>
+  <p class="eyebrow">{game.ending?.kind === 'GOOD' ? 'ENDING' : 'BAD ENDING'}</p>
+  <h1>{game.ending?.title}</h1>
   <p class="lede">{game.ending?.desc}</p>
 
-  <div class="stats">
-    <span>해결 {game.history.length}/{content.cases.length}건</span>
-    <span>제출 {totalSubmits}회</span>
-    <span>보유 {game.ownedClues.length}/{allClues.length}</span>
-    <span>검증 {clueVerified}</span>
-    <span>주목 {game.heat} · 신뢰 {game.trust}</span>
-  </div>
+  {#if game.ending?.kind === 'BAD'}
+    <p class="ending-warning-proof">
+      {warningSeen
+        ? '이 위험은 수사 상태와 인터루드 경고에서 먼저 예고되었습니다.'
+        : '경고 기록이 없는 ending은 유효하지 않습니다.'}
+    </p>
+  {/if}
 
-  <div class="collection-grid compact">
-    {#each allClues as card (card.id)}
-      {#if game.ownedClues.includes(card.id)}
-        <CardChip {card} verified={game.verified.includes(card.id)} />
-      {:else}
-        <div class="card back">?</div>
-      {/if}
-    {/each}
-  </div>
-
-  <button class="primary" onclick={() => dispatch({ type: 'RESTART' })}>다시 (run 재시작)</button>
+  <button class="primary" onclick={() => dispatch({ type: 'SHOW_SUMMARY' })}>
+    Run Summary
+  </button>
 </section>
