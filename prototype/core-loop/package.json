@@ -25,13 +25,19 @@
     "audio:promote": "node scripts/promote-audio.mjs --spec audio/audio-spec.json --report audio/audio-qa-report.json --picks audio/audio-picks.json --out public/audio",
     "audio:verify": "node scripts/verify-audio-manifest.mjs",
     "audio:verify-page": "node scripts/prepare-final-audio-verification.mjs",
+    "smoke:case-generator-e2e": "esbuild smoke-case-generator-e2e.ts --bundle --format=esm --platform=node --outfile=smoke-case-generator-e2e.mjs && node smoke-case-generator-e2e.mjs",
+    "fixture:pg204": "esbuild build-pg204-fixture.ts --bundle --format=esm --platform=node --outfile=build-pg204-fixture.mjs && node build-pg204-fixture.mjs --source F:/Project/out/raw_texts/204.txt --out fixtures/case-generator/pg204-invisible-man.source.json",
+    "e2e:case-generator": "esbuild e2e-case-generator.ts --bundle --format=esm --platform=node --outfile=e2e-case-generator.mjs && node e2e-case-generator.mjs",
     "prototype:case-generator": "esbuild case-generator-prototype.ts --bundle --format=esm --platform=node --outfile=case-generator-prototype.mjs && node case-generator-prototype.mjs",
     "prototype:case-generator:demo": "esbuild case-generator-prototype.ts --bundle --format=esm --platform=node --outfile=case-generator-prototype.mjs && node case-generator-prototype.mjs --demo",
+    "generator:demo": "npm run prototype:case-generator:demo",
+    "typecheck": "tsc --noEmit",
     "preview": "vite preview"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^5.0.3",
     "ajv": "^8.17.1",
+    "@types/node": "^26.1.2",
     "svelte": "^5.16.0",
     "typescript": "~5.7.2",
     "vite": "^6.0.5"

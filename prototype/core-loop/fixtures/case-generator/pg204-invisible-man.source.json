@@ -1,0 +1,41 @@
+{
+  "format": "SourceSnapshot@1",
+  "pgId": 204,
+  "story": {
+    "startAnchor": "The Invisible Man",
+    "endAnchor": "The Honour of Israel Gow"
+  },
+  "source": {
+    "revision": "Project Gutenberg pg204 local snapshot",
+    "extractedAt": "2026-07-28",
+    "sha256": "516076490c5530c6f299bda8a472f2ae8718f675db0a32fb478c58a5de9757f3",
+    "bytes": 477691
+  },
+  "paragraphs": [
+    {
+      "id": "pg204-invisible-man-01",
+      "text": "As they threaded the steep side streets already powdered with silver,\nAngus finished his story; and by the time they reached the crescent with\nthe towering flats, he had leisure to turn his attention to the four\nsentinels. The chestnut seller, both before and after receiving a\nsovereign, swore stubbornly that he had watched the door and seen no\nvisitor enter. The policeman was even more emphatic. He said he had had\nexperience of crooks of all kinds, in top hats and in rags; he wasn’t so\ngreen as to expect suspicious characters to look suspicious; he looked\nout for anybody, and, so help him, there had been nobody. And when all\nthree men gathered round the gilded commissionaire, who still stood\nsmiling astride of the porch, the verdict was more final still.",
+      "sha256": "fca820658dbed80be00f7610b6c774e40fb4aa4e6d9e060c849ee528f708ecad"
+    },
+    {
+      "id": "pg204-invisible-man-02",
+      "text": "“Have you ever noticed this--that people never answer what you say? They\nanswer what you mean--or what they think you mean. Suppose one lady says\nto another in a country house, ‘Is anybody staying with you?’ the lady\ndoesn’t answer ‘Yes; the butler, the three footmen, the parlourmaid, and\nso on,’ though the parlourmaid may be in the room, or the butler behind\nher chair. She says ‘There is nobody staying with us,’ meaning nobody of\nthe sort you mean. But suppose a doctor inquiring into an epidemic asks,\n‘Who is staying in the house?’ then the lady will remember the butler,\nthe parlourmaid, and the rest. All language is used like that; you never\nget a question answered literally, even when you get it answered truly.\nWhen those four quite honest men said that no man had gone into the\nMansions, they did not really mean that no man had gone into them. They\nmeant no man whom they could suspect of being your man. A man did go\ninto the house, and did come out of it, but they never noticed him.”",
+      "sha256": "fad8b35de6c71c861012825c455900ee62c7ce655532ec2e9729024308bdffda"
+    },
+    {
+      "id": "pg204-invisible-man-03",
+      "text": "“An invisible man?” inquired Angus, raising his red eyebrows. “A\nmentally invisible man,” said Father Brown.",
+      "sha256": "579fbf9a91b6b44d40cbec34f4d7da8f32e77453b2ff623ac64d8d3d17124a85"
+    },
+    {
+      "id": "pg204-invisible-man-04",
+      "text": "“Because,” said Father Brown, “barring carrier-pigeons, somebody must\nhave brought her the letter.”",
+      "sha256": "e5c3b4e5bbd646b1dbf5f7b05c8d4dc8fcb03d18ddef88d68a1beac488495e49"
+    },
+    {
+      "id": "pg204-invisible-man-05",
+      "text": "“Nobody ever notices postmen somehow,” he said thoughtfully; “yet they\nhave passions like other men, and even carry large bags where a small\ncorpse can be stowed quite easily.”",
+      "sha256": "c068aed7adab41786bb9e7e525c215f29e4e05ed5057a385a5bbe206554ba160"
+    }
+  ]
+}

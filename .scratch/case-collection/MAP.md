@@ -74,6 +74,8 @@ Labels: wayfinder:map
 - `[검증]` [인터루드·BAD 엔딩 콘텐츠 계약](issues/29-interlude-bad-ending-content-contract.md) — 공개 allowlist 입력만 받는 결정론적 인터루드와 도달 가능한 두 BAD 엔딩을 `game-data-pack@2`에 넣고 warning 선행·taint·병합 provenance를 검증했다.
 - `[검증]` [MVP 오디오 스코프](issues/30-mvp-audio-scope.md) — 보이스 없이 Higgsfield Sonilo Music loop 2개와 Seed Audio 의미 SFX 7개를 사람 청감 선택 후 WAV/OGG/MP3 27개로 승격했다. manifest hash·LUFS·peak·loop·브라우저 18/18 decode와 무음 시 GameState 불변을 검증했다. / 기각: 기계 QA만 통과하고 청감 반려된 로컬 ACE-Step/Stable Audio 후보.
 
+- `[검증]` [case 생성 E2E 데이터팩 프로토타입](issues/28-case-generator-e2e-datapack-prototype.md) — Project Gutenberg 204 고정 원문과 실제 sLLM selector/presenter/taste transcript를 승인 입력으로 저장하고, 두 replay를 byte-identical하게 emit했다. 최신 `game-data-pack@2`와 교차해 `boss→generated case` 진입 인터루드까지 포함한 `cases=5, overrides=0`을 검증했다. / 유예: `prototype/case-generator-shape`의 main 병합은 별도 사용자 결정.
+
 ## Not yet specified
 
 - 수익화 — **유료 채널의 시점과 형태만 남았다.** 채널 후보는 Steam으로 좁혀졌고(콘텐츠 분량 때문에 [18](issues/18-case-generator-shape.md) 이후, 리드타임 6주+), 무료 배포는 GitHub Pages+Higgsfield로 확정. itch.io·Patreon은 미사용 결정, Stripe 직판은 후순위 대기([10001](issues/10001-higgsfield-stripe-storefront.md))이므로 이 줄에서 빠졌다. 남은 fog는 "유료판이 무엇을 담는가" — 무료 게시본과의 경계이고 18의 산출에 달렸다.

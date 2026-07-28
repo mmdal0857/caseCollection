@@ -1,0 +1,150 @@
+{
+  "format": "PatternContract@1",
+  "approved": true,
+  "evidence": {
+    "id": "pg204.social-invisibility.evidence",
+    "patternId": "social-invisibility",
+    "sourceSnapshotIds": [
+      "pg204-invisible-man-01",
+      "pg204-invisible-man-02",
+      "pg204-invisible-man-03",
+      "pg204-invisible-man-04",
+      "pg204-invisible-man-05"
+    ],
+    "commonClues": [
+      "정직한 목격자들이 특정 직업인을 사람 수에 넣지 않는다",
+      "배달 행위가 존재를 증명하지만 신분을 숨긴다",
+      "눈 위 흔적이 출입 부정을 반박한다"
+    ],
+    "typicalLocations": [
+      "출입구가 감시되는 공동주택",
+      "서비스 노동이 일상적으로 드나드는 거리"
+    ],
+    "summary": "숨은 사람이 아니라 보였지만 사회적으로 세어지지 않은 사람이 감시를 통과한다."
+  },
+  "recipe": {
+    "id": "pg204.social-invisibility",
+    "version": "1.0.0",
+    "evidenceIds": [
+      "pg204.social-invisibility.evidence"
+    ],
+    "slots": [
+      {
+        "id": "witness-gap",
+        "order": 0,
+        "frame": "omission",
+        "accepts": [
+          "사람",
+          "행위"
+        ],
+        "label": "목격의 맹점"
+      },
+      {
+        "id": "social-mask",
+        "order": 1,
+        "frame": "identity",
+        "accepts": [
+          "사람",
+          "행위"
+        ],
+        "label": "사회적 위장"
+      },
+      {
+        "id": "routine-action",
+        "order": 2,
+        "frame": "action",
+        "accepts": [
+          "행위"
+        ],
+        "label": "반복된 행동"
+      },
+      {
+        "id": "physical-trace",
+        "order": 3,
+        "frame": "trace",
+        "accepts": [
+          "사물",
+          "현상"
+        ],
+        "label": "남겨진 흔적"
+      }
+    ],
+    "allowedAxisProfiles": [
+      "tag-pressure:논리"
+    ],
+    "allowCardReuse": false
+  },
+  "storySeed": {
+    "id": "pg204.snowbound-delivery",
+    "requires": [
+      {
+        "slotId": "witness-gap",
+        "meaningIncludesAny": [
+          "공백",
+          "기억되지"
+        ]
+      },
+      {
+        "slotId": "social-mask",
+        "meaningIncludesAny": [
+          "투명",
+          "위장"
+        ]
+      },
+      {
+        "slotId": "routine-action",
+        "facetTagsAll": [
+          "신중"
+        ]
+      },
+      {
+        "slotId": "physical-trace",
+        "facetTagsAll": [
+          "논리"
+        ]
+      }
+    ],
+    "prefers": [
+      {
+        "slotId": "witness-gap",
+        "facetTagsAny": [
+          "논리"
+        ],
+        "weight": 3
+      },
+      {
+        "slotId": "social-mask",
+        "facetTagsAny": [
+          "은밀"
+        ],
+        "weight": 3
+      },
+      {
+        "slotId": "physical-trace",
+        "meaningIncludesAny": [
+          "자취",
+          "증거",
+          "흔적"
+        ],
+        "weight": 2
+      }
+    ],
+    "axisPresentations": [
+      {
+        "profileId": "tag-pressure:논리",
+        "label": "가시성",
+        "low": "익숙함",
+        "high": "의심",
+        "hint": "논리적 대조가 익숙해서 보이지 않던 사람을 수사선 위로 끌어낸다."
+      }
+    ]
+  },
+  "axisProfile": {
+    "id": "tag-pressure:논리",
+    "drivenBy": "논리",
+    "initial": 3,
+    "step": 1,
+    "min": 0,
+    "max": 10
+  }
+}
