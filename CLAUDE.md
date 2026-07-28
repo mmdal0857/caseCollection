@@ -25,19 +25,29 @@ OUT 프로젝트(`f:/Project/out`)의 LLM 위키를 기반으로 하는 웹 카�
 
 코어 루프 프로토타입(v1~v10.1, ticket 11·17·19)은 **main의 `prototype/core-loop/`**에 있다 — 2026-07-23 `b2596bf`로 병합됐고 동명 브랜치는 삭제됐다. **예전 문서의 `git checkout prototype/core-loop`는 무효.** 실행: `cd prototype/core-loop && npm install && npm run dev`.
 
-> **예외 — 격리 프로토는 다시 생겼고, 그대로 둔다 (2026-07-28 결정).** [ticket 18](.scratch/case-collection/issues/18-case-generator-shape.md)의 case 생성기 로직과 [ticket 26](.scratch/case-collection/issues/26-openwiki-candidate-discovery-pilot.md)의 OpenWiki 파일럿은 각각 `.worktrees/case-generator-shape`·`.worktrees/openwiki-candidate-pilot` 워크트리에만 있고 main엔 없다 — 위 문단의 "프로토는 main"이 전면 무효는 아니지만 **이 둘은 예외**다. 18의 검증(smoke·tsc·build 통과)은 이 격리 브랜치에서 얻은 결과라 main에서 재현되지 않는다. **2026-07-28 사용자 결정: 격리 유지**("일단 유지"). 그러므로 이 상태는 정리가 덜 된 것이 **아니다** — 다음 세션이 병합하거나 워크트리를 지우지 말 것. **기각이 아니라 유예**이므로 병합은 다시 열릴 수 있고, 그때까지 두 브랜치의 검증 결과는 main에서 재현되지 않는다는 점만 기억하면 된다.
+> **`prototype/case-generator-shape`는 2026-07-29 main에 병합됐다.** 2026-07-28 결정("일단 유지")은 [ticket 28](.scratch/case-collection/issues/28-case-generator-e2e-datapack-prototype.md)이 실 sLLM·실 원문까지 이어붙일 때 병합 여부를 재판단한다는 조건부였고, 28이 그 조건(로컬 sLLM `gemma-4-e4b`로 Project Gutenberg 204 E2E 완주, replay byte 동일성, ticket 16 validator 교차검증)을 실제로 채웠다 — 격리를 뒤집은 게 아니라 유예가 예정대로 풀린 것이다. 이 브랜치는 main보다 28개 커밋 뒤처져 있었기 때문에 naive merge 대신 `main`으로 rebase 후 병합했다(2d4f42d/9d79a97 → 77bdba5/df596a7). ticket 18·28 모두 `Reviewed-by: Claude (2026-07-29)`.
+>
+> [ticket 26](.scratch/case-collection/issues/26-openwiki-candidate-discovery-pilot.md)의 OpenWiki 파일럿(`.worktrees/openwiki-candidate-pilot`)은 이 병합과 무관 — 26은 이미 "런타임 기각, validator 흡수"로 종결됐고 격리 워크트리 자체를 main에 합칠 대상이 아니다.
 
 검증된 **순수 모듈**은 스펙 입력이자 **빌드 파이프라인의 콘텐츠 검증기**로 승격 예정 — `engine.ts`(솔버빌리티), `facets.ts`(측면 합법성·해석 공간), `dramaturgy.ts`(코믹 반응 생성), `scenario.ts`(서사 응집), `persona.ts`, `josa.ts`, `datapack.ts`(데이터 팩 로더).
 
-**기계 검증기 실행**:
+**기계 검증기 실행** (2026-07-29, ticket 14·16·21·22·23·28·29·30 통합 이후 전체 목록):
 
 ```
 cd prototype/core-loop
-npm run smoke
-npm run smoke:datapack
+npm run smoke                    # 코어 엔진 — 삼중 제약·전파·연쇄 해제·조사 린트
+npm run smoke:datapack           # game-data-pack@2 — 형태·병합·무결성·schema 동기화
+npm run smoke:pack-storage       # IndexedDB 본문 + localStorage manifest
+npm run smoke:collection         # 영구 컬렉션 — 진행도 3축·오답 dedupe·게스트 경계
+npm run smoke:run-session        # RunSnapshot@1 — 저장·재개·비가역 액션 멱등성
+npm run smoke:run-flow           # 화면 그래프 — review/final submit·인터루드 AP
+npm run smoke:narrative          # 인터루드·BAD 엔딩 — truth 누출 차단·결정론
+npm run smoke:audio              # 오디오 — manifest·mute·GameState 불변
+npm run smoke:case-generator-e2e # 실 sLLM E2E — selector/presenter/taste 경계·replay 동일성
+npx tsc --noEmit && npm run build
 ```
 
-데이터 팩 추출 파이프라인(티켓 14 뼈대 — 3·4단계 STUB): `py scripts/extract_game_data_pack.py` — 후보 49건·패턴 4종을 보고한다(49는 위키 천장이고 MVP 절단은 08 §④의 24장이다). `py`가 "Python was not found"로 죽으면 Store 별칭에 걸린 것이니 `python.exe` 전체 경로로 실행할 것(전역 CLAUDE.md 참조) — 이 기계에서는 `py -m`·`py -`는 되는데 `py <script>`만 별칭에 걸렸다.
+원문 기반 태그·측면 추출(ticket 14, STUB 아님 — 2026-07-28 `scripts/game_data_pack/` Python 패키지로 완전 구현): `py -m pytest scripts/tests/test_game_data_pack.py`(14개 테스트) 또는 `py scripts/extract_game_data_pack.py`로 실행. `FacetExtractor`/`TasteFilter`/`CaseAssembler` 경계 + `game-data-pack@2` emit. `py`가 "Python was not found"로 죽으면 Store 별칭에 걸린 것이니 `python.exe` 전체 경로로 실행할 것(전역 CLAUDE.md 참조) — 이 기계에서는 `py -m`·`py -`는 되는데 `py <script>`만 별칭에 걸렸다.
 
 ## 카드 아트 (ticket 13 확정, ticket 08로 볼륨 최종화)
 
