@@ -18,6 +18,8 @@ OUT 프로젝트(`f:/Project/out`)의 LLM 위키를 기반으로 하는 웹 카�
 
 - **Svelte 5 `$state` 프록시는 `structuredClone`으로 복제 불가** (`DataCloneError`). 순수 리듀서에 상태를 넘길 땐 반드시 `$state.snapshot(state)`로 평범한 객체를 만들어 전달할 것. 이걸 놓치면 모든 dispatch가 조용히 예외로 죽어 화면이 멈춘다 (프로토 v1에서 실제 발생).
 - 파생값은 `$derived`, 복합 계산은 `$derived.by`. `$props()` 값을 지역 상수로 캡처하면 `state_referenced_locally` 경고 — 의도한 초기값 캡처가 아니면 `$derived`로.
+- **조사는 flex 형제로 떼어놓지 말 것** (2026-07-28 실측). `eul(name)` 같은 조사 계산이 맞아도 이름과 조사를 각각 flex 자식으로 두면 `gap`이 끼어들어 「환기구 틈 을 집었다」가 된다 — **받침 계산이 맞아도 띄어쓰기가 틀리면 소용없다.** 이름·조사·문장을 한 인라인 덩어리로 묶을 것. 그리고 **인라인 요소 맨 앞의 공백 문자는 Svelte 컴파일에서 지워진다**(「집었다— 놓을」) → 간격은 `margin`/`::before`로 낼 것.
+- **`.svelte` 편집은 HMR이 안 먹을 때가 있다** — 새 마크업이 화면에 안 나타나면 코드가 틀린 게 아니라 갱신이 안 된 것일 수 있다. 판정 전에 전체 새로고침 한 번.
 
 ## 프로토타입 자산
 
@@ -68,7 +70,7 @@ Default role strings (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-fo
 
 ### Domain docs
 
-Single-context: `CONTEXT.md` + `docs/adr/` at repo root. See `docs/agents/domain.md`.
+Single-context: `CONTEXT.md` + `docs/adr/` at repo root. See `docs/agents/domain.md`. **`docs/adr/`는 비어 있고 그게 정상이다** — 이 프로젝트의 결정 기록은 **wayfinder 티켓의 `## Resolution`**이다(2026-07-28 확인). ADR을 새로 만들지 말고 티켓에 쓸 것. `CONTEXT.md`는 용어집 전용이며 결정·구현 세부를 담지 않는다.
 
 ### Codex collaboration
 
