@@ -34,8 +34,8 @@ Claude decision -> optional Codex advisory review -> Claude delegation -> Codex 
 
 1. **Decision.** Claude claims and owns the open ticket. While it's open, Codex may only do read-only Workflow A (adversarial review) when Claude explicitly asks — Workflow A must not modify files.
 2. **Delegation.** Write-enabled Workflow T is allowed only when the referenced decision ticket is `closed`, or an implementation ticket generated from an approved spec is ready for an agent. Record the delegation in the existing implementation ticket (see Delegation Contract below); open a child ticket only if the work is independently schedulable, spans sessions, or has its own blocking edges.
-3. **Execution.** Codex edits only the declared paths. It never edits `CLAUDE.md`, `docs/agents/`, `.scratch/`, or `MAP.md`, and never commits. If implementation needs a missing decision, Codex returns `decision_required`; if evidence conflicts with the governing ticket, it returns `source_conflict`.
-4. **Integration.** Claude inspects the diff and verification evidence — independently, not by trusting Codex's self-report (run the smoke tests yourself). Claude may invoke a fresh Workflow R for a second opinion, then accepts/revises/rejects, updates the ticket and map, and creates the commit.
+3. **Execution.** Codex edits only the declared paths, plus its own assigned ticket file(s) and a one-line `MAP.md` index entry for ticket-closing housekeeping (see Failure handling below for the exact boundary). It never edits `CLAUDE.md` or `docs/agents/`, and never commits. If implementation needs a missing decision, Codex returns `decision_required`; if evidence conflicts with the governing ticket, it returns `source_conflict`.
+4. **Integration.** Claude inspects the diff and verification evidence — independently, not by trusting Codex's self-report (run the smoke tests yourself). If the work happened in an isolated worktree, check `git log main..<branch>` before merging — a worktree left checked out for a while can drift far behind main; a naive merge/rebase of a stale branch risks silently dropping intervening decisions rather than just producing a text conflict (found 2026-07-29: `prototype/case-generator-shape` was 28 commits behind by the time ticket 28 finished — resolved by committing the new work, then `git rebase main` before merging, not a direct merge of the stale branch). Claude may invoke a fresh Workflow R for a second opinion, then accepts/revises/rejects, updates the ticket and map, and creates the commit.
 
 ## Entry Lane B — user-initiated standalone Codex work
 
@@ -234,7 +234,8 @@ Card art and marketplace assets go through the Higgsfield CLI directly (`scripts
 | Acceptance command can't run | `blocked`; preserve the diff, report why |
 | Work reveals a new product/domain decision | `decision_required`; intake issue only in direct mode |
 | A wiki update seems useful but wasn't part of the task | `wiki_candidate`; no wiki write |
-| Codex changed a governance file (`CLAUDE.md`, `docs/agents/`, `.scratch/`, `MAP.md`) during delegated work | reject the integration; restore through owner-directed editing, not a destructive git command |
+| Codex changed `CLAUDE.md` or `docs/agents/` during delegated work | reject the integration; restore through owner-directed editing, not a destructive git command |
+| Codex changed `MAP.md` or `.scratch/` paths outside its own assigned ticket(s) | reject the integration for those paths. A ticket-closing write to the ticket's own file (`Status: closed`, blank `Reviewed-by:`, `## Resolution`) and a one-line `MAP.md` "Decisions so far" entry for that ticket are expected practice (see Delegation contract step 6), not a violation — the earlier blanket "never touch `.scratch/`/`MAP.md`" wording here was over-broad and contradicted by tickets 18/26/27's own precedent (2026-07-29 correction) |
 
 ## Standing rules for every Workflow T prompt
 
