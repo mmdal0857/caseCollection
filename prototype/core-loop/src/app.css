@@ -114,14 +114,17 @@ body {
    고른 뒤 슬롯을 누를 때까지 화면이 아무 말도 안 한다(ticket 31 ⓐ). 새 층이 아니라
    핸드 레일 안이므로 20의 층 예산은 그대로다. */
 .picked-readout {
-  display: flex; align-items: baseline; gap: 6px; margin: 0 0 8px; padding: 5px 9px;
+  display: flex; align-items: baseline; flex-wrap: wrap; gap: 2px 8px; margin: 0 0 8px; padding: 5px 9px;
   border: 1px solid var(--gold); border-left-width: 3px; border-radius: 5px;
   background: rgb(216 180 90 / 9%); font-size: 12px; color: var(--ink);
 }
 .picked-readout b { color: var(--gold); }
+.picked-match { color: var(--dim); }
+.picked-match.lit { color: var(--gold); font-weight: 700; }
 /* 힌트 앞 간격은 **공백 문자가 아니라 margin**으로 낸다 — 인라인 요소 맨 앞의 공백은
    Svelte 컴파일에서 지워져 "집었다— 놓을"이 된다. */
-.picked-hint { color: var(--dim); margin-left: .35em; }
+.picked-hint { color: var(--dim); }
+.picked-hint::before { content: '·'; margin-right: .4em; opacity: .55; }
 .suit-stacks { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
 /* 펼침의 기준은 **레일**이지 개별 슈트 칸이 아니다 — 칸을 기준으로 잡으면 폭 1060px짜리
    패널이 한 칸 중앙에 걸려 어긋난다. 그래서 여기에 position을 두지 않는다. */

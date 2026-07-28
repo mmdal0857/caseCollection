@@ -6,11 +6,14 @@
 
   type HandCard = { card: ClueCard; guest: boolean; available: boolean };
 
-  let { cards, selected, verified, onpick }: {
+  type Readings = { judged: number; knownUnjudged: number; unknown: number; lit: number };
+
+  let { cards, selected, verified, onpick, readings }: {
     cards: HandCard[];
     selected: string | null;
     verified: string[];
     onpick: (id: string) => void;
+    readings: Readings | null;
   } = $props();
 
   const suits: Suit[] = ['physical', 'behavioral', 'documentary', 'forensic'];
@@ -29,7 +32,21 @@
       <!-- 조사는 이름에 **붙어야** 한다. flex 자식으로 떼어놓으면 gap이 끼어들어
            "환기구 틈 을 집었다"가 된다 — 받침 계산이 맞아도 띄어쓰기가 틀리면 소용없다.
            그래서 이름·조사·문장을 한 인라인 덩어리로 묶는다. 을/를 판정은 19의 josa 모듈. -->
-      <span><b>{picked.card.name}</b>{eul(picked.card.name)} 집었다<span class="picked-hint">— 놓을 슬롯을 고르거나, 다시 눌러 내려놓는다</span></span>
+      <span><b>{picked.card.name}</b>{eul(picked.card.name)} 집었다</span>
+      {#if readings}
+        <!-- 빈 상태가 두 가지를 뜻하면 안 된다: "대조할 노트가 없다"와 "노트에 맞는 자리가
+             없다"는 다른 사실이다. 침묵 하나로 뭉뚱그리면 컬티스트의 모호함을 축소판으로
+             재현한다(ticket 31). -->
+        <span class="picked-match" class:lit={readings.lit > 0}>
+          {#if readings.lit > 0}노트 대조 — 놓을 자리 {readings.lit}
+          {:else if readings.judged === 0}대조할 노트가 아직 없다 — 어디든 놓아보라
+          {:else}노트에 맞는 자리가 지금은 없다{/if}
+        </span>
+        <!-- 두 축을 갈라 센다. 합치면 "더 굴려보면 되는 것"과 "수사를 더 해야 되는 것"이
+             구분되지 않는다. -->
+        {#if readings.knownUnjudged > 0}<span class="picked-hint">아는데 미판정 {readings.knownUnjudged}</span>{/if}
+        {#if readings.unknown > 0}<span class="picked-hint">아직 모름 {readings.unknown}</span>{/if}
+      {/if}
     </p>
   {/if}
   <div class="suit-stacks">

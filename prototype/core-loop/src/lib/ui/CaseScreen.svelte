@@ -56,6 +56,11 @@
       list: readFacets(selectedClue.facets, slot.role?.frame ?? null, facetCtxFor(game, content, index)),
     };
   });
+  // **판정 이력** — 그 측면으로 제출해 결과를 본 적이 있는가(정오 무관). 커밋·지식·가용성과
+  // 별개의 네 번째 축이며 `note.correct`가 채워졌는지와 일대일이다(CONTEXT.md 등록).
+  const judgedFacets = $derived(
+    new Set(game.notebook.filter((note) => note.correct !== null).map((note) => note.facetKey)),
+  );
   // 집은 카드가 **실제로** 들어갈 수 있는 슬롯 집합. 목적은 힌트가 아니라 **헛클릭 제거**다
   // — 네 슬롯을 다 눌러보며 어디가 받는지 알아내는 건 플레이가 아니라 반복노동이다.
   // 다면성 발견은 여기서 죽지 않는다: 발견은 표기가 아니라 **놓은 뒤 피드백**(확정 보상·
@@ -76,12 +81,29 @@
       //      **슬롯 frame을 보지 않는다.** 역시 네 슬롯이 전부 켜졌다.
       // 실제로 「환기구 틈」이 쓸 수 있는 읽기는 「밀실의 허점」(경로) 하나뿐이었다
       // (「전달 통로」는 *아직 모르는 측면*). 그러므로 **아는 읽기가 이 슬롯의 역할과 맞는가**,
-      // 즉 `usable && fitsRole`이 요약의 술어다. 모르는 측면은 usable이 아니라 자동으로
-      // 침묵하므로, 이 요약은 **수사 노트가 자라면 함께 자란다** — 12 §4의 "보유 ≠ 앎"이
-      // 처음으로 화면에 드러나는 자리다.
-      if (list.some((v) => v.usable && v.fitsRole)) ok.add(slot.id);
+      // 즉 `usable && fitsRole`이다.
+      //
+      // 여기에 **판정 이력**이 하나 더 붙는다(그릴링 결정). 공짜로 아는 측면(`facets[0]`)까지
+      // 밝히면 "맞는 카드를 틀린 측면으로 읽었다"는 실패 양태가 평범한 플레이에서 사라진다 —
+      // 엔진이 전용 반응까지 만들어둔 양태다. 그래서 **제출해 결과를 본 읽기만** 대조한다.
+      // 대가는 희박함이다(run당 판정 14 / 측면 55, 첫 case는 통째로 공백). 실측으로 그
+      // 숫자를 보여드린 뒤에도 사용자가 "희박해도 원칙이 먼저"로 재확인했다.
+      if (list.some((v) => v.usable && v.fitsRole && judgedFacets.has(v.facet.key))) ok.add(slot.id);
     });
     return ok;
+  });
+  // 집은 카드의 읽기를 **판정 이력 × 지식** 두 축으로 갈라 센다. 한 숫자로 합치면
+  // "더 굴려보면 열리는 것"과 "수사를 더 해야 열리는 것"이 구분되지 않는다.
+  const pickedReadings = $derived.by(() => {
+    if (!selectedClue) return null;
+    const ctx = facetCtxFor(game, content, 0); // known·lent는 슬롯과 무관하므로 인덱스는 아무거나
+    let judged = 0, knownUnjudged = 0, unknown = 0;
+    for (const f of selectedClue.facets) {
+      if (judgedFacets.has(f.key)) judged += 1;
+      else if (ctx.known.has(f.key) || ctx.lent.has(f.key)) knownUnjudged += 1;
+      else unknown += 1;
+    }
+    return { judged, knownUnjudged, unknown, lit: placeableSlots?.size ?? 0 };
   });
   const canSubmit = $derived(def.slots.every((slot) => game.confirmed[slot.id] || game.placed[slot.id]));
   const caseNotes = $derived(game.notebook.filter((note) => note.correct !== null));
@@ -264,5 +286,5 @@
   {#if game.awaitingAdvance}
     <div class="advance-row"><button class="primary" onclick={() => dispatch({ type: 'ADVANCE' })}>계속</button></div>
   {/if}
-  <HandRail cards={hand} selected={selectedCard} verified={game.verified} onpick={pickCard} />
+  <HandRail cards={hand} selected={selectedCard} verified={game.verified} onpick={pickCard} readings={pickedReadings} />
 </section>
