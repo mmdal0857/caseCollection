@@ -2,6 +2,10 @@
 
 OUT 프로젝트(`f:/Project/out`)의 LLM 위키를 기반으로 하는 웹 카드 콜렉션 게임. wayfinder 지도로 진행 — 정본은 `.scratch/case-collection/MAP.md` (현재 상태·프론티어는 지도의 Decisions so far와 open 티켓이 권위). 리서치 산출물은 `docs/research/`.
 
+Wiki-Project-Root: F:\Project\out
+
+이 선언은 housekeeping의 Drive→로컬 wiki 동기화 대상을 지정한다. caseCollection의 코드 변경을 근거로 OUT wiki 본문을 고치는 권한은 주지 않는다.
+
 **주의: `MAP.md`는 색인이지 정본이 아니다.** 한 줄 요약은 채택안만 남기고 기각·유예된 대안을 지운다 — 결정 상태를 판정하려면 반드시 티켓 원문을 대조할 것.
 
 ## 기술 스택 (ticket 05 확정)
@@ -85,3 +89,13 @@ Single-context: `CONTEXT.md` + `docs/adr/` at repo root. See `docs/agents/domain
 ### Codex collaboration
 
 Codex handles code (refactor/review/diagnosis on `prototype/core-loop/`) — not design decisions (except the narrow "Claude 한도" exception, 2026-07-27: Codex may progress a design ticket when Claude is session/token-limited, but the result is provisional until Claude's mandatory 4-point review fills `Reviewed-by:`), not image generation (that's Higgsfield CLI, above — Codex may build generation *tooling* like the manifest/batch scripts but doesn't call the model itself). Standing `action_safety` block + behavior-preservation gate (smoke tests). Token expiry handoff and Claude's independent review/integration flow also live in `docs/agents/codex-collab.md`.
+
+<!-- OPENWIKI:START -->
+
+## OpenWiki
+
+This repository uses OpenWiki for recurring code documentation. Start with `openwiki/quickstart.md`, then follow its links to architecture, workflows, domain concepts, operations, integrations, testing guidance, and source maps.
+
+The scheduled OpenWiki GitHub Actions workflow refreshes the repository wiki. Do not hand-edit generated OpenWiki pages unless explicitly asked; prefer updating source code/docs and letting OpenWiki regenerate.
+
+<!-- OPENWIKI:END -->
