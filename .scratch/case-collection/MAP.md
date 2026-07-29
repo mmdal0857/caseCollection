@@ -74,6 +74,8 @@ Labels: wayfinder:map
 - `[검증]` [인터루드·BAD 엔딩 콘텐츠 계약](issues/29-interlude-bad-ending-content-contract.md) — 공개 allowlist 입력만 받는 결정론적 인터루드와 도달 가능한 두 BAD 엔딩을 `game-data-pack@2`에 넣고 warning 선행·taint·병합 provenance를 검증했다.
 - `[검증]` [MVP 오디오 스코프](issues/30-mvp-audio-scope.md) — 보이스 없이 Higgsfield Sonilo Music loop 2개와 Seed Audio 의미 SFX 7개를 사람 청감 선택 후 WAV/OGG/MP3 27개로 승격했다. manifest hash·LUFS·peak·loop·브라우저 18/18 decode와 무음 시 GameState 불변을 검증했다. / 기각: 기계 QA만 통과하고 청감 반려된 로컬 ACE-Step/Stable Audio 후보.
 
+- `[검증]` [OpenWiki 코드 모드 파일럿](issues/32-openwiki-code-mode-pilot.md) — code mode(`openwiki code --init`)는 personal mode(26, 기각)와 달리 실사용 품질에 도달했다. Gemini spend cap·로컬 LM Studio 두 provider는 실패했고 `openai-chatgpt`(Codex 계정)에서 성공 — 이 환경에서 OpenWiki는 클라우드급 모델에서만 검증됨. `openwiki/` 트리(콘셉트 문서 7개)와 `CLAUDE.md`/`AGENTS.md` 포인터 블록을 사용자 직접 리뷰 후 실물 리포에 반영. CI 자동 갱신은 미채택 — housekeeping 주기 갱신(`--update`)으로 대체. **/ 기각**: CI 자동 갱신(GitHub Secrets 미설정 + spend cap 초과 상태에서 즉시 실패).
+
 - `[검증]` [case 생성 E2E 데이터팩 프로토타입](issues/28-case-generator-e2e-datapack-prototype.md) — Project Gutenberg 204 고정 원문과 실제 sLLM selector/presenter/taste transcript를 승인 입력으로 저장하고, 두 replay를 byte-identical하게 emit했다. 최신 `game-data-pack@2`와 교차해 `boss→generated case` 진입 인터루드까지 포함한 `cases=5, overrides=0`을 검증했다. / 유예: `prototype/case-generator-shape`의 main 병합은 별도 사용자 결정.
 
 ## Not yet specified

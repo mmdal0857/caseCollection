@@ -1,6 +1,6 @@
 # OpenWiki 코드 모드 파일럿
 
-Status: open (실물 리포 채택 완료, 커밋·CI 배선은 사용자 결정 대기)
+Status: closed
 Labels: wayfinder:prototype
 Assignee: Claude
 Blocked-by: none
@@ -86,3 +86,9 @@ Status는 `open`으로 유지, 위 조치 후 재시도.
 1. **커밋**: 보류 — 사용자가 직접 리뷰 예정. VS Code Markdown Preview(`Ctrl+Shift+V`, 내장 Mermaid 렌더링)로 확인 가능, 별도 GUI 불필요.
 2. **CI 자동 갱신**: **미채택.** `.github/workflows/openwiki-update.yml` 삭제 — GitHub Secrets 미설정 + Gemini spend cap 초과 상태에서 도입해도 즉시 실패. 대신 `/housekeeping`이 주기적으로 `openwiki code --update --print`를 돌리는 쪽으로 결정(Step 2.7 신설).
 3. **스킬 등록 완료**: `~/.claude/skills/openwiki-code-wiki/SKILL.md`(실행·provider·실패 처리·GUI 리뷰 절차) + `housekeeping` 스킬에 Step 2.7 추가. `openwiki` CLI는 스크래치 사본이 아니라 **전역 npm 설치**(`npm install -g openwiki@0.2.3`)로 전환해 세션 간 재사용 가능.
+
+## Resolution
+
+사용자가 VS Code Markdown Preview(`Ctrl+Shift+V`, 내장 Mermaid 렌더링)로 `openwiki/` 산출물을 직접 검토 완료. 커밋 `d2ea6e1`로 `openwiki/` 트리(콘셉트 문서 7개 + index 4개)와 `CLAUDE.md`/`AGENTS.md`의 `<!-- OPENWIKI:START/END -->` 포인터 블록을 실물 리포에 반영했다. CI 자동 갱신은 미채택 — housekeeping Step 2.7이 주기 갱신(`openwiki code --update --print`)을 대신한다. 이후 세션은 `openwiki/quickstart.md`를 코드구조 문서 진입점으로 사용한다.
+
+**/ 기각**: OpenWiki personal/ingestion mode를 원문 후보 발견에 사용(26이 별도로 기각), CI 자동 갱신(GitHub Secrets 미설정 + Gemini spend cap 초과 상태에서 도입해도 즉시 실패).
