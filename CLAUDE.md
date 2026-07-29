@@ -39,6 +39,7 @@ Wiki-Project-Root: F:\Project\out
 
 ```
 cd prototype/core-loop
+npm run schema:check             # JSON Schema와 생성 validator 동기화
 npm run smoke                    # 코어 엔진 — 삼중 제약·전파·연쇄 해제·조사 린트
 npm run smoke:datapack           # game-data-pack@2 — 형태·병합·무결성·schema 동기화
 npm run smoke:pack-storage       # IndexedDB 본문 + localStorage manifest
@@ -48,7 +49,8 @@ npm run smoke:run-flow           # 화면 그래프 — review/final submit·인
 npm run smoke:narrative          # 인터루드·BAD 엔딩 — truth 누출 차단·결정론
 npm run smoke:audio              # 오디오 — manifest·mute·GameState 불변
 npm run smoke:case-generator-e2e # 실 sLLM E2E — selector/presenter/taste 경계·replay 동일성
-npx tsc --noEmit && npm run build
+npm run audio:verify             # 승격 오디오 27개 무결성 + human pick 9개
+npm run typecheck && npm run build
 ```
 
 원문 기반 태그·측면 추출(ticket 14, STUB 아님 — 2026-07-28 `scripts/game_data_pack/` Python 패키지로 완전 구현): `py -m pytest scripts/tests/test_game_data_pack.py`(14개 테스트) 또는 `py scripts/extract_game_data_pack.py`로 실행. `FacetExtractor`/`TasteFilter`/`CaseAssembler` 경계 + `game-data-pack@2` emit. `py`가 "Python was not found"로 죽으면 Store 별칭에 걸린 것이니 `python.exe` 전체 경로로 실행할 것(전역 CLAUDE.md 참조) — 이 기계에서는 `py -m`·`py -`는 되는데 `py <script>`만 별칭에 걸렸다.
