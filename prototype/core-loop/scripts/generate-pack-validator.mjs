@@ -56,8 +56,11 @@ export default validate;
 `;
 
 if (process.argv.includes('--check')) {
-  const current = readFileSync(outputPath, 'utf8');
-  const currentDeclaration = readFileSync(declarationPath, 'utf8');
+  const current = readFileSync(outputPath, 'utf8').replaceAll('\r\n', '\n');
+  const currentDeclaration = readFileSync(declarationPath, 'utf8').replaceAll(
+    '\r\n',
+    '\n',
+  );
   if (current !== output || currentDeclaration !== declaration) {
     process.stderr.write('generated validator is stale\n');
     process.exit(1);
