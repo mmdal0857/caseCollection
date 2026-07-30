@@ -10,6 +10,7 @@
     type AudioPort,
     type SfxCue,
   } from './lib/audio';
+  import { publicAssetUrl, rebaseAudioManifest } from './lib/public-assets';
   import { CONTENT } from './lib/content';
   import {
     createCollectionState,
@@ -61,11 +62,13 @@
     const unlock = () => void audio.unlock();
     window.addEventListener('pointerdown', unlock, { capture: true });
     window.addEventListener('keydown', unlock, { capture: true });
-    void fetch('/audio/audio-manifest.json')
+    void fetch(publicAssetUrl('audio/audio-manifest.json', import.meta.env.BASE_URL))
       .then(async (response) => {
         if (!response.ok) return null;
         const manifest = await response.json() as AudioManifest;
-        return validateAudioManifest(manifest, audioSpec).ok ? manifest : null;
+        return validateAudioManifest(manifest, audioSpec).ok
+          ? rebaseAudioManifest(manifest, import.meta.env.BASE_URL)
+          : null;
       })
       .then((manifest) => {
         if (disposed) return;

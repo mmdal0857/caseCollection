@@ -19,6 +19,7 @@
     "smoke:collection": "esbuild smoke-collection.ts --bundle --format=esm --platform=node --outfile=smoke-collection.mjs && node smoke-collection.mjs",
     "smoke:narrative": "esbuild smoke-narrative-content.ts --bundle --format=esm --platform=node --outfile=smoke-narrative-content.mjs && node smoke-narrative-content.mjs",
     "smoke:audio": "esbuild smoke-audio.ts --bundle --format=esm --platform=node --outfile=smoke-audio.mjs && node smoke-audio.mjs",
+    "smoke:public-assets": "esbuild smoke-public-assets.ts --bundle --format=esm --platform=node --outfile=smoke-public-assets.mjs && node smoke-public-assets.mjs",
     "audio:generate": "node scripts/generate-higgsfield-audio.mjs",
     "audio:qa": "node scripts/audio-qa.mjs --spec audio/audio-spec.json --candidates .audio-candidates --report audio/audio-qa-report.json",
     "audio:audition": "node scripts/prepare-audio-audition.mjs",

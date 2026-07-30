@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { ClueCard } from '../engine';
   import { SUIT_LABEL, SUIT_ICON } from '../engine';
+  import { publicAssetUrl } from '../public-assets';
   let {
     card,
     verified = false,
@@ -20,7 +21,9 @@
   } = $props();
 
   let artFailed = $state(false);
-  const art = $derived(`/assets/cards/${card.id}.webp`);
+  const art = $derived(
+    publicAssetUrl(`assets/cards/${card.id}.webp`, import.meta.env.BASE_URL),
+  );
   const treat = $derived(treatment ? `treat-${treatment}` : '');
 </script>
 

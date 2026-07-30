@@ -14,6 +14,7 @@ prototype/core-loop/smoke-run-flow.mjs
 prototype/core-loop/smoke-run-session.mjs
 prototype/core-loop/smoke-narrative-content.mjs
 prototype/core-loop/smoke-audio.mjs
+prototype/core-loop/smoke-public-assets.mjs
 prototype/core-loop/check-pack-file.mjs
 prototype/core-loop/migrate-pack-v1-to-v2.mjs
 prototype/core-loop/smoke-case-generator-e2e.mjs

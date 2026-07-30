@@ -6,6 +6,7 @@
   import { FRAME_LABEL, facetCtxFor, facetOf } from '../engine';
   import { readFacets } from '../facets';
   import { josaPlaceholder, resolveJosa } from '../josa';
+  import { publicAssetUrl } from '../public-assets';
   import CardChip from './CardChip.svelte';
   import CaseNotebookDrawer from './CaseNotebookDrawer.svelte';
   import HandRail from './HandRail.svelte';
@@ -115,9 +116,9 @@
   // 배경은 **case가 아니라 배경 상태에 귀속**한다(ticket 13 §⑦). case별로 굽는 순간
   // 장수가 case 수만큼 불어나 13이 9장을 3장으로 줄인 근거가 사라진다.
   const scenes = {
-    low: '/assets/backgrounds/trust-low.webp',
-    mid: '/assets/backgrounds/trust-mid.webp',
-    high: '/assets/backgrounds/trust-high.webp',
+    low: publicAssetUrl('assets/backgrounds/trust-low.webp', import.meta.env.BASE_URL),
+    mid: publicAssetUrl('assets/backgrounds/trust-mid.webp', import.meta.env.BASE_URL),
+    high: publicAssetUrl('assets/backgrounds/trust-high.webp', import.meta.env.BASE_URL),
   };
 
   const treatment: Record<Tag, string> = {
