@@ -42,6 +42,19 @@ export function resolveHiggsfieldBin(env, existsSync = fs.existsSync) {
   return existsSync(npmShim) ? npmShim : null;
 }
 
+export function cardArtSourceDir(root) {
+  return path.join(root, 'prototype/core-loop/.art-source/cardart');
+}
+
+export function buildGenerationLogEntry(row, url, generatedAt = new Date().toISOString()) {
+  return {
+    id: row.id,
+    url,
+    path: `prototype/core-loop/.art-source/cardart/${row.id}.png`,
+    generatedAt,
+  };
+}
+
 function loadManifest(manifestPath) {
   return fs.readFileSync(manifestPath, 'utf8')
     .split(/\r?\n/)
@@ -76,12 +89,7 @@ function existingCardIds(outputDir) {
 function appendGenerationLog(outputDir, row, stdout) {
   const url = stdout.split(/\r?\n/).find((line) => /^https:\/\//.test(line.trim()))?.trim();
   if (!url) return;
-  const entry = {
-    id: row.id,
-    url,
-    path: `prototype/core-loop/public/cardart/${row.id}.png`,
-    generatedAt: new Date().toISOString(),
-  };
+  const entry = buildGenerationLogEntry(row, url);
   fs.appendFileSync(
     path.join(outputDir, 'generation-log.jsonl'),
     `${JSON.stringify(entry)}\n`,
@@ -92,7 +100,7 @@ function appendGenerationLog(outputDir, row, stdout) {
 function main() {
   const scriptDir = path.dirname(fileURLToPath(import.meta.url));
   const root = path.resolve(scriptDir, '..');
-  const outputDir = path.join(root, 'prototype/core-loop/public/cardart');
+  const outputDir = cardArtSourceDir(root);
   const options = parseArgs(process.argv.slice(2));
   const rows = loadManifest(path.join(scriptDir, 'cardart-manifest.jsonl'));
   const plan = planBatch(rows, {

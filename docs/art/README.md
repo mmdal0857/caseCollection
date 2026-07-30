@@ -6,7 +6,16 @@
 
 CLAUDE.md의 원칙은 "생성 바이너리는 미커밋, 레시피가 정본"이다. **스타일 키는 그 예외다** — 산출물이 아니라 **입력**이고, 생성이 확률적이므로 레시피만으로는 같은 그림이 다시 나오지 않는다. 키가 없으면 49장이 각자 다른 스타일로 구워진다.
 
-게임 카드 PNG는 Google Drive에서 관리하고 `scripts/sync-cardart.cmd pull|push <Drive 폴더>`로 작업 사본과 복사한다. 어느 방향도 대상에만 있는 파일을 삭제하지 않는다. 비교 벤치마크를 포함한 `prototype/core-loop/public/cardart/` 전체는 Git에 커밋하지 않는다.
+게임 카드 PNG의 정본은 Google Drive에서 관리하고 `scripts/sync-cardart.cmd pull|push <Drive 폴더>`로 `prototype/core-loop/.art-source/cardart/*.png` 작업 사본과 복사한다. 어느 방향도 대상에만 있는 파일을 삭제하지 않는다. 비교 벤치마크(`.art-source/cardart/benchmark/`)와 생성 기록(`.art-source/cardart/generation-log.jsonl`)을 포함한 `.art-source/cardart/` 전체는 Git에 커밋하지 않는다.
+
+배포에 쓰는 결정적 파생본은 `prototype/core-loop/public/assets/cards/*.webp`이며 Git에서 추적한다. 원본 PNG를 동기화한 뒤 다음 명령으로 20장을 재현하고 `prototype/core-loop/release/card-art-promotions.json`에 원본·출력 SHA-256을 기록한다.
+
+```bash
+cd prototype/core-loop
+npm run art:promote
+```
+
+승인된 배경 파생본 `prototype/core-loop/public/assets/backgrounds/*.webp`도 배포 자산으로 추적한다. 원본 PNG, 비교 결과, 생성 로그와 `protoart` 작업물은 `.art-source/` 아래에만 둔다.
 
 ## Google Drive 정본과 동기화
 

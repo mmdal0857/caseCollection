@@ -74,6 +74,10 @@ export function resolveHiggsfieldEntrypoint(bin) {
   );
 }
 
+export function comparisonOutputDir(root) {
+  return path.join(root, 'prototype/core-loop/.art-source/cardart/benchmark');
+}
+
 export function chunkJobs(jobs, size) {
   const chunks = [];
   for (let index = 0; index < jobs.length; index += size) {
@@ -160,7 +164,7 @@ async function main() {
     return row;
   });
   const styleKey = path.join(root, 'docs/art/style-key.png');
-  const outputRoot = path.join(root, 'prototype/core-loop/public/cardart/benchmark');
+  const outputRoot = comparisonOutputDir(root);
   const jobs = [];
   for (const row of rows) {
     for (const model of options.models) {

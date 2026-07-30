@@ -1,12 +1,14 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import {
+import * as cardArtCompare from './cardart-compare.mjs';
+
+const {
   buildModelArgs,
   chunkJobs,
   parseCompareArgs,
   resolveHiggsfieldEntrypoint,
-} from './cardart-compare.mjs';
+} = cardArtCompare;
 
 test('uses the style reference for Nano Banana 2 Lite', () => {
   assert.deepEqual(buildModelArgs('nano_banana_2_lite', 'style.png', 'prompt'), [
@@ -58,4 +60,14 @@ test('parses model and template filters separately from card IDs', () => {
       ids: ['thread_fiber', 'venom_trace'],
     },
   );
+});
+
+test('resolves comparison output under ignored source art', () => {
+  const outputDir = cardArtCompare.comparisonOutputDir?.('C:\\repo');
+
+  assert.equal(
+    outputDir,
+    'C:\\repo\\prototype\\core-loop\\.art-source\\cardart\\benchmark',
+  );
+  assert.doesNotMatch(outputDir, /public[\\/]cardart/);
 });

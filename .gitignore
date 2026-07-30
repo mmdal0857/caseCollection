@@ -30,14 +30,12 @@ prototype/core-loop/artifacts/case-generator/*
 !prototype/core-loop/artifacts/case-generator/approved/
 !prototype/core-loop/artifacts/case-generator/approved/**
 
-# 티켓 13 아트 — 생성 바이너리는 미커밋(레시피가 정본).
+# 티켓 13 아트 — 원본·비교 기록은 미커밋(Drive 원본과 레시피가 정본).
 #   시안 재현: scripts/protoart-prompts.sh   카드: scripts/cardart-generate.sh
-#   배경: scripts/bgart-generate.sh
+#   배포용 카드·배경 WebP는 public/assets 아래에서 추적한다.
 # 예외: docs/art/style-key.png 은 **커밋한다** — 산출물이 아니라 재현 불가한 입력이다.
 #       근거는 docs/art/README.md.
-prototype/core-loop/public/protoart/
-prototype/core-loop/public/cardart/
-prototype/core-loop/public/assets/backgrounds/
+prototype/core-loop/.art-source/
 
 # Python 부산물
 __pycache__/

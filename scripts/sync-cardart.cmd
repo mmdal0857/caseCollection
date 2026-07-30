@@ -3,7 +3,7 @@ setlocal
 
 set "SCRIPT_DIR=%~dp0"
 for %%I in ("%SCRIPT_DIR%..") do set "ROOT=%%~fI"
-set "LOCAL=%ROOT%\prototype\core-loop\public\cardart"
+set "LOCAL=%ROOT%\prototype\core-loop\.art-source\cardart"
 
 if "%~2"=="" (
   echo Usage: %~nx0 pull^|push ^<google-drive-cardart-directory^>

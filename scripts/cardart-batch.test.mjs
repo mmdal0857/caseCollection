@@ -1,7 +1,9 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { planBatch, resolveHiggsfieldBin } from './cardart-batch.mjs';
+import * as cardArtBatch from './cardart-batch.mjs';
+
+const { planBatch, resolveHiggsfieldBin } = cardArtBatch;
 
 const rows = [
   { id: 'alpha', category: 'clue', enabled: true, description: 'A', composition: 'single' },
@@ -56,4 +58,27 @@ test('resolves the existing Windows npm Higgsfield shim from APPDATA', () => {
   );
 
   assert.equal(result, 'C:/Users/test/AppData/Roaming/npm/higgsfield.cmd');
+});
+
+test('resolves card generation and batch source defaults outside public cardart', () => {
+  const sourceDir = cardArtBatch.cardArtSourceDir?.('C:\\repo');
+
+  assert.equal(sourceDir, 'C:\\repo\\prototype\\core-loop\\.art-source\\cardart');
+  assert.doesNotMatch(sourceDir, /public[\\/]cardart/);
+});
+
+test('records generated source art under the ignored source directory', () => {
+  const entry = cardArtBatch.buildGenerationLogEntry?.(
+    { id: 'alpha' },
+    'https://example.test/alpha.png',
+    '2026-07-30T00:00:00.000Z',
+  );
+
+  assert.deepEqual(entry, {
+    id: 'alpha',
+    url: 'https://example.test/alpha.png',
+    path: 'prototype/core-loop/.art-source/cardart/alpha.png',
+    generatedAt: '2026-07-30T00:00:00.000Z',
+  });
+  assert.doesNotMatch(entry.path, /public[\\/]cardart/);
 });

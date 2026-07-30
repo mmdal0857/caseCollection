@@ -1,0 +1,138 @@
+{
+  "format": "card-art-promotions@1",
+  "converter": {
+    "package": "sharp",
+    "version": "0.35.3",
+    "options": {
+      "width": 440,
+      "height": 584,
+      "fit": "cover",
+      "position": "centre",
+      "withoutEnlargement": true,
+      "quality": 82,
+      "effort": 6
+    }
+  },
+  "items": [
+    {
+      "id": "ash_residue",
+      "sourceSha256": "f6a37e1423b6ec9283f1106722524c1e3e08afa553e5fa0f8d618fcef2a83e37",
+      "outputSha256": "bd30a112b63abb8069a187d1e10049c8dcac8db80499abffd47e3239770dcf82",
+      "outputPath": "public/assets/cards/ash_residue.webp"
+    },
+    {
+      "id": "burned_note",
+      "sourceSha256": "9530e9f8bf9c41f63675050ba86924fab2571b099b982801048149afe582626a",
+      "outputSha256": "283ded003cccf9cae6a0d85daec78d9dd3e49a5b450c365a71098acc3ac2819d",
+      "outputPath": "public/assets/cards/burned_note.webp"
+    },
+    {
+      "id": "confronted_servant",
+      "sourceSha256": "756f3731d1816b4e3def846b4e5587724278eb633b831b3c6b60f444c37877ba",
+      "outputSha256": "4c026feba7dcdefd688abd05b76218d72adbb002a2622fa2a4836b7010016211",
+      "outputPath": "public/assets/cards/confronted_servant.webp"
+    },
+    {
+      "id": "forged_ledger",
+      "sourceSha256": "16be17662e03f9aa76fb054e0ca60ca3dcd1dd183ab3032ec609d24e6d18c22b",
+      "outputSha256": "29426a4f603c4bad8a5536e82f2212070482ef8bcc93bfb363cdc9432f71a57a",
+      "outputPath": "public/assets/cards/forged_ledger.webp"
+    },
+    {
+      "id": "handwriting_match",
+      "sourceSha256": "379587571765a59e290d6c7e22fcd1ba6e134573a56c8916a5268a3b790ef899",
+      "outputSha256": "e8262333ef3a0a9f3eed95e81a382dc28a35e48d355b0b45fe70642a6a0e1f37",
+      "outputPath": "public/assets/cards/handwriting_match.webp"
+    },
+    {
+      "id": "insurance_policy",
+      "sourceSha256": "520644ca031e8a8577a986bc794e47d8c0e39b7f6e972e53e78adc4145780969",
+      "outputSha256": "cf25bf984061df4d4c99d930a21fe3832e481d0ed18cb8e749080e711dc4a0d1",
+      "outputPath": "public/assets/cards/insurance_policy.webp"
+    },
+    {
+      "id": "mud_footprint",
+      "sourceSha256": "59f1300dec2c28fd427481eda1e02edee5737f6c9065a3346ad205e298851fbb",
+      "outputSha256": "d1dc650082cd087284e4e1111cf38ac2d5b5bf2133a5bc729e8024c39106ae76",
+      "outputPath": "public/assets/cards/mud_footprint.webp"
+    },
+    {
+      "id": "night_errand",
+      "sourceSha256": "061fd6bd87c33ae8f2f5787c86a02437aa17e5fa504be5b597c968e39dc09232",
+      "outputSha256": "ee207e0142e92b938c8618236867654f7648be3f5e34e1fd19f38e85d1708179",
+      "outputPath": "public/assets/cards/night_errand.webp"
+    },
+    {
+      "id": "omitted_witness",
+      "sourceSha256": "815368058257e8a6e638e176dd90eeceaae5c02e48375552816e6e1adb5a2361",
+      "outputSha256": "885b5fefbd46ad8ec14ae312af8a8fc0b27e1d5cf2c06287cdc51f2db81d8cd8",
+      "outputPath": "public/assets/cards/omitted_witness.webp"
+    },
+    {
+      "id": "rehearsed_story",
+      "sourceSha256": "9d5bc69210445d3862eba423278ae847f39a44198c6a1c31e7a9bebe530c6f60",
+      "outputSha256": "73f0495b198bff1465e0a139ffae719d34c01b43963cec0b7fa60102a007ed82",
+      "outputPath": "public/assets/cards/rehearsed_story.webp"
+    },
+    {
+      "id": "rope_mark",
+      "sourceSha256": "0025c1a675dfe59b49ea1481992eb248af23c3ed8de7d59ef71270ba50e1b94a",
+      "outputSha256": "29c5e9ac6a464f5848d256610e80d496164ed82f60924e3bc9ae65cadbb2555f",
+      "outputPath": "public/assets/cards/rope_mark.webp"
+    },
+    {
+      "id": "scattered_belongings",
+      "sourceSha256": "14c2ffb58dc5779eaa04304346b818c0bf736bbebc9a675b6a1a3e1e63809904",
+      "outputSha256": "d4cd5671fde4a582233ca6ec3253706b1a1f5b35fddbf637b60ab6ff6fa23a6a",
+      "outputPath": "public/assets/cards/scattered_belongings.webp"
+    },
+    {
+      "id": "sudden_wealth",
+      "sourceSha256": "baf2804b81d39a002584b9095a19797f5193f0e48eb5046eb897167935d7361c",
+      "outputSha256": "99e0856b454209a0a178693692b0c6982bf9293fb1ffe8d21df5ab3f67dff66e",
+      "outputPath": "public/assets/cards/sudden_wealth.webp"
+    },
+    {
+      "id": "thread_fiber",
+      "sourceSha256": "7a0d69c8846804e55ab5991ef5bcb561b06e240b58eb5a40e4f952c1ab130335",
+      "outputSha256": "390219c3546c283db7bfb2f14a43a971f2b7b4b81540a726688f01e683e14caf",
+      "outputPath": "public/assets/cards/thread_fiber.webp"
+    },
+    {
+      "id": "tod_gap",
+      "sourceSha256": "59317fe4add45da9f6e59e2faa907ab1bd19880c3bffc439b6756a77f5b0901a",
+      "outputSha256": "08669cfa58103875a5ee01d8f1cf53d1c2822a11318ea73ae1f7091143e494de",
+      "outputPath": "public/assets/cards/tod_gap.webp"
+    },
+    {
+      "id": "torn_letter",
+      "sourceSha256": "2c6d11c59f25a07e8c377e3f00399703ac42d6c45470ac078a512bc908c4e651",
+      "outputSha256": "f20a054403c5807b666b681fa297ff19d71893074647116a702b897977c34e31",
+      "outputPath": "public/assets/cards/torn_letter.webp"
+    },
+    {
+      "id": "train_ticket",
+      "sourceSha256": "3bef04ae9e6da14d17b2b70bddc672b55fce94df7c559ce6f816dc39810eeae9",
+      "outputSha256": "54ca58c7829d4177adfd74d23e67e164a181b5ea7e437dd491c5fd6cc992e508",
+      "outputPath": "public/assets/cards/train_ticket.webp"
+    },
+    {
+      "id": "uniform_habit",
+      "sourceSha256": "1e2e7f4d2bcee6f76575b614bcf6feb44bcac91a4b4690ab98e093dc2efffbe8",
+      "outputSha256": "48e8d4973777d4a393af6c5539ff90bef862536d07f09363b0b56fed42c63b26",
+      "outputPath": "public/assets/cards/uniform_habit.webp"
+    },
+    {
+      "id": "venom_trace",
+      "sourceSha256": "63248c31880d8bb03fb5201a10024e057dec2d7f070bca21c08fdb81c576599e",
+      "outputSha256": "48e73ee8fea523e6306d76fc408e1bf8dbae1f25bdd921db64ecfbd4e291c604",
+      "outputPath": "public/assets/cards/venom_trace.webp"
+    },
+    {
+      "id": "vent_gap",
+      "sourceSha256": "71fa346b66509e486a1bd0c2f5a8013ca4c4df1f49cfc4008d0b6d79454aa609",
+      "outputSha256": "cc1093ccf681e772691f09e91250bf24c3e6ea6e049c635b6888d7e3d6bdc1e8",
+      "outputPath": "public/assets/cards/vent_gap.webp"
+    }
+  ]
+}
