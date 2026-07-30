@@ -24,6 +24,7 @@
     "audio:qa": "node scripts/audio-qa.mjs --spec audio/audio-spec.json --candidates .audio-candidates --report audio/audio-qa-report.json",
     "audio:audition": "node scripts/prepare-audio-audition.mjs",
     "audio:promote": "node scripts/promote-audio.mjs --spec audio/audio-spec.json --report audio/audio-qa-report.json --picks audio/audio-picks.json --out public/audio",
+    "art:promote": "node scripts/promote-card-art.mjs",
     "audio:verify": "node scripts/verify-audio-manifest.mjs",
     "audio:verify-page": "node scripts/prepare-final-audio-verification.mjs",
     "smoke:case-generator-e2e": "esbuild smoke-case-generator-e2e.ts --bundle --format=esm --platform=node --outfile=smoke-case-generator-e2e.mjs && node smoke-case-generator-e2e.mjs",
@@ -32,15 +33,18 @@
     "prototype:case-generator": "esbuild case-generator-prototype.ts --bundle --format=esm --platform=node --outfile=case-generator-prototype.mjs && node case-generator-prototype.mjs",
     "prototype:case-generator:demo": "esbuild case-generator-prototype.ts --bundle --format=esm --platform=node --outfile=case-generator-prototype.mjs && node case-generator-prototype.mjs --demo",
     "generator:demo": "npm run prototype:case-generator:demo",
+    "test:release-tools": "node --test scripts/promote-card-art.test.mjs",
     "typecheck": "tsc --noEmit",
     "preview": "vite preview"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^5.0.3",
-    "ajv": "^8.17.1",
     "@types/node": "^26.1.2",
+    "ajv": "^8.17.1",
+    "sharp": "0.35.3",
     "svelte": "^5.16.0",
     "typescript": "~5.7.2",
-    "vite": "^6.0.5"
+    "vite": "^6.0.5",
+    "yaml": "2.9.0"
   }
 }
