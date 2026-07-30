@@ -110,6 +110,22 @@ test('sorts enabled IDs before processing and recording promotions', async (t) =
   assert.deepEqual(manifest.items.map((item) => item.id), ['alpha', 'zulu']);
 });
 
+test('sorts Unicode IDs with locale-independent ordinal ordering', async (t) => {
+  const { sourceDir, outputDir, manifestPath, promotionManifestPath } = await createWorkspace(t);
+  await createPng(path.join(sourceDir, 'z.png'));
+  await createPng(path.join(sourceDir, 'ä.png'));
+  await writeFile(
+    manifestPath,
+    [JSON.stringify({ id: 'ä', enabled: true }), JSON.stringify({ id: 'z', enabled: true })].join('\n'),
+  );
+
+  const report = await promoteCardArt({ manifestPath, sourceDir, outputDir, promotionManifestPath });
+  const manifest = JSON.parse(await readFile(promotionManifestPath, 'utf8'));
+
+  assert.deepEqual(report.promoted, ['z', 'ä']);
+  assert.deepEqual(manifest.items.map((item) => item.id), ['z', 'ä']);
+});
+
 test('reruns unchanged inputs with an identical output hash and manifest', async (t) => {
   const { sourceDir, outputDir, manifestPath, promotionManifestPath } = await createWorkspace(t);
   await createPng(path.join(sourceDir, 'bravo.png'));

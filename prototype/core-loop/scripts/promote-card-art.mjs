@@ -42,7 +42,7 @@ function parseSelectedRows(manifestText) {
     ids.add(row.id);
   }
 
-  return rows.sort((left, right) => left.id.localeCompare(right.id));
+  return rows.sort((left, right) => (left.id < right.id ? -1 : left.id > right.id ? 1 : 0));
 }
 
 async function readSourcePng(sourceDir, id) {
