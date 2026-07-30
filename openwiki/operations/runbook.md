@@ -76,7 +76,7 @@ For pure-module refactors, preserve behavior and rerun both smoke suites plus Ty
 
 ## Card-art pipeline
 
-The art rule is “generate nouns, compute adjectives”: one neutral object image per clue, with five facet-tag visual treatments computed in CSS. `/docs/art/style-key.png` is a committed input because stochastic generation cannot reproduce it from text alone; final card images are intentionally not committed.
+The art rule is “generate nouns, compute adjectives”: one neutral object image per clue, with five facet-tag visual treatments computed in CSS. `/docs/art/style-key.png` is a committed input because stochastic generation cannot reproduce it from text alone. Source PNGs, comparison outputs, and generation logs are working artifacts under `prototype/core-loop/.art-source/cardart`; committed WebP derivatives are a separate GitHub Pages release boundary.
 
 Validate and plan before generation:
 
@@ -100,11 +100,26 @@ Operational constraints:
 - `cardart-generate.sh` must fail if the style key is absent.
 - The current production choice documented by source is Higgsfield `gpt_image_2`, low, 3:4, 1k. Older plans naming `nano_banana_pro` are historical.
 - The batch script locates Higgsfield through `HIGGSFIELD_BIN` or the APPDATA npm shim. Do not expose credential values.
-- Output binaries under `prototype/core-loop/public/cardart` and their generation log are working artifacts, not Git source.
+- Generation writes source PNGs and its log under `prototype/core-loop/.art-source/cardart`; comparison outputs belong in its `benchmark/` subdirectory. These are ignored working artifacts, not release files.
+
+### Promote release art
+
+After source PNGs are approved, create the deterministic delivery derivatives from `prototype/core-loop`:
+
+```bash
+npm run art:promote
+npm run test:release-tools
+npm run smoke:public-assets
+npm run build
+```
+
+`art:promote` reads enabled IDs from `/scripts/cardart-manifest.jsonl`, converts `.art-source/cardart/<id>.png` to tracked `public/assets/cards/<id>.webp`, and atomically records source/output SHA-256 values in `release/card-art-promotions.json`. It uses Sharp to normalize delivery output to 440×584 WebP with the source image centered, cover-fitted, and not enlarged. The committed `public/assets/backgrounds/*.webp` files are likewise release assets. Do not document or create a `public/cardart` output directory: current source consumes the `public/assets` paths.
+
+The tracked derivatives let the static [runtime architecture](../architecture/overview.md) deploy card art with the application, while the Drive-synchronized source art remains outside Git. Use the release-tool test and public-asset smoke check after changing the promotion script, manifest, source images, or runtime asset paths; the broader verification matrix is in [testing guidance](../testing/guidance.md).
 
 ### Google Drive boundary
 
-Final clue images are synchronized explicitly with the canonical Drive folder described in `/docs/art/README.md`:
+Source clue PNGs are synchronized explicitly with the canonical Drive folder described in `/docs/art/README.md`; promote approved local sources before relying on the tracked WebP delivery derivatives:
 
 ```bat
 scripts\sync-cardart.cmd pull "<Drive cardart clues folder>"

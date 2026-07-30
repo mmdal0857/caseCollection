@@ -71,7 +71,7 @@ The repository governance and dirty-worktree precautions are summarized in the [
 - **Game-rule change:** start with [game model](domain/game-model.md), then inspect the governing ticket and pure module before touching UI.
 - **UI change:** read [architecture](architecture/overview.md), ticket 24’s layout lessons, and [testing guidance](testing/guidance.md). Avoid positioning one element with guessed constants derived from another element’s height.
 - **Content/data change:** start with [play and content workflows](workflows/play-and-content.md); preserve facet keys, Korean-particle markers, and post-merge references.
-- **Art/tooling change:** use the [operations runbook](operations/runbook.md); the committed style key is an input, final card binaries live outside Git, and sync is explicit.
+- **Art/tooling change:** use the [operations runbook](operations/runbook.md); the committed style key and release WebP derivatives are tracked, while generated PNG sources stay in `.art-source/cardart` and Drive sync is explicit.
 - **Decision work:** read the full ticket, not only `MAP.md`, and follow the close-time housekeeping sequence.
 
 ## Backlog

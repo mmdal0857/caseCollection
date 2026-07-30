@@ -26,11 +26,15 @@
 #    극적인 키라이트가 이미 구워져 있으면 은밀/공개 처리가 겹쳐서 뭉갠다.
 #    조명은 형용사의 몫이므로 명사에는 넣지 않는다.
 set -u
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+OUT="$ROOT/prototype/core-loop/.art-source/cardart"
+if [ "${1:-}" = "--print-output-dir" ]; then
+  printf '%s\n' "$OUT"
+  exit 0
+fi
 CARD="${1:?card_id 필요}"
 DESC="${2:?영문 사물 묘사 필요}"
 COMPOSITION="${3:-single}"
-ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-OUT="$ROOT/prototype/core-loop/.art-source/cardart"
 KEY="$ROOT/docs/art/style-key.png"   # 스타일 키 — 모든 카드가 이걸 레퍼런스로 문다
 mkdir -p "$OUT"
 

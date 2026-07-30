@@ -1,4 +1,7 @@
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
+import path from 'node:path';
 import test from 'node:test';
 
 import * as cardArtBatch from './cardart-batch.mjs';
@@ -61,10 +64,44 @@ test('resolves the existing Windows npm Higgsfield shim from APPDATA', () => {
 });
 
 test('resolves card generation and batch source defaults outside public cardart', () => {
-  const sourceDir = cardArtBatch.cardArtSourceDir?.('C:\\repo');
+  const root = path.resolve('repo-fixture');
+  const sourceDir = cardArtBatch.cardArtSourceDir?.(root);
 
-  assert.equal(sourceDir, 'C:\\repo\\prototype\\core-loop\\.art-source\\cardart');
+  assert.equal(
+    sourceDir,
+    path.join(root, 'prototype', 'core-loop', '.art-source', 'cardart'),
+  );
   assert.doesNotMatch(sourceDir, /public[\\/]cardart/);
+});
+
+test('card generator reports its default output directory without side effects', () => {
+  const scriptPath = fileURLToPath(new URL('./cardart-generate.sh', import.meta.url));
+  const root = path.resolve(path.dirname(scriptPath), '..');
+  const bash = process.env.CARDART_BASH
+    || (process.platform === 'win32' ? 'C:/Program Files/Git/bin/bash.exe' : 'bash');
+  const result = spawnSync(bash, [scriptPath, '--print-output-dir'], {
+    encoding: 'utf8',
+    env: {
+      ...process.env,
+      HIGGSFIELD_BIN: 'cardart-diagnostic-must-not-invoke-higgsfield',
+    },
+  });
+  let actual = result.stdout.trim().replaceAll('\\', '/');
+  const msysPath = /^\/([a-zA-Z])\/(.*)$/.exec(actual);
+  if (process.platform === 'win32' && msysPath) {
+    actual = `${msysPath[1]}:/${msysPath[2]}`;
+  }
+  const expected = path.join(root, 'prototype', 'core-loop', '.art-source', 'cardart');
+  const comparableActual = process.platform === 'win32'
+    ? path.normalize(actual).toLowerCase()
+    : path.normalize(actual);
+  const comparableExpected = process.platform === 'win32'
+    ? expected.toLowerCase()
+    : expected;
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(result.stderr, '');
+  assert.equal(comparableActual, comparableExpected);
 });
 
 test('records generated source art under the ignored source directory', () => {

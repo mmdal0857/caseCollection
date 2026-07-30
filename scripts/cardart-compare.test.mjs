@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import path from 'node:path';
 import test from 'node:test';
 
 import * as cardArtCompare from './cardart-compare.mjs';
@@ -63,11 +64,12 @@ test('parses model and template filters separately from card IDs', () => {
 });
 
 test('resolves comparison output under ignored source art', () => {
-  const outputDir = cardArtCompare.comparisonOutputDir?.('C:\\repo');
+  const root = path.resolve('repo-fixture');
+  const outputDir = cardArtCompare.comparisonOutputDir?.(root);
 
   assert.equal(
     outputDir,
-    'C:\\repo\\prototype\\core-loop\\.art-source\\cardart\\benchmark',
+    path.join(root, 'prototype', 'core-loop', '.art-source', 'cardart', 'benchmark'),
   );
   assert.doesNotMatch(outputDir, /public[\\/]cardart/);
 });
