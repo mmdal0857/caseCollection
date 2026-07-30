@@ -2,7 +2,8 @@
 
 Status: open
 Labels: wayfinder:grilling
-Assignee:
+Assignee: Codex (GPT-5.6, 2026-07-30)
+Reviewed-by:
 Blocked-by:
 
 ## Question
