@@ -53,7 +53,7 @@ for (const asset of spec.assets) {
   const files = {};
   for (const [format, path] of Object.entries({ wav, ogg, mp3 })) {
     files[format] = {
-      path: `/${relative(resolve('public'), path).replaceAll('\\', '/')}`,
+      path: relative(resolve('public'), path).replaceAll('\\', '/'),
       sha256: sha256File(path),
       ...measureAudio(path, asset.role === 'music'),
     };

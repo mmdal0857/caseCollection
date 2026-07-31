@@ -18,7 +18,7 @@
       "duration": 32,
       "files": {
         "wav": {
-          "path": "/audio/music_title.wav",
+          "path": "audio/music_title.wav",
           "sha256": "73747f7219eee7363499606df37b44f12d8e35ab38c27af121fe53ed25ca0513",
           "duration": 32,
           "peakDb": -6.4,
@@ -26,7 +26,7 @@
           "loopBoundaryDelta": 0.004602819699098178
         },
         "ogg": {
-          "path": "/audio/music_title.ogg",
+          "path": "audio/music_title.ogg",
           "sha256": "aead1da4843992d949540ec26cad6b1a88366a1ec1eb43f116b52eddaf69d021",
           "duration": 32,
           "peakDb": -6.3,
@@ -34,7 +34,7 @@
           "loopBoundaryDelta": 0.004546050650211913
         },
         "mp3": {
-          "path": "/audio/music_title.mp3",
+          "path": "audio/music_title.mp3",
           "sha256": "49fc9485aa501a6d1476e557fae80400f9aee1b116d948f9b3593218bfdc5a4b",
           "duration": 32,
           "peakDb": -6.4,
@@ -65,7 +65,7 @@
       "duration": 32,
       "files": {
         "wav": {
-          "path": "/audio/music_case.wav",
+          "path": "audio/music_case.wav",
           "sha256": "68905c599b8d5312d3a7703d8e771af403b69ffb93d49f73283b649b88617ddb",
           "duration": 32,
           "peakDb": -6.6,
@@ -73,7 +73,7 @@
           "loopBoundaryDelta": 0.016306672432167747
         },
         "ogg": {
-          "path": "/audio/music_case.ogg",
+          "path": "audio/music_case.ogg",
           "sha256": "97e11803fa4c1bdbf091cae1f14751c2ea4d78f5db15b247ded4e3e12956aff9",
           "duration": 32,
           "peakDb": -6.6,
@@ -81,7 +81,7 @@
           "loopBoundaryDelta": 0.016362168615755877
         },
         "mp3": {
-          "path": "/audio/music_case.mp3",
+          "path": "audio/music_case.mp3",
           "sha256": "b6d7ed8db4106826e3fc38abbfbd7c85912ba0e21ab73a22b1b54cb3bfde0f7a",
           "duration": 32,
           "peakDb": -6.6,
@@ -112,21 +112,21 @@
       "duration": 1,
       "files": {
         "wav": {
-          "path": "/audio/card_pick.wav",
+          "path": "audio/card_pick.wav",
           "sha256": "705d9feb4bd673a048eaa32030c87c9d09851825cf29d857360fa5c9f0b22f19",
           "duration": 1,
           "peakDb": -6.9,
           "integratedLufs": -18
         },
         "ogg": {
-          "path": "/audio/card_pick.ogg",
+          "path": "audio/card_pick.ogg",
           "sha256": "01b1690d95ef0db391ed55f86f0fd1f2b0c85748622554ec62ac1e88a8df4506",
           "duration": 1,
           "peakDb": -6.5,
           "integratedLufs": -18.2
         },
         "mp3": {
-          "path": "/audio/card_pick.mp3",
+          "path": "audio/card_pick.mp3",
           "sha256": "b1023d47d57a751cc0cc4c4cdead7cdf82bf509aec61b2d0c6a4f0ef2bea095d",
           "duration": 1,
           "peakDb": -7,
@@ -156,21 +156,21 @@
       "duration": 1,
       "files": {
         "wav": {
-          "path": "/audio/card_place.wav",
+          "path": "audio/card_place.wav",
           "sha256": "06fa11d1e2b4ff962eec29fd56cbe320aed34d0f41f64eaa116f92c6afa14639",
           "duration": 1,
           "peakDb": -1.5,
           "integratedLufs": -21.7
         },
         "ogg": {
-          "path": "/audio/card_place.ogg",
+          "path": "audio/card_place.ogg",
           "sha256": "484d2a0c26f65a65b412b36658eb82b7b9ea965431de00279da1681213aac15e",
           "duration": 1,
           "peakDb": -1.5,
           "integratedLufs": -22
         },
         "mp3": {
-          "path": "/audio/card_place.mp3",
+          "path": "audio/card_place.mp3",
           "sha256": "1fd78ebc10094071d9687a9675e76c8943589146f884707d869ea44c16df6b6d",
           "duration": 1,
           "peakDb": -1.4,
@@ -200,21 +200,21 @@
       "duration": 1,
       "files": {
         "wav": {
-          "path": "/audio/facet_lock.wav",
+          "path": "audio/facet_lock.wav",
           "sha256": "1968bfef5f97bb5196e1bf46214563978dc3f2097f5380fe67fd28614220573d",
           "duration": 1,
           "peakDb": -1.5,
           "integratedLufs": -20.7
         },
         "ogg": {
-          "path": "/audio/facet_lock.ogg",
+          "path": "audio/facet_lock.ogg",
           "sha256": "e52c43ea2b0b626a021120a68313a9af4aacf8275f2c1192d7d6f700fbf429f0",
           "duration": 1,
           "peakDb": -2.1,
           "integratedLufs": -20.9
         },
         "mp3": {
-          "path": "/audio/facet_lock.mp3",
+          "path": "audio/facet_lock.mp3",
           "sha256": "fa8224cac65f86aa706b5734bde2ab3c838ed3c0bf888f095be44c2c0ee86831",
           "duration": 1,
           "peakDb": -1.5,
@@ -244,21 +244,21 @@
       "duration": 2,
       "files": {
         "wav": {
-          "path": "/audio/chain_release.wav",
+          "path": "audio/chain_release.wav",
           "sha256": "bcc424d370d94555fc821cb462a9ebce13ff4c0295b2a42643b0992405491106",
           "duration": 2,
           "peakDb": -1.5,
           "integratedLufs": -21.8
         },
         "ogg": {
-          "path": "/audio/chain_release.ogg",
+          "path": "audio/chain_release.ogg",
           "sha256": "3097b5a988e9586ea4fd223f5fe5538733f8714c0e6b3219bbffe465fbb93025",
           "duration": 2,
           "peakDb": -1.9,
           "integratedLufs": -22.2
         },
         "mp3": {
-          "path": "/audio/chain_release.mp3",
+          "path": "audio/chain_release.mp3",
           "sha256": "e4a3709e55189ea036d21ba1b9ed233989ebc5ce3b4531e38d7f6a326eae99ad",
           "duration": 2,
           "peakDb": -1.8,
@@ -288,21 +288,21 @@
       "duration": 2,
       "files": {
         "wav": {
-          "path": "/audio/review_pass.wav",
+          "path": "audio/review_pass.wav",
           "sha256": "23468f9d7ac13dbc2bdab8aa03bddf92ef21ed2dc9b8ed3e6410a70872c9c417",
           "duration": 2,
           "peakDb": -1.5,
           "integratedLufs": -22.1
         },
         "ogg": {
-          "path": "/audio/review_pass.ogg",
+          "path": "audio/review_pass.ogg",
           "sha256": "dbfe00ee77b2c40444900950e17813659a01636ee65bf0ec0059f446b2e6c37c",
           "duration": 2,
           "peakDb": -1.5,
           "integratedLufs": -22.1
         },
         "mp3": {
-          "path": "/audio/review_pass.mp3",
+          "path": "audio/review_pass.mp3",
           "sha256": "a771ade5099ad02a8159826645c3cc627b1d66f614b11c5a0243745c0506eb5b",
           "duration": 2,
           "peakDb": -1.5,
@@ -332,21 +332,21 @@
       "duration": 2,
       "files": {
         "wav": {
-          "path": "/audio/review_fail.wav",
+          "path": "audio/review_fail.wav",
           "sha256": "85e6259cb92153c285c1421e4ae7546415150c472bb220bbd3020367fd69b8d5",
           "duration": 2,
           "peakDb": -3.3,
           "integratedLufs": -18
         },
         "ogg": {
-          "path": "/audio/review_fail.ogg",
+          "path": "audio/review_fail.ogg",
           "sha256": "b5082a4485eddd9bca2b864bbaa01c7048f0369d7d04bda70da5f9f083c930e3",
           "duration": 2,
           "peakDb": -3.1,
           "integratedLufs": -18
         },
         "mp3": {
-          "path": "/audio/review_fail.mp3",
+          "path": "audio/review_fail.mp3",
           "sha256": "0f63c1dda1ae3ab9d777487553322e21292be856bb27f925fc01a3ff7b10c0a8",
           "duration": 2,
           "peakDb": -3.3,
@@ -376,21 +376,21 @@
       "duration": 1,
       "files": {
         "wav": {
-          "path": "/audio/interlude_action.wav",
+          "path": "audio/interlude_action.wav",
           "sha256": "c6d05aa3105855c6168d9f4caaebc324aa9a3f79ea0fbf5fc155936b11e5f733",
           "duration": 1,
           "peakDb": -1.5,
           "integratedLufs": -23.4
         },
         "ogg": {
-          "path": "/audio/interlude_action.ogg",
+          "path": "audio/interlude_action.ogg",
           "sha256": "ef43357a5edefc83d89cc6087e37c477facde760f38d98b8b451d80ee521cbbb",
           "duration": 1,
           "peakDb": -1.5,
           "integratedLufs": -23.6
         },
         "mp3": {
-          "path": "/audio/interlude_action.mp3",
+          "path": "audio/interlude_action.mp3",
           "sha256": "e9cb145b9e8345560fe03f3f2d1dffc10c17037ef3feee112a045eac0a0e28f4",
           "duration": 1,
           "peakDb": -1.5,
