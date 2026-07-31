@@ -35,7 +35,8 @@
     "generator:demo": "npm run prototype:case-generator:demo",
     "release:verify-source": "node scripts/verify-release.mjs source",
     "release:verify-dist": "node scripts/verify-release.mjs dist",
-    "test:release-tools": "node --test scripts/promote-card-art.test.mjs scripts/verify-release.test.mjs",
+    "smoke:ci": "node scripts/run-core-smoke-ci.mjs",
+    "test:release-tools": "node --test scripts/promote-card-art.test.mjs scripts/verify-release.test.mjs scripts/run-core-smoke-ci.test.mjs",
     "typecheck": "tsc --noEmit",
     "preview": "vite preview"
   },
