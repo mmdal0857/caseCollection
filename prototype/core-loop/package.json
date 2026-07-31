@@ -33,7 +33,9 @@
     "prototype:case-generator": "esbuild case-generator-prototype.ts --bundle --format=esm --platform=node --outfile=case-generator-prototype.mjs && node case-generator-prototype.mjs",
     "prototype:case-generator:demo": "esbuild case-generator-prototype.ts --bundle --format=esm --platform=node --outfile=case-generator-prototype.mjs && node case-generator-prototype.mjs --demo",
     "generator:demo": "npm run prototype:case-generator:demo",
-    "test:release-tools": "node --test scripts/promote-card-art.test.mjs",
+    "release:verify-source": "node scripts/verify-release.mjs source",
+    "release:verify-dist": "node scripts/verify-release.mjs dist",
+    "test:release-tools": "node --test scripts/promote-card-art.test.mjs scripts/verify-release.test.mjs",
     "typecheck": "tsc --noEmit",
     "preview": "vite preview"
   },
