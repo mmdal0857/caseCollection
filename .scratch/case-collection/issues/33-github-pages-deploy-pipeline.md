@@ -3,7 +3,7 @@
 Status: open
 Labels: wayfinder:grilling
 Assignee: Codex (GPT-5.6, 2026-07-30) — Tasks 5-7 continued directly by Claude, 2026-08-01
-Reviewed-by: Claude (2026-08-01)
+Reviewed-by: Claude (2026-08-01; 자체 검토 출처, 독립 검토 예외를 사용자 승인)
 Blocked-by:
 
 ## Question
@@ -31,3 +31,13 @@ Blocked-by:
 - **2026-08-02 NAN 2026 해커톤 제출 준비 세션 — 브랜치 통합 + 실통합 검증.** `ticket/33-pages`(위 review가 다룬 10개 커밋)를 독립 재검증(모든 게이트 직접 재실행: `test:release-tools` 48-49/49, `smoke:ci` 11개 전체, `typecheck`, `build`, `release:verify-source`, `release:verify-dist`, `release:verify-pages-workflow` 전부 PASS)한 뒤 `main`에 로컬 fast-forward 머지(`34616a0..616ee98`), 워크트리·브랜치 정리 완료.
   - **실통합에서만 드러난 gap**: 격리 워크트리(신선한 체크아웃)에서는 안 보였지만 `main`의 실제 작업 디렉터리에서 재검증하니 `release:verify-source`/`release:verify-dist`가 즉시 FAIL — `prototype/core-loop/public/cardart`(20장 원본 PNG + `benchmark/` 81MB, 티켓 13 시절부터 `.gitignore`에도 안 걸린 채 방치)와 `public/protoart`(21MB, 폐기된 프로토 하네스의 잔재 산출물)가 `.art-source/` 재구성 이전부터 `public/` 아래 그대로 남아 있었던 것 — 설계 §4.1이 "이래서 일반 빌드가 실수로 못 담는다"고 명시한 바로 그 경계 위반. `git status`로 두 디렉터리가 미추적(untracked)임을 확인 후 `public/cardart` → `.art-source/cardart`, `public/protoart` → `.art-source/protoart`로 파일시스템 이동(git 추적 대상 아니므로 커밋 불필요) — Drive가 여전히 원본 정본이라 데이터 손실 없음. 이동 중 `public/cardart/benchmark`가 낡은 `vite dev` 좀비 프로세스 2개(PID 23596·13928, 세션 시작 전부터 떠 있던 것으로 추정)에 잠겨 `EPERM`으로 실패 — 사용자 승인 받아 해당 프로세스 종료 후 재시도해 해결. 이동 후 재검증 전부 PASS.
   - 결론: 설계·구현·검증기 로직 자체는 정확했다. 이 gap은 "완결된 계획을 격리 워크트리에서만 확인하고 실제 통합 대상(main의 진짜 작업 디렉터리)에서 재확인하지 않으면 놓칠 수 있는" 통합 단계 고유의 결함이었다 — 앞으로 이런 계획은 병합 직후 실제 작업 디렉터리에서 최소 1회 release 게이트 재실행을 통합 완료 조건에 포함할 것.
+- **2026-08-02 Codex 독립 감사·수정 및 중첩 경로 collection 증명.** 기존 기록의 `230c4c1..75a5f58`은 시작 커밋을 제외하므로, 당시 구현의 정확한 포함 범위는 `230c4c1^..75a5f58`(9개)이다. 중요 지적 수정까지 포함한 최종 감사 범위는 `230c4c1^..0de95bf`(12개)다. Claude가 Tasks 5-7을 직접 작성한 뒤 검토했다는 기존 고지는 그대로 유효하며, 위 `Reviewed-by`는 저자 독립 검토를 주장하지 않고 사용자가 승인한 자체 검토 예외와 출처만 기록한다.
+  - 독립 감사에서 확인한 중요 4건을 회귀 테스트 우선으로 수정했다:
+    1. stdout/stderr 사이에서 분할된 `FAIL` 탐지.
+    2. JSON escape를 해제한 문자열에서 소유 루트-절대(owned root-absolute) `/assets/`·`/audio/` URL 검사.
+    3. 정확한 workflow job·step·command·action·`with` 및 최상위 shape 검사.
+    4. `public`/`dist` 링크 거부와 prefix-boundary 실수를 막는 component-safe required-file realpath containment.
+  - scoped 재검토 결과: 첫 재검토는 위 1·2·4를 `ADDRESSED`로, 최상위 `defaults.run.shell`·`env` 미검사인 3을 `NOT ADDRESSED`로 판정했고 별도 신규 Critical/Important 문제는 없었다. 이 잔여 3은 `0de95bf`에서 닫았고, 두 번째 scoped 재검토는 이를 `ADDRESSED`, 신규 Critical/Important 없음, 전체 `CLEAN`으로 판정했다.
+  - 최종 로컬 게이트를 다시 실행해 `test:release-tools` 67/67, `smoke:ci` 11/11, `release:verify-source`, `typecheck`, 155-module `build`, `release:verify-dist`가 모두 PASS했다. 빌드 산출물은 27,367,847 bytes다.
+  - `http://127.0.0.1:4173/caseCollection/`에서 Home→새 수사→Briefing→case→물리 카드 스택→Collection→case 복귀를 실제 Chrome DevTools 세션으로 확인했다. 오디오 매니페스트, title/case OGG, `trust-low.webp`, 카드 4장(`vent_gap`, `thread_fiber`, `mud_footprint`, `rope_mark`)이 모두 `/caseCollection/` 아래에서 200으로 응답했고, 화면에는 배경과 카드 그림이 fallback glyph가 아닌 실제 이미지로 렌더됐다. 처리되지 않은 예외는 없었으며 비소유 루트 `favicon.ico` 404와 사용자 동작 전 AudioContext 자동재생 경고만 관찰됐다.
+  - **이 감사 시점의 Status는 계속 open** — Task 9의 저장소/공개 범위 결정, remote 추가, push, Pages 설정, 수동 dispatch와 실제 배포 URL 검증은 별도 외부 변경 승인 없이는 수행하지 않았다.
