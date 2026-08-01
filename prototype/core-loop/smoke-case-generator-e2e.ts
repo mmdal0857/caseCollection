@@ -25,7 +25,7 @@ function expect(ok: boolean, label: string): void {
 }
 
 const sourcePath =
-  process.env.PG204_SOURCE ?? 'F:/Project/out/raw_texts/204.txt';
+  process.env.PG204_SOURCE ?? 'fixtures/case-generator/pg204-source.txt';
 const source = readFileSync(sourcePath, 'utf8');
 const fixture = buildSourceFixture(source);
 const issues = validateSourceFixture(fixture, source);
