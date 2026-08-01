@@ -17,7 +17,7 @@ Wiki-Project-Root: F:\Project\out
 > - **GitHub Pages가 정본 호스팅.** Higgsfield는 정본이 될 수 없다 — 약관 §3.4(30일 미활동 시 cold storage)·§16.2(무통보 해지권)·§16.4(콘텐츠 삭제 무책임)가 막는다. **병행은 선호가 아니라 약관이 만든 제약.**
 > - Higgsfield 마켓플레이스 등재는 [ticket 08](.scratch/case-collection/issues/08-mvp-scope.md) §⑥으로 **2026-07-27 정식 Resolution 확정**(closed) — GitHub Pages+Higgsfield 병행 유지, itch.io·Patreon 미사용 재확인, 유료 채널은 여전히 Steam 후보([18](.scratch/case-collection/issues/18-case-generator-shape.md) 이후 사안). **게시는 비가역**이다(약관 §4.3 영구·취소불가 실시권, CLI에 게임 삭제 커맨드 없음).
 > - **유료 채널은 미확정.** Steam이 후보이나 [18](.scratch/case-collection/issues/18-case-generator-shape.md) 이후 사안(리드타임 6주+). Higgsfield 웹사이트+Stripe 직판은 검증 완료 후 후순위 대기 → [ticket 10001](.scratch/case-collection/issues/10001-higgsfield-stripe-storefront.md).
-> - **채널은 결정됐고 파이프라인은 아직 없다** (2026-07-28 확인): `.github/workflows/`가 없고 배포를 다루는 티켓도 없다. `npm run build`(vite)까지가 현재 존재하는 전부이므로, GitHub Pages 배포가 자동화돼 있다고 가정하지 말 것.
+> - **GitHub Pages 배포 파이프라인 구축 완료** (2026-08-02, [ticket 33](.scratch/case-collection/issues/33-github-pages-deploy-pipeline.md)): `.github/workflows/deploy-pages.yml`을 `workflow_dispatch`로 수동 실행한다. `prototype/core-loop/`에서 schema·release tools·`smoke:ci`·source/dist 경계·typecheck·build gate를 모두 통과한 `dist/`만 `/caseCollection/` base로 게시하며, 실제 Actions build/deploy와 `https://mmdal0857.github.io/caseCollection/` 브라우저 완주까지 검증했다. Higgsfield 배포는 별도 수동 절차다.
 > - 근거·실측: [docs/research/2026-07-25-higgsfield-games-marketplace.md](docs/research/2026-07-25-higgsfield-games-marketplace.md). `higgsfield game deploy/publish` 사용법은 전역 CLAUDE.md 참조.
 
 - **Svelte 5 `$state` 프록시는 `structuredClone`으로 복제 불가** (`DataCloneError`). 순수 리듀서에 상태를 넘길 땐 반드시 `$state.snapshot(state)`로 평범한 객체를 만들어 전달할 것. 이걸 놓치면 모든 dispatch가 조용히 예외로 죽어 화면이 멈춘다 (프로토 v1에서 실제 발생).
@@ -98,6 +98,6 @@ Codex handles code (refactor/review/diagnosis on `prototype/core-loop/`) — not
 
 This repository uses OpenWiki for recurring code documentation. Start with `openwiki/quickstart.md`, then follow its links to architecture, workflows, domain concepts, operations, integrations, testing guidance, and source maps.
 
-The scheduled OpenWiki GitHub Actions workflow refreshes the repository wiki. Do not hand-edit generated OpenWiki pages unless explicitly asked; prefer updating source code/docs and letting OpenWiki regenerate.
+Housekeeping refreshes the repository wiki with an incremental OpenWiki update; no scheduled GitHub Actions workflow is installed. Do not hand-edit generated OpenWiki pages unless explicitly asked; prefer updating source code/docs and letting OpenWiki regenerate.
 
 <!-- OPENWIKI:END -->
