@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { mkdtemp, mkdir, rm, unlink, writeFile } from 'node:fs/promises';
+import { mkdtemp, mkdir, rm, symlink, unlink, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
@@ -78,6 +78,17 @@ async function populateDist(fixture, extraFiles = {}) {
   }));
 }
 
+async function createDirectoryLink(t, target, linkPath) {
+  try {
+    await symlink(target, linkPath, process.platform === 'win32' ? 'junction' : 'dir');
+    return true;
+  } catch (error) {
+    if (!['EACCES', 'EPERM', 'ENOTSUP'].includes(error?.code)) throw error;
+    t.skip(`filesystem links unavailable on ${process.platform}: ${error.code} ${error.message}`);
+    return false;
+  }
+}
+
 test('reports an enabled card missing its promoted WebP derivative', async (t) => {
   const fixture = await createReleaseFixture(t);
   await unlink(path.join(fixture.publicRoot, 'assets/cards/alpha.webp'));
@@ -132,6 +143,21 @@ test('reports forbidden source art under the public runtime root', async (t) => 
   ]);
 });
 
+test('release links reject a source directory link and do not trust required files outside public', async (t) => {
+  const fixture = await createReleaseFixture(t);
+  const externalCards = path.join(path.dirname(fixture.publicRoot), 'external-cards');
+  await mkdir(externalCards);
+  await writeFile(path.join(externalCards, 'alpha.webp'), fixture.cardBytes);
+  const cardsPath = path.join(fixture.publicRoot, 'assets/cards');
+  await rm(cardsPath, { recursive: true });
+  if (!(await createDirectoryLink(t, externalCards, cardsPath))) return;
+
+  assert.deepEqual((await verifySourceRelease(fixture.sourceOptions)).issues, [
+    issue('public/assets/cards/alpha.webp', 'required file resolves outside public root'),
+    issue('public/assets/cards', 'symbolic link or junction is not allowed'),
+  ]);
+});
+
 test('reports a textual dist asset with an owned root-absolute asset URL', async (t) => {
   const fixture = await createReleaseFixture(t);
   await populateDist(fixture, { 'assets/app.js': 'const card = "/assets/cards/alpha.webp";' });
@@ -152,6 +178,38 @@ test('reports root-absolute audio paths in the dist audio manifest JSON', async 
   assert.deepEqual((await verifyDistRelease(fixture.distOptions)).issues, [
     issue('audio/audio-manifest.json', 'contains root-absolute owned asset URL'),
   ]);
+});
+
+test('decoded JSON rejects an escaped-slash owned root URL', async (t) => {
+  const fixture = await createReleaseFixture(t);
+  await populateDist(fixture, { 'assets/escaped.json': '{"cue":"\\/audio\\/cue.ogg"}' });
+
+  assert.deepEqual((await verifyDistRelease(fixture.distOptions)).issues, [
+    issue('assets/escaped.json', 'contains root-absolute owned asset URL'),
+  ]);
+});
+
+test('decoded JSON rejects a Unicode-escaped owned root URL', async (t) => {
+  const fixture = await createReleaseFixture(t);
+  await populateDist(fixture, { 'assets/unicode.json': '{"card":"\\u002fassets\\u002fcards\\u002falpha.webp"}' });
+
+  assert.deepEqual((await verifyDistRelease(fixture.distOptions)).issues, [
+    issue('assets/unicode.json', 'contains root-absolute owned asset URL'),
+  ]);
+});
+
+test('decoded JSON accepts scheme-qualified and protocol-relative remote URLs', async (t) => {
+  const fixture = await createReleaseFixture(t);
+  await populateDist(fixture, {
+    'assets/remotes.json': JSON.stringify({
+      nested: [
+        'https://cdn.example/file?next=/assets/a.webp#fallback=/audio/cue.ogg',
+        '//cdn.example/audio/cue.ogg?next=/assets/a.webp',
+      ],
+    }),
+  });
+
+  assert.deepEqual(await verifyDistRelease(fixture.distOptions), { ok: true, issues: [] });
 });
 
 test('reports an unquoted CSS url with a root-absolute owned asset URL', async (t) => {
@@ -212,6 +270,19 @@ test('reports a forbidden candidate directory in dist', async (t) => {
 
   assert.deepEqual((await verifyDistRelease(fixture.distOptions)).issues, [
     issue('audio-candidates', 'forbidden source or candidate path'),
+  ]);
+});
+
+test('release links reject a directory link anywhere under dist without traversing it', async (t) => {
+  const fixture = await createReleaseFixture(t);
+  await populateDist(fixture);
+  const external = path.join(path.dirname(fixture.distRoot), 'external-dist');
+  await mkdir(external);
+  await writeFile(path.join(external, 'outside.js'), 'const escaped = true;');
+  if (!(await createDirectoryLink(t, external, path.join(fixture.distRoot, 'linked-outside')))) return;
+
+  assert.deepEqual((await verifyDistRelease(fixture.distOptions)).issues, [
+    issue('linked-outside', 'symbolic link or junction is not allowed'),
   ]);
 });
 

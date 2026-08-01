@@ -46,6 +46,21 @@ test('rejects when a child prints FAIL but exits 0', async (t) => {
     runChecked(process.execPath, [script], { stdout: createSink(), stderr: createSink() }));
 });
 
+test('rejects when stdout FAIL is split around an intervening stderr chunk', async (t) => {
+  const dir = await mkdtemp(path.join(os.tmpdir(), 'smoke-ci-'));
+  t.after(() => rm(dir, { recursive: true, force: true }));
+  const script = await writeScript(
+    dir,
+    'interleaved-fail',
+    "process.stdout.write('FA', () => process.stderr.write('noise', () => setTimeout(() => process.stdout.write('IL'), 20)));",
+  );
+
+  await assert.rejects(
+    () => runChecked(process.execPath, [script], { stdout: createSink(), stderr: createSink() }),
+    /printed FAIL/,
+  );
+});
+
 test('rejects when a child exits nonzero without printing FAIL', async (t) => {
   const dir = await mkdtemp(path.join(os.tmpdir(), 'smoke-ci-'));
   t.after(() => rm(dir, { recursive: true, force: true }));

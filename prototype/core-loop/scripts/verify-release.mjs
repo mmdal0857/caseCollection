@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { readdir, readFile, stat } from 'node:fs/promises';
+import { readdir, readFile, realpath, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -23,19 +23,10 @@ function issue(issues, pathname, message) {
   issues.push({ path: pathname, message });
 }
 
-async function exists(filePath) {
-  try {
-    await stat(filePath);
-    return true;
-  } catch (error) {
-    if (error?.code === 'ENOENT') return false;
-    throw error;
-  }
-}
-
 async function inventory(root) {
   const files = [];
   const directories = [];
+  const links = [];
   async function visit(current, relative = '') {
     let entries;
     try {
@@ -47,7 +38,9 @@ async function inventory(root) {
     for (const entry of entries) {
       const nextRelative = relative === '' ? entry.name : path.join(relative, entry.name);
       const nextAbsolute = path.join(current, entry.name);
-      if (entry.isDirectory()) {
+      if (entry.isSymbolicLink()) {
+        links.push(toPosix(nextRelative));
+      } else if (entry.isDirectory()) {
         directories.push(toPosix(nextRelative));
         await visit(nextAbsolute, nextRelative);
       } else if (entry.isFile()) {
@@ -56,7 +49,7 @@ async function inventory(root) {
     }
   }
   await visit(root);
-  return { files, directories };
+  return { files, directories, links };
 }
 
 export async function directorySize(root) {
@@ -129,6 +122,27 @@ function resolveRuntimeAudioPath(root, runtimePath) {
   return { absolutePath, relativePath: toPosix(relativePath) };
 }
 
+function isContainedPath(rootPath, candidatePath) {
+  const relativePath = path.relative(rootPath, candidatePath);
+  return relativePath !== '..'
+    && !relativePath.startsWith(`..${path.sep}`)
+    && !path.isAbsolute(relativePath);
+}
+
+async function inspectContainedPath(root, candidatePath) {
+  try {
+    const [resolvedRoot, resolvedCandidate] = await Promise.all([realpath(root), realpath(candidatePath)]);
+    return {
+      exists: true,
+      contained: isContainedPath(resolvedRoot, resolvedCandidate),
+      realPath: resolvedCandidate,
+    };
+  } catch (error) {
+    if (error?.code === 'ENOENT') return { exists: false, contained: false, realPath: null };
+    throw error;
+  }
+}
+
 function isForbidden(relativePath) {
   return relativePath.split('/').some((segment) => {
     const lower = segment.toLowerCase();
@@ -148,6 +162,15 @@ function reportForbiddenPaths(issues, relativePaths, prefix = '') {
 function containsOwnedRootAbsoluteUrl(text) {
   const withoutRemoteUrls = text.replace(/(?:\b[a-z][a-z\d+.-]*:|(?<=[\s"'`(=]))\/\/[^\s"'`<>)]*/gi, '');
   return /(?:^|[\s"'`(=])\/(?:assets|audio)\//.test(withoutRemoteUrls);
+}
+
+function containsDecodedOwnedRootAbsoluteUrl(value) {
+  if (typeof value === 'string') return /^\/(?:assets|audio)\//.test(value);
+  if (Array.isArray(value)) return value.some(containsDecodedOwnedRootAbsoluteUrl);
+  if (value !== null && typeof value === 'object') {
+    return Object.values(value).some(containsDecodedOwnedRootAbsoluteUrl);
+  }
+  return false;
 }
 
 export async function verifySourceRelease(options) {
@@ -184,15 +207,21 @@ export async function verifySourceRelease(options) {
     if (item.outputPath !== cardDisplayPath) {
       issue(issues, 'release/card-art-promotions.json', `promotion output path differs for enabled ID: ${row.id}`);
     }
-    if (!(await exists(cardPath))) {
+    const cardInspection = await inspectContainedPath(publicRoot, cardPath);
+    if (!cardInspection.exists) {
       issue(issues, cardDisplayPath, 'missing enabled card derivative');
-    } else if (sha256(await readFile(cardPath)) !== item.outputSha256) {
+    } else if (!cardInspection.contained) {
+      issue(issues, cardDisplayPath, 'required file resolves outside public root');
+    } else if (sha256(await readFile(cardInspection.realPath)) !== item.outputSha256) {
       issue(issues, cardDisplayPath, 'output SHA-256 differs from promotion manifest');
     }
     const sourcePath = path.join(sourceDir, `${row.id}.png`);
-    if (await exists(sourcePath)) {
+    const sourceInspection = await inspectContainedPath(sourceDir, sourcePath);
+    if (sourceInspection.exists) {
       const sourceDisplayPath = `.art-source/cardart/${row.id}.png`;
-      if (sha256(await readFile(sourcePath)) !== item.sourceSha256) {
+      if (!sourceInspection.contained) {
+        issue(issues, sourceDisplayPath, 'source file resolves outside source root');
+      } else if (sha256(await readFile(sourceInspection.realPath)) !== item.sourceSha256) {
         issue(issues, sourceDisplayPath, 'source SHA-256 differs from promotion manifest');
       }
     }
@@ -200,27 +229,41 @@ export async function verifySourceRelease(options) {
 
   for (const background of BACKGROUNDS) {
     const backgroundPath = path.join(publicRoot, 'assets/backgrounds', background);
-    if (!(await exists(backgroundPath))) {
+    const backgroundInspection = await inspectContainedPath(publicRoot, backgroundPath);
+    if (!backgroundInspection.exists) {
       issue(issues, `public/assets/backgrounds/${background}`, 'missing required trust background');
+    } else if (!backgroundInspection.contained) {
+      issue(issues, `public/assets/backgrounds/${background}`, 'required file resolves outside public root');
     }
   }
 
   const audioManifestPath = path.join(publicRoot, 'audio/audio-manifest.json');
-  if (!(await exists(audioManifestPath))) {
+  const audioManifestInspection = await inspectContainedPath(publicRoot, audioManifestPath);
+  if (!audioManifestInspection.exists) {
     issue(issues, 'public/audio/audio-manifest.json', 'missing audio manifest');
+  } else if (!audioManifestInspection.contained) {
+    issue(issues, 'public/audio/audio-manifest.json', 'required file resolves outside public root');
   } else {
-    for (const runtimePath of audioPaths(await readJson(audioManifestPath))) {
+    for (const runtimePath of audioPaths(await readJson(audioManifestInspection.realPath))) {
       const resolvedPath = resolveRuntimeAudioPath(publicRoot, runtimePath);
       if (resolvedPath === null) {
         issue(issues, 'public/audio/audio-manifest.json', 'audio-manifest runtime path escapes public root');
-      } else if (!(await exists(resolvedPath.absolutePath))) {
-        issue(issues, `public/${resolvedPath.relativePath}`, 'missing audio-manifest runtime asset');
+      } else {
+        const runtimeInspection = await inspectContainedPath(publicRoot, resolvedPath.absolutePath);
+        if (!runtimeInspection.exists) {
+          issue(issues, `public/${resolvedPath.relativePath}`, 'missing audio-manifest runtime asset');
+        } else if (!runtimeInspection.contained) {
+          issue(issues, 'public/audio/audio-manifest.json', 'audio-manifest runtime path escapes public root');
+        }
       }
     }
   }
 
   const contents = await inventory(publicRoot);
   reportForbiddenPaths(issues, [...contents.directories, ...contents.files.map((file) => file.relative)], 'public/');
+  for (const link of contents.links) {
+    issue(issues, `public/${link}`, 'symbolic link or junction is not allowed');
+  }
   return { ok: issues.length === 0, issues };
 }
 
@@ -229,7 +272,18 @@ export async function verifyDistRelease(options) {
   const issues = [];
   const rows = await enabledRows(manifestPath);
   const contents = await inventory(distRoot);
-  const files = new Map(contents.files.map((file) => [file.relative, file]));
+  for (const link of contents.links) {
+    issue(issues, link, 'symbolic link or junction is not allowed');
+  }
+  const files = new Map();
+  for (const file of contents.files) {
+    const inspection = await inspectContainedPath(distRoot, file.absolute);
+    if (!inspection.exists || !inspection.contained) {
+      issue(issues, file.relative, 'file resolves outside dist root');
+    } else {
+      files.set(file.relative, { ...file, absolute: inspection.realPath });
+    }
+  }
   const requiredPaths = [
     'index.html',
     ...rows.map((row) => `assets/cards/${row.id}.webp`),
@@ -255,13 +309,18 @@ export async function verifyDistRelease(options) {
 
   reportForbiddenPaths(issues, [...contents.directories, ...files.keys()]);
 
-  for (const file of contents.files) {
+  for (const file of files.values()) {
     if (!/\.(?:html|js|css|json)$/i.test(file.relative)) continue;
-    if (containsOwnedRootAbsoluteUrl(await readFile(file.absolute, 'utf8'))) {
+    const text = await readFile(file.absolute, 'utf8');
+    const containsOwnedUrl = /\.json$/i.test(file.relative)
+      ? containsDecodedOwnedRootAbsoluteUrl(JSON.parse(text))
+      : containsOwnedRootAbsoluteUrl(text);
+    if (containsOwnedUrl) {
       issue(issues, file.relative, 'contains root-absolute owned asset URL');
     }
   }
-  if (await directorySize(distRoot) > ARTIFACT_LIMIT_BYTES) {
+  const artifactBytes = [...files.values()].reduce((total, file) => total + file.size, 0);
+  if (artifactBytes > ARTIFACT_LIMIT_BYTES) {
     issue(issues, 'dist', 'artifact bytes exceed 64 MiB');
   }
   return { ok: issues.length === 0, issues };

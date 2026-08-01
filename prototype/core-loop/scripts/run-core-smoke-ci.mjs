@@ -42,17 +42,18 @@ export async function runChecked(command, args, options = {}) {
     env = process.env,
     shell = false,
   } = options;
-  const detectFail = createFailDetector();
+  const detectStdoutFail = createFailDetector();
+  const detectStderrFail = createFailDetector();
   let sawFail = false;
 
   return await new Promise((resolve, reject) => {
     const child = spawn(command, args, { cwd, env, shell });
-    const forward = (target) => (chunk) => {
+    const forward = (target, detectFail) => (chunk) => {
       if (detectFail(chunk.toString())) sawFail = true;
       target.write(chunk);
     };
-    child.stdout.on('data', forward(stdout));
-    child.stderr.on('data', forward(stderr));
+    child.stdout.on('data', forward(stdout, detectStdoutFail));
+    child.stderr.on('data', forward(stderr, detectStderrFail));
     child.on('error', (error) => {
       reject(new Error(`failed to start ${command}: ${error.message}`));
     });

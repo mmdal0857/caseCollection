@@ -121,6 +121,110 @@ test('rejects a build job missing the release:verify-dist gate command', () => {
   assert.ok(result.issues.some((current) => current.message.includes('release:verify-dist')));
 });
 
+test('semantic gate rejects exact-command neutralization', () => {
+  const document = clone(validDocument());
+  document.jobs.build.steps.find((step) => step.run === 'npm run typecheck').run = 'npm run typecheck || true';
+
+  const result = validatePagesWorkflow(document);
+  assert.equal(result.ok, false);
+  assert.ok(result.issues.some((current) => current.path === 'jobs.build.steps[8].run'));
+});
+
+test('semantic gate rejects continue-on-error on a step', () => {
+  const document = clone(validDocument());
+  document.jobs.build.steps[3]['continue-on-error'] = true;
+
+  const result = validatePagesWorkflow(document);
+  assert.equal(result.ok, false);
+  assert.ok(result.issues.some((current) => current.path === 'jobs.build.steps[3].continue-on-error'));
+});
+
+test('semantic gate rejects continue-on-error on a job', () => {
+  const document = clone(validDocument());
+  document.jobs.build['continue-on-error'] = true;
+
+  const result = validatePagesWorkflow(document);
+  assert.equal(result.ok, false);
+  assert.ok(result.issues.some((current) => current.path === 'jobs.build.continue-on-error'));
+});
+
+test('semantic gate rejects if conditions on jobs and steps', () => {
+  const jobDocument = clone(validDocument());
+  jobDocument.jobs.deploy.if = 'always()';
+  const stepDocument = clone(validDocument());
+  stepDocument.jobs.build.steps[4].if = 'success()';
+
+  const jobResult = validatePagesWorkflow(jobDocument);
+  const stepResult = validatePagesWorkflow(stepDocument);
+  assert.equal(jobResult.ok, false);
+  assert.ok(jobResult.issues.some((current) => current.path === 'jobs.deploy.if'));
+  assert.equal(stepResult.ok, false);
+  assert.ok(stepResult.issues.some((current) => current.path === 'jobs.build.steps[4].if'));
+});
+
+test('semantic gate rejects an extra job', () => {
+  const document = clone(validDocument());
+  document.jobs.audit = { 'runs-on': 'ubuntu-latest', steps: [] };
+
+  const result = validatePagesWorkflow(document);
+  assert.equal(result.ok, false);
+  assert.ok(result.issues.some((current) => current.path === 'jobs'));
+});
+
+test('semantic gate rejects wrong action order and placement', () => {
+  const document = clone(validDocument());
+  [document.jobs.build.steps[1], document.jobs.build.steps[2]] = [
+    document.jobs.build.steps[2],
+    document.jobs.build.steps[1],
+  ];
+
+  const result = validatePagesWorkflow(document);
+  assert.equal(result.ok, false);
+  assert.ok(result.issues.some((current) => current.path === 'jobs.build.steps[1].uses'));
+});
+
+test('semantic gate rejects reordered and duplicate run commands', () => {
+  const reordered = clone(validDocument());
+  [reordered.jobs.build.steps[3], reordered.jobs.build.steps[4]] = [
+    reordered.jobs.build.steps[4],
+    reordered.jobs.build.steps[3],
+  ];
+  const duplicate = clone(validDocument());
+  duplicate.jobs.build.steps.splice(4, 0, { run: 'npm ci' });
+
+  assert.equal(validatePagesWorkflow(reordered).ok, false);
+  assert.equal(validatePagesWorkflow(duplicate).ok, false);
+});
+
+test('semantic gate rejects altered or extra setup-node with values', () => {
+  const altered = clone(validDocument());
+  altered.jobs.build.steps[1].with['node-version'] = 22;
+  const extra = clone(validDocument());
+  extra.jobs.build.steps[1].with['registry-url'] = 'https://registry.npmjs.org';
+
+  assert.equal(validatePagesWorkflow(altered).ok, false);
+  assert.equal(validatePagesWorkflow(extra).ok, false);
+});
+
+test('semantic gate rejects with mappings on actions that approve none', () => {
+  const document = clone(validDocument());
+  document.jobs.build.steps[2].with = { enablement: false };
+
+  const result = validatePagesWorkflow(document);
+  assert.equal(result.ok, false);
+  assert.ok(result.issues.some((current) => current.path === 'jobs.build.steps[2].with'));
+});
+
+test('semantic gate rejects extra deploy steps and altered deploy identity', () => {
+  const extraStep = clone(validDocument());
+  extraStep.jobs.deploy.steps.push({ run: 'echo bypass' });
+  const alteredIdentity = clone(validDocument());
+  alteredIdentity.jobs.deploy.steps[0].id = 'other';
+
+  assert.equal(validatePagesWorkflow(extraStep).ok, false);
+  assert.equal(validatePagesWorkflow(alteredIdentity).ok, false);
+});
+
 test('rejects an upload-pages-artifact path other than prototype/core-loop/dist', () => {
   const document = clone(validDocument());
   const step = document.jobs.build.steps.find((current) => current.uses?.startsWith('actions/upload-pages-artifact'));
