@@ -40,11 +40,11 @@ Before handing off a change, normally run:
 ```bash
 npm run smoke
 npm run smoke:datapack
-npx tsc --noEmit
+npm run typecheck
 npm run build
 ```
 
-`npm run smoke` requires reading its output for `FAIL`; unlike the data-pack smoke suite, its logical checks do not reliably force a nonzero exit. UI work also requires browser play checks. Details and change-specific gates are in [testing guidance](testing/guidance.md).
+`npm run smoke` requires reading its output for `FAIL`; unlike the data-pack smoke suite, its logical checks do not reliably force a nonzero exit. The release path instead uses `npm run smoke:ci`, which makes any printed `FAIL` fatal across its full smoke suite. UI work also requires browser play checks. Details and change-specific gates are in [testing guidance](testing/guidance.md).
 
 ## Authority model
 
@@ -61,10 +61,10 @@ The repository governance and dirty-worktree precautions are summarized in the [
 ## Current-state cautions
 
 - Main has pre-existing uncommitted and untracked files, including the OpenWiki setup. Inspect `git status` and do not absorb unrelated changes.
-- Two significant prototypes are intentionally isolated: case-generator work and the OpenWiki candidate pilot. Their branch/worktree results are not reproducible from main. The latest decision is **isolate for now**, which is a deferral rather than rejection.
-- A separate dirty data-contracts worktree contains broader v2 pack, storage, narrative, and audio work. Open tickets and unreviewed worktree-local resolutions do not make those mainline features.
-- The implemented v1 data-pack validator and schema are real, but the live UI bypasses them. `scenario.ts` and alternative lock modes also exist without current UI entry points.
-- Deployment channels are decided—GitHub Pages canonical, Higgsfield parallel—but a committed application deployment pipeline is not established by the inspected mainline evidence.
+- The case-generator E2E smoke is now mainline and self-contained through its committed Project Gutenberg 204 source fixture. The OpenWiki candidate pilot remains isolated and rejected as a runtime/core dependency.
+- Open tickets and unreviewed worktree-local resolutions do not extend mainline behavior beyond the current source.
+- The implemented v2 data-pack validator, persistence, narrative, and audio seams are real, but the live UI still bypasses external pack loading. `scenario.ts` and alternative lock modes also exist without current UI entry points.
+- GitHub Pages is the canonical host. Its committed `workflow_dispatch` pipeline publishes only a release-gated `prototype/core-loop/dist`; Higgsfield remains a separate manual distribution process. The command sequence and release boundaries are in the [operations runbook](operations/runbook.md).
 
 ## Practical first moves
 
@@ -77,7 +77,4 @@ The repository governance and dirty-worktree precautions are summarized in the [
 ## Backlog
 
 - **Mainline production architecture** — source anchor: ticket 08 and `/prototype/core-loop`; deferred because the repository still labels the runtime as a prototype and the production promotion/rewrite is incomplete.
-- **Integrated generated-content E2E** — source anchor: tickets 18 and 28 plus the isolated case-generator worktree; deferred because the main ticket remains open and isolated evidence is not integrated.
-- **Data-pack v2, storage, and external loading** — source anchor: open tickets 14/16 and the dirty data-contracts worktree; deferred because main only contains the standalone v1 contract.
-- **Audio and expanded narrative contracts** — source anchor: open tickets 29/30 and untracked plans; deferred because scope and integration are not authoritative on main.
-- **Automated deployment** — source anchor: ticket 05/08 and repository `.github`; deferred because channel policy exists but committed deploy automation was not established by inspected evidence.
+- **External data-pack startup** — source anchor: `/prototype/core-loop/src/App.svelte` and `src/lib/datapack.ts`; deferred because v2 packs are validated and persistable only through the developer-facing pack view, while ordinary play still initializes authored `CONTENT`.

@@ -35,7 +35,7 @@ From `prototype/core-loop`:
 ```bash
 npm run smoke
 npm run smoke:datapack
-npx tsc --noEmit
+npm run typecheck
 npm run build
 ```
 
@@ -51,9 +51,9 @@ git diff -- <scoped-paths>
 git log --max-count=12 --oneline
 ```
 
-Do not stage, reset, stash, delete, or commit unrelated dirty files. At this documentation run, main had pre-existing modifications/untracked setup files. The latest repository decision also keeps the case-generator and OpenWiki pilot worktrees isolated. Isolation is **deferred integration**, not rejection, and their checks are not reproducible from main.
+Do not stage, reset, stash, delete, or commit unrelated dirty files. At this documentation run, main had pre-existing modifications/untracked setup files. The case-generator E2E smoke is now mainline and self-contained; the OpenWiki pilot remains isolated and rejected as a runtime/core dependency.
 
-A dirty data-contracts worktree contains broader pack/storage/narrative/audio experiments. Worktree-local ticket resolutions that remain open, unreviewed, or uncommitted are evidence only. The [source map](../source-map.md) distinguishes authority levels.
+Worktree-local ticket resolutions that remain open, unreviewed, or uncommitted are evidence only. The [source map](../source-map.md) distinguishes authority levels.
 
 ## Decision and ticket workflow
 
@@ -145,6 +145,21 @@ Do not modify the OUT wiki from caseCollection changes. It is source evidence, w
 
 ## Distribution state
 
+GitHub Pages is the canonical host, deployed through the committed manual `.github/workflows/deploy-pages.yml` workflow. Its build job runs in `prototype/core-loop`, executes `npm ci`, schema and release-tool checks, `smoke:ci`, source-release verification, type checking, the Vite build, and dist-release verification in that order, then uploads only `dist/`; its deploy job depends on that build. Run these release gates locally before a manual dispatch:
+
+```bash
+npm run schema:check
+npm run test:release-tools
+npm run smoke:ci
+npm run release:verify-source
+npm run typecheck
+npm run build
+npm run release:verify-dist
+npm run release:verify-pages-workflow
+```
+
+`smoke:ci` runs the 11 configured smoke scripts sequentially and fails if either output stream prints `FAIL`. The source verifier checks promoted card derivatives, required backgrounds and audio assets, containment, and forbidden generated paths; the dist verifier repeats artifact closure checks and rejects root-absolute owned asset URLs. The workflow verifier tests the committed workflow's strict trigger, command order, permissions, and no-bypass rules. These release gates depend on the broader checks in [testing guidance](../testing/guidance.md).
+
 Decided channel policy:
 
 - **GitHub Pages:** canonical host.
@@ -153,7 +168,7 @@ Decided channel policy:
 - **Steam:** possible later paid channel, undecided.
 - **Higgsfield/Stripe direct storefront:** deferred backlog.
 
-A Vite production build exists. Do not claim that application deployment is automated merely because channel policy or untracked workflow files exist; verify committed `.github/workflows` state and the relevant deployment ticket first.
+The GitHub Pages workflow is intentionally manual (`workflow_dispatch` only), uses relative Vite asset paths for repository-subpath deployment, and does not invoke Higgsfield. Ticket 33 records a successful Actions build/deploy and browser verification at `https://mmdal0857.github.io/caseCollection/`; Higgsfield publication remains an independent manual action.
 
 ## Incident-oriented checks
 

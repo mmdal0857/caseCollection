@@ -53,12 +53,12 @@ See [game model](domain/game-model.md) for the synthesized rules and [testing gu
 | Asset | Status | Purpose |
 |---|---|---|
 | `/prototype/core-loop/src/lib/content.ts` | Live | Hard-coded official prototype run |
-| `/prototype/core-loop/src/lib/datapack.ts` | Implemented, disconnected | v1 shape validation, ordered merge, provenance and integrity |
-| `/prototype/core-loop/schema/game-data-pack.json` | Implemented | v1 structural schema; TypeScript owns cross-field checks |
+| `/prototype/core-loop/src/lib/datapack.ts` | Implemented, developer-facing | v2 shape validation, ordered merge, provenance and integrity |
+| `/prototype/core-loop/schema/game-data-pack-v2.json` | Implemented | v2 structural schema; TypeScript owns cross-field checks |
 | `/prototype/core-loop/smoke-datapack.ts` | Implemented | Contract regression suite |
-| `/scripts/extract_game_data_pack.py` | Skeleton | OUT inventory/draft pack; facet extraction and case assembly are STUB |
-| ticket 18 and generator foundation spec | Accepted design | Deterministic truth/provenance pipeline |
-| ticket 28 main copy | Open | Real-source/real-model E2E is not resolved on main |
+| `/scripts/extract_game_data_pack.py` | Implemented | OUT extraction package with facet, taste-filter, and case-assembly stages |
+| `/prototype/core-loop/smoke-case-generator-e2e.ts`, fixtures | Implemented | Self-contained Project Gutenberg 204 deterministic-generation smoke |
+| ticket 18 and ticket 28 | Closed decisions | Deterministic truth/provenance pipeline and its integrated E2E evidence |
 
 The relationship and flow are documented in [play and content workflows](workflows/play-and-content.md).
 
@@ -66,13 +66,13 @@ The relationship and flow are documented in [play and content workflows](workflo
 
 | Area | Source | Boundary |
 |---|---|---|
-| Local commands | `/prototype/core-loop/package.json` | Vite plus two smoke scripts; no test framework script |
+| Local and release commands | `/prototype/core-loop/package.json` | Vite, focused Node release-tool tests, individual smoke checks, strict `smoke:ci`, and source/dist/workflow release verification |
 | Tracker workflow | `/docs/agents/issue-tracker.md` | Map indexes decisions; ticket resolutions own them |
 | Agent collaboration | `/docs/agents/codex-collab.md` | Bounded writes and independent verification |
 | Card-art rules | `/docs/art/README.md`, style key | Style key committed; final card images outside Git |
 | Art batch/manifest | `/scripts/cardart-batch.mjs`, `check-cardart-manifest.mjs`, manifest JSONL | Higgsfield generation tooling and ID parity |
 | Drive synchronization | `/scripts/sync-cardart.cmd` | Explicit, non-deleting final-asset transfer |
-| Deployment policy | tickets 05 and 08 | GitHub Pages canonical, Higgsfield parallel; automation must be verified separately |
+| GitHub Pages delivery | `.github/workflows/deploy-pages.yml`, ticket 33 | Manual release-gated Actions deployment of `prototype/core-loop/dist`; Higgsfield remains parallel and manual |
 | External knowledge | `/CLAUDE.md`, extraction script | OUT is read-only source evidence, not game decision authority |
 
 These operations are collected into the [runbook](operations/runbook.md).
@@ -81,8 +81,11 @@ These operations are collected into the [runbook](operations/runbook.md).
 
 - `/prototype/core-loop/smoke.ts`: game progression, solvability, coherence, failure reachability, propagation, undo and Korean authoring checks. Inspect printed `FAIL` lines.
 - `/prototype/core-loop/smoke-datapack.ts`: pack shape, merge, provenance, integrity and schema-enum synchronization; exits nonzero on failures.
-- `/scripts/*.test.mjs`: focused Node tests for art batch/comparison/manifest and Higgsfield URL extraction.
-- `npx tsc --noEmit`: required by repository collaboration guidance even though it is not an npm script.
+- `/prototype/core-loop/scripts/run-core-smoke-ci.mjs`: runs 11 smoke scripts and treats printed `FAIL` as fatal for CI.
+- `/prototype/core-loop/scripts/verify-release.mjs`: validates public-source and built-dist release closure, asset paths, containment, and size.
+- `/prototype/core-loop/scripts/verify-pages-workflow.mjs`: verifies the Pages workflow's strict gate and deployment shape.
+- `/prototype/core-loop/scripts/*.test.mjs`: focused Node tests, including the release and workflow verifiers.
+- `npm run typecheck`: TypeScript no-emit check.
 - `npm run build`: Vite production compile.
 - Browser play checks: required for Svelte semantics and spatial behavior.
 
@@ -96,7 +99,7 @@ Recent history explains several non-obvious rules:
 - Ticket 31 added note comparison after play revealed repeated dead clicks; it intentionally uses judgment history without exposing correctness.
 - Ticket 18 turned generation into deterministic legal-candidate enumeration with LLMs restricted to selection, presentation and taste.
 - The OpenWiki candidate pilot was rejected as runtime/core dependency because its prompt/context path was too costly, while provenance prompting and strict validation ideas were retained.
-- The latest commit explicitly keeps two prototypes isolated for now; this is recorded as deferral rather than rejection.
+- Ticket 33 established the manually dispatched GitHub Pages release workflow; inspect its closed resolution and workflow verifier before changing deployment gates.
 
 Use `git log -- <path>`, targeted `git show <commit> -- <path>`, and selective blame when the current code’s reason is unclear. Avoid persistent hash inventories unless a branch-only result must be located.
 
@@ -115,4 +118,4 @@ Use `git log -- <path>`, targeted `git show <commit> -- <path>`, and selective b
 - **Case/card content:** [play/content workflow](workflows/play-and-content.md) → `content.ts` and pack contracts → smoke plus render particle check.
 - **UI/layout:** [architecture](architecture/overview.md) → ticket 24/31 → component/CSS → browser checklist.
 - **Art:** [operations runbook](operations/runbook.md) → art README/manifest/scripts → focused Node tests and dry run.
-- **Generation/external packs:** [play/content workflow](workflows/play-and-content.md) → tickets 14/16/18/28 → confirm branch/worktree and review state before coding.
+- **Generation/external packs:** [play/content workflow](workflows/play-and-content.md) → tickets 14/16/18/28 → confirm current source wiring and developer-facing versus ordinary-startup boundary before coding.

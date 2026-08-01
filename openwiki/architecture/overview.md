@@ -113,4 +113,4 @@ The durable rule is to anchor layout to actual structure or shared CSS variables
 - `lastLock` and exported `influenceOf` carry useful data but are not consumed by current UI code.
 - Reducer `PLACE` trusts callers; facet usability is enforced by the UI and authored-content validators rather than rechecked at the reducer boundary.
 - The source still contains prototype-era comments and stale UI copy. Prefer current wiring and governing ticket resolutions when descriptions conflict.
-- Normal gameplay still does not consume merged external-pack output. Persistence, v2 pack tooling, and generated-content contracts are mainline; deployment automation and browser/component automation remain separate gaps. Operational status is in the [runbook](../operations/runbook.md).
+- Normal gameplay still does not consume merged external-pack output. Persistence, v2 pack tooling, and generated-content contracts are mainline. GitHub Pages delivery is covered by a committed manual release workflow; browser/component automation remains a separate gap. Operational status is in the [runbook](../operations/runbook.md).

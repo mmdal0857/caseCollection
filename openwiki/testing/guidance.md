@@ -37,7 +37,7 @@ From `prototype/core-loop`:
 ```bash
 npm run smoke
 npm run smoke:datapack
-npx tsc --noEmit
+npm run typecheck
 npm run build
 ```
 
@@ -69,6 +69,12 @@ npm run build
 
 This suite does maintain a failure count and exits nonzero on failure. It verifies the standalone pack seam described in [play and content workflows](../workflows/play-and-content.md), not that the live app loads packs.
 
+### CI and release gates
+
+`npm run smoke:ci` runs the 11 smoke scripts configured in `scripts/run-core-smoke-ci.mjs` sequentially. Unlike direct core-smoke invocation, it rejects a nonzero exit **or** a `FAIL` token printed by either output stream. The manual GitHub Pages workflow combines that strict smoke gate with `schema:check`, `test:release-tools`, source-release verification, type checking, build, and dist-release verification before it uploads `dist`; the [operations runbook](../operations/runbook.md) records the exact command order.
+
+`release:verify-source` validates the public release boundary before building: enabled card promotions and hashes, required backgrounds, audio manifest/runtime assets, containment, and absence of candidate/source paths or links under `public`. `release:verify-dist` checks the built artifact's equivalent closure and rejects owned root-absolute `/assets/` or `/audio/` URLs. `release:verify-pages-workflow` is covered by the release-tool test suite and verifies the committed workflow cannot weaken its trigger, command order, permissions, or gates.
+
 ## Script tests
 
 The root scripts have Node test files:
@@ -95,6 +101,7 @@ The Python extraction skeleton has no dedicated test suite on main. Its default 
 | `josa.ts` or sentence content | Both smoke suites and build | Render correct, wrong and empty-slot names with/without final consonants |
 | Art scripts/manifest | Paired Node tests and manifest check | Prefer batch `--dry-run`; confirm style-key preflight and output boundary |
 | Extraction script | Inventory and optional draft validation | Confirm STUB status is not misrepresented; avoid accidental base-ID override |
+| Deployment workflow or release-boundary script | `schema:check`, `test:release-tools`, `smoke:ci`, source verifier, `typecheck`, build, dist verifier | Run `release:verify-pages-workflow`; manual dispatch remains required for GitHub Pages |
 | Governance/ticket change | N/A as code gate | Verify authority, status, blockers, vocabulary ripple, map entry and dirty-file ownership |
 
 The [operations runbook](../operations/runbook.md) provides command and worktree safety; the [source map](../source-map.md) identifies governing evidence.
@@ -133,5 +140,5 @@ This review relationship is why [architecture](../architecture/overview.md), [do
 - `scenario.ts` is disconnected, so runtime smoke does not prove a user-visible scenario flow.
 - The core smoke suite’s exit behavior can mask printed failures.
 - Reducer callers can bypass UI facet-legality screening; current confidence comes from UI behavior and authored solvability checks.
-- Interlude v1 pack schema is intentionally loose.
-- Deployment automation, isolated generator E2E, v2 pack/storage and audio require their own reviewed integration gates before being documented as mainline-tested.
+- Interlude v2 contracts remain less constrained than core card, facet, and case references.
+- Browser/component automation is still absent. Deployment is covered by a manual GitHub Pages workflow with source/dist release gates and recorded CI/browser evidence; it is not an automatic-on-push release channel.

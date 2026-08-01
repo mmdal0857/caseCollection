@@ -63,7 +63,7 @@ When editing this file, preserve these relationships: every slot answer must nam
 
 ## Implemented data-pack workflow
 
-`/prototype/core-loop/src/lib/datapack.ts` and `/prototype/core-loop/schema/game-data-pack.json` define `game-data-pack@1`. Base and mod packs use the same envelope. The TypeScript loader is stricter than JSON Schema because it checks cross-field invariants and references.
+`/prototype/core-loop/src/lib/datapack.ts` and `/prototype/core-loop/schema/game-data-pack-v2.json` define `game-data-pack@2`. Base and mod packs use the same envelope. The TypeScript loader is stricter than JSON Schema because it checks cross-field invariants and references.
 
 ```mermaid
 flowchart TD
@@ -78,7 +78,7 @@ flowchart TD
 
 *Cross-pack references are checked after merge because a mod may legitimately refer to base IDs.*
 
-Important v1 contracts include:
+Important v2 contracts include:
 
 - envelope format/version and namespace-like pack ID;
 - record key equals item ID;
@@ -89,19 +89,19 @@ Important v1 contracts include:
 - merged pattern, card, facet, hint, starter and answer references all exist;
 - all five tag deltas are available after merge.
 
-Interlude event/action shape remains intentionally loose in v1. Most importantly, `App.svelte` does not call `loadPacks`; this is a standalone validated seam rather than live external loading.
+Interlude event/action content has dedicated v2 contracts. Most importantly, `App.svelte` only uses merged packs in the developer-facing data-pack view; ordinary gameplay still initializes authored `CONTENT`, so validated external packs are not normal startup input.
 
-## Extraction skeleton
+## OUT extraction
 
-`/scripts/extract_game_data_pack.py` is a build-time skeleton that consumes the separate OUT repository’s catalog, clue libraries, case-pattern pages and texts. Its stages are source loading, candidate selection, facet extraction, case assembly, validation and emission.
+`/scripts/extract_game_data_pack.py` is a build-time entrypoint for the separate OUT repository’s catalog, clue libraries, case-pattern pages and texts. The `scripts/game_data_pack/` package implements source loading, candidate selection, facet extraction, case assembly, validation and v2 pack emission. Its extraction boundary is build-time rather than runtime; generated output does not replace `CONTENT` in ordinary app startup.
 
-Only inventory/candidate selection and draft-pack validation are mainline-real. **Facet extraction and case assembly are explicit STUBs.** `--emit-draft` creates placeholder facets and no playable cases. Its default `wiki.` card-ID prefix avoids accidentally overriding same-named base cards; an empty prefix means intentional promotion and should not be used casually.
+
 
 The [operations runbook](../operations/runbook.md) includes the safe invocation and external-root caveat.
 
 ## Accepted future generation contract
 
-Ticket 18 defines how build-time case generation should work even though its logic prototype remains isolated from main:
+Tickets 18 and 28 define the mainline build-time case-generation contract; `smoke-case-generator-e2e.ts` exercises its deterministic path using a committed Project Gutenberg 204 source fixture:
 
 ```mermaid
 flowchart TD
@@ -120,15 +120,15 @@ flowchart TD
 
 The design separates `truth`, `presentation`, and optional `obstacles`. Truth owns explicit slot solutions and reusable mechanical axis profiles; presentation owns case-specific prose and axis labels. Conditional solutions must be fixed at placement/commit time so later state changes cannot invalidate an already accepted answer.
 
-This contract depends on the [domain constraints](../domain/game-model.md) and is intended to reuse the [testing/validation layers](../testing/guidance.md). It is not evidence that main currently generates cases.
+This contract depends on the [domain constraints](../domain/game-model.md) and reuses the [testing/validation layers](../testing/guidance.md). The self-contained smoke verifies the deterministic candidate and replay boundaries, but ordinary gameplay still uses authored `CONTENT` rather than generated cases.
 
 ## Integration and status boundaries
 
-- **Live:** hard-coded `CONTENT`, reducer, facet rules, UI screens, v1 pack validator/merger, JSON Schema and smoke suites.
-- **Implemented but disconnected:** data-pack loading from app startup, alternative lock modes, `scenario.ts`.
-- **Skeleton:** OUT extraction with placeholder draft emission.
-- **Accepted design but isolated:** deterministic generator logic and provenance contract from ticket 18.
-- **Open/unintegrated:** generator E2E, v2 packs, external loading/storage, expanded narrative/interlude contracts and audio.
+- **Live:** hard-coded `CONTENT`, reducer, facet rules, UI screens, v2 pack validator/merger, JSON Schema, browser-local persistence, narrative/audio contracts, and smoke suites.
+- **Developer-facing rather than ordinary startup:** data-pack loading through `?data-packs=1`, IndexedDB pack bodies, alternative lock modes, `scenario.ts`.
+- **Build-time:** OUT extraction and deterministic generated-case E2E, including the committed PG204 fixture.
+
+
 - **Rejected as core dependency:** OpenWiki runtime/automatic canonical promotion. Its pilot contributed provenance/validator ideas but remains isolated.
 
-Future agents should verify current tickets and worktree state through the [source map](../source-map.md) before treating a plan or isolated result as available functionality.
+Future agents should verify current tickets and source wiring through the [source map](../source-map.md) before treating a plan or developer-only seam as ordinary player functionality.
