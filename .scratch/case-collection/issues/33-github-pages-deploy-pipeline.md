@@ -3,7 +3,7 @@
 Status: open
 Labels: wayfinder:grilling
 Assignee: Codex (GPT-5.6, 2026-07-30) — Tasks 5-7 continued directly by Claude, 2026-08-01
-Reviewed-by: Claude (2026-08-01)
+Reviewed-by: Claude (2026-08-01; 자체 검토 출처, 독립 검토 예외를 사용자 승인)
 Blocked-by:
 
 ## Question
@@ -28,3 +28,13 @@ Blocked-by:
   - ③ **자산·참조 존재**: 설계 스펙(`docs/superpowers/specs/2026-07-30-github-pages-portable-deployment-design.md`)·계획(`docs/superpowers/plans/2026-07-30-github-pages-portable-deployment.md`) 전부 실재 확인. `.art-source/cardart/`는 git 미추적(0 파일), `public/assets/`의 23개 WebP 파생본만 추적 — 설계 §8이 요구한 "Drive가 소스, Git은 배포 파생본만" 경계가 실제로 지켜짐을 `git ls-files`로 확인.
   - ④ **커맨드·배포 경로 재실행**: `npm ci`→`schema:check`→`test:release-tools`(48/48)→`smoke:ci`(11개 스모크 전체 PASS)→`release:verify-source`→`typecheck`→`build`→`release:verify-dist` 전부 독립 재실행 PASS. `vite preview --base /caseCollection/`을 실제로 띄우고 Chrome DevTools로 홈→브리핑→케이스 화면까지 진행해 카드 4장·배경·오디오 매니페스트·OGG가 전부 `/caseCollection/` 하위에서 200으로 로드됨을 확인(콘솔에 처리되지 않은 예외 없음 — 유일한 404는 무관한 루트 `favicon.ico`).
   - **Status는 open 유지** — 계획의 Task 9(실 GitHub 저장소 생성·push·Pages 배포)는 외부에 공개되는 비가역적 조치라 사용자 판단(2026-08-01)으로 이 세션에서는 보류. 저장소 이름·공개 범위가 정해지면 재개.
+- **2026-08-02 Codex 독립 감사·수정 및 중첩 경로 collection 증명.** 기존 기록의 `230c4c1..75a5f58`은 시작 커밋을 제외하므로, 당시 구현의 정확한 포함 범위는 `230c4c1^..75a5f58`(9개)이다. 중요 지적 수정까지 포함한 최종 감사 범위는 `230c4c1^..0de95bf`(12개)다. Claude가 Tasks 5-7을 직접 작성한 뒤 검토했다는 기존 고지는 그대로 유효하며, 위 `Reviewed-by`는 저자 독립 검토를 주장하지 않고 사용자가 승인한 자체 검토 예외와 출처만 기록한다.
+  - 독립 감사에서 확인한 중요 4건을 회귀 테스트 우선으로 수정했다:
+    1. stdout/stderr 사이에서 분할된 `FAIL` 탐지.
+    2. JSON escape를 해제한 문자열에서 소유 루트-절대(owned root-absolute) `/assets/`·`/audio/` URL 검사.
+    3. 정확한 workflow job·step·command·action·`with` 및 최상위 shape 검사.
+    4. `public`/`dist` 링크 거부와 prefix-boundary 실수를 막는 component-safe required-file realpath containment.
+  - scoped 재검토 결과: 첫 재검토는 위 1·2·4를 `ADDRESSED`로, 최상위 `defaults.run.shell`·`env` 미검사인 3을 `NOT ADDRESSED`로 판정했고 별도 신규 Critical/Important 문제는 없었다. 이 잔여 3은 `0de95bf`에서 닫았고, 두 번째 scoped 재검토는 이를 `ADDRESSED`, 신규 Critical/Important 없음, 전체 `CLEAN`으로 판정했다.
+  - 최종 로컬 게이트를 다시 실행해 `test:release-tools` 67/67, `smoke:ci` 11/11, `release:verify-source`, `typecheck`, 155-module `build`, `release:verify-dist`가 모두 PASS했다. 빌드 산출물은 27,367,847 bytes다.
+  - `http://127.0.0.1:4173/caseCollection/`에서 Home→새 수사→Briefing→case→물리 카드 스택→Collection→case 복귀를 실제 Chrome DevTools 세션으로 확인했다. 오디오 매니페스트, title/case OGG, `trust-low.webp`, 카드 4장(`vent_gap`, `thread_fiber`, `mud_footprint`, `rope_mark`)이 모두 `/caseCollection/` 아래에서 200으로 응답했고, 화면에는 배경과 카드 그림이 fallback glyph가 아닌 실제 이미지로 렌더됐다. 처리되지 않은 예외는 없었으며 비소유 루트 `favicon.ico` 404와 사용자 동작 전 AudioContext 자동재생 경고만 관찰됐다.
+  - **Status는 계속 open** — Task 9의 저장소/공개 범위 결정, remote 추가, push, Pages 설정, 수동 dispatch와 실제 배포 URL 검증은 별도 외부 변경 승인 없이는 수행하지 않는다.
