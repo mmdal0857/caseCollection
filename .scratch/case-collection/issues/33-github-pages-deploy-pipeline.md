@@ -1,6 +1,6 @@
 # GitHub Pages 배포 파이프라인 구축
 
-Status: open
+Status: closed
 Labels: wayfinder:grilling
 Assignee: Codex (GPT-5.6, 2026-07-30) — Tasks 5-7 continued directly by Claude, 2026-08-01
 Reviewed-by: Claude (2026-08-01; 자체 검토 출처, 독립 검토 예외를 사용자 승인)
@@ -41,3 +41,14 @@ Blocked-by:
   - 최종 로컬 게이트를 다시 실행해 `test:release-tools` 67/67, `smoke:ci` 11/11, `release:verify-source`, `typecheck`, 155-module `build`, `release:verify-dist`가 모두 PASS했다. 빌드 산출물은 27,367,847 bytes다.
   - `http://127.0.0.1:4173/caseCollection/`에서 Home→새 수사→Briefing→case→물리 카드 스택→Collection→case 복귀를 실제 Chrome DevTools 세션으로 확인했다. 오디오 매니페스트, title/case OGG, `trust-low.webp`, 카드 4장(`vent_gap`, `thread_fiber`, `mud_footprint`, `rope_mark`)이 모두 `/caseCollection/` 아래에서 200으로 응답했고, 화면에는 배경과 카드 그림이 fallback glyph가 아닌 실제 이미지로 렌더됐다. 처리되지 않은 예외는 없었으며 비소유 루트 `favicon.ico` 404와 사용자 동작 전 AudioContext 자동재생 경고만 관찰됐다.
   - **이 감사 시점의 Status는 계속 open** — Task 9의 저장소/공개 범위 결정, remote 추가, push, Pages 설정, 수동 dispatch와 실제 배포 URL 검증은 별도 외부 변경 승인 없이는 수행하지 않았다.
+
+## Resolution
+
+2026-08-02 완료:
+
+1. 배포 트리거는 `workflow_dispatch`, 게시 방식은 GitHub Actions Pages로 확정했다. 워크플로는 `prototype/core-loop/`에서 전체 release gate를 통과한 `dist/`만 `/<repo>/` base path로 게시하며, Higgsfield 배포는 별도 수동 절차로 유지한다.
+2. 공개 저장소 `mmdal0857/caseCollection`의 `main`을 push하고 Pages를 Actions 소스로 설정했다. 첫 실행 `30708811645`는 clean Linux runner에서 Windows 전용 절대 원문 경로를 찾지 못해 실패했고, `03d29a9`에서 SHA-256이 원본과 같은 고정 fixture를 저장소에 포함해 smoke를 self-contained하게 만들었다.
+3. 후속 실행 [`30712010808`](https://github.com/mmdal0857/caseCollection/actions/runs/30712010808)은 커밋 `03d29a941da14f055d1e82bf60119767414676f7`에서 build·deploy job 모두 성공했다. schema, release-tool tests, `smoke:ci` 11/11, source/dist 검증, typecheck, build가 실제 CI에서 통과했다.
+4. 배포본 [`https://mmdal0857.github.io/caseCollection/`](https://mmdal0857.github.io/caseCollection/)이 HTTP 200으로 응답하고 `/caseCollection/` 자산 경로로 동작함을 확인했다. 실제 브라우저 완주와 화면 겹침 회귀 검증은 [35](35-mvp-launch-integration-check.md)에 기록했다.
+
+Claude의 Tasks 5–7 자체검토 출처와 사용자 승인 예외는 위 Comments에 공개되어 있으며, 이후 Codex 독립 감사에서 나온 중요 4건은 두 수정 웨이브와 재검토를 거쳐 Critical/Important 없음(`CLEAN`)으로 닫혔다.

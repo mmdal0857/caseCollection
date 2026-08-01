@@ -78,6 +78,8 @@ Labels: wayfinder:map
 
 - `[검증]` [case 생성 E2E 데이터팩 프로토타입](issues/28-case-generator-e2e-datapack-prototype.md) — Project Gutenberg 204 고정 원문과 실제 sLLM selector/presenter/taste transcript를 승인 입력으로 저장하고, 두 replay를 byte-identical하게 emit했다. 최신 `game-data-pack@2`와 교차해 `boss→generated case` 진입 인터루드까지 포함한 `cases=5, overrides=0`을 검증했다. / 유예: `prototype/case-generator-shape`의 main 병합은 별도 사용자 결정.
 
+- `[검증]` [GitHub Pages 배포 파이프라인](issues/33-github-pages-deploy-pipeline.md) — `workflow_dispatch` 수동 트리거와 GitHub Actions Pages를 채택하고, `prototype/core-loop/dist`만 `/caseCollection/` base로 게시한다. schema·release-tool tests·smoke 11종·source/dist 경계·typecheck·build를 배포 gate로 강제했으며, clean Linux runner에서 드러난 Windows 절대 원문 의존은 byte-identical 저장소 fixture로 제거했다. 실제 Actions build/deploy와 공개 URL `https://mmdal0857.github.io/caseCollection/`의 200 응답·실브라우저 완주까지 검증했다. Higgsfield는 별도 수동 배포로 유지. **/ 기각**: main push·release tag 자동 트리거, `gh-pages` 브랜치 게시, 현재 단계의 커스텀 도메인.
+
 ## Not yet specified
 
 - 수익화 — **유료 채널의 시점과 형태만 남았다.** 채널 후보는 Steam으로 좁혀졌고(콘텐츠 분량 때문에 [18](issues/18-case-generator-shape.md) 이후, 리드타임 6주+), 무료 배포는 GitHub Pages+Higgsfield로 확정. itch.io·Patreon은 미사용 결정, Stripe 직판은 후순위 대기([10001](issues/10001-higgsfield-stripe-storefront.md))이므로 이 줄에서 빠졌다. 남은 fog는 "유료판이 무엇을 담는가" — 무료 게시본과의 경계이고 18의 산출에 달렸다.
