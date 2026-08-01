@@ -49,6 +49,8 @@ const APPROVED_DEPLOY_STEP = {
   uses: `actions/deploy-pages@${APPROVED_ACTIONS.get('actions/deploy-pages')}`,
 };
 
+const APPROVED_TOP_LEVEL_KEYS = ['concurrency', 'jobs', 'name', 'on', 'permissions'];
+
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 export const WORKFLOW_PATH = path.resolve(scriptDir, '../../../.github/workflows/deploy-pages.yml');
 
@@ -67,6 +69,20 @@ function collectSteps(document) {
     for (const step of Array.isArray(job?.steps) ? job.steps : []) steps.push(step);
   }
   return steps;
+}
+
+function checkWorkflowShape(document, issues) {
+  if (!isPlainObject(document)) {
+    issue(issues, 'workflow', 'must be an object');
+    return;
+  }
+  const keys = Object.keys(document).sort();
+  if (!isDeepStrictEqual(keys, APPROVED_TOP_LEVEL_KEYS)) {
+    issue(issues, 'workflow', `must contain exactly ${APPROVED_TOP_LEVEL_KEYS.join(', ')}`);
+  }
+  if (document.name !== 'Deploy GitHub Pages') {
+    issue(issues, 'name', `must be "Deploy GitHub Pages", found ${JSON.stringify(document.name)}`);
+  }
 }
 
 function checkJobNames(document, issues) {
@@ -303,6 +319,7 @@ function checkActions(document, issues) {
 
 export function validatePagesWorkflow(document) {
   const issues = [];
+  checkWorkflowShape(document, issues);
   checkTrigger(document, issues);
   checkJobNames(document, issues);
   checkWeakeningConditions(document, issues);

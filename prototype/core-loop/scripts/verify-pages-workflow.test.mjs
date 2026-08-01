@@ -65,6 +65,33 @@ test('accepts the approved workflow document with no issues', () => {
   assert.deepEqual(validatePagesWorkflow(validDocument()), { ok: true, issues: [] });
 });
 
+test('top-level workflow rejects a shell default that neutralizes exact run steps', () => {
+  const document = clone(validDocument());
+  document.defaults = { run: { shell: 'bash {0} || true' } };
+
+  const result = validatePagesWorkflow(document);
+  assert.equal(result.ok, false);
+  assert.ok(result.issues.some((current) => current.path === 'workflow'));
+});
+
+test('top-level workflow rejects env that can change command behavior', () => {
+  const document = clone(validDocument());
+  document.env = { NODE_OPTIONS: '--require ./bypass.cjs' };
+
+  const result = validatePagesWorkflow(document);
+  assert.equal(result.ok, false);
+  assert.ok(result.issues.some((current) => current.path === 'workflow'));
+});
+
+test('top-level workflow requires the approved workflow name', () => {
+  const document = clone(validDocument());
+  document.name = 'Deploy bypass';
+
+  const result = validatePagesWorkflow(document);
+  assert.equal(result.ok, false);
+  assert.ok(result.issues.some((current) => current.path === 'name'));
+});
+
 test('rejects an extra trigger alongside workflow_dispatch', () => {
   const document = clone(validDocument());
   document.on.push = { branches: ['main'] };
