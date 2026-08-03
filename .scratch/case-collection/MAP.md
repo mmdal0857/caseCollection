@@ -81,6 +81,7 @@ Labels: wayfinder:map
 - `[검증]` [GitHub Pages 배포 파이프라인](issues/33-github-pages-deploy-pipeline.md) — `workflow_dispatch` 수동 트리거와 GitHub Actions Pages를 채택하고, `prototype/core-loop/dist`만 `/caseCollection/` base로 게시한다. schema·release-tool tests·smoke 11종·source/dist 경계·typecheck·build를 배포 gate로 강제했으며, clean Linux runner에서 드러난 Windows 절대 원문 의존은 byte-identical 저장소 fixture로 제거했다. 실제 Actions build/deploy와 공개 URL `https://mmdal0857.github.io/caseCollection/`의 200 응답·실브라우저 완주까지 검증했다. Higgsfield는 별도 수동 배포로 유지. **/ 기각**: main push·release tag 자동 트리거, `gh-pages` 브랜치 게시, 현재 단계의 커스텀 도메인.
 - `[검증]` [사용자 노출 영문 카피 한국어화](issues/36-korean-ui-copy-cleanup.md) — 일반 플레이·저장 복구 화면의 영문 카피를 한국어로 통일하고, 내부 식별자는 유지한 채 `smoke:korean-ui`를 release gate에 편입했다.
 - `[검증]` [집은 카드 상세 판독창](issues/37-picked-card-detail-panel.md) — 핸드의 선택 카드 아트를 고정 썸네일로 표시하고, 플레이 중에도 영구 컬렉션의 알려진/미해금 측면과 카드별 오답 이력을 모달 판독창에서 확인하도록 구현했다. 대여 카드는 측면을 누출하지 않으며 세 가지 닫기와 트리거 초점 복귀를 실제 브라우저에서 검증했다.
+- `[검증]` [패턴·힌트 카드 시각 규칙 확정](issues/34-pattern-hint-card-art.md) — 패턴 4종은 가설 선언용 의미 칩, 힌트 2종은 런 액션 버튼으로 유지해 전용 일러스트 대상에서 제외했다. 6개 ID는 `artPolicy:"semantic-ui"`인 disabled adjunct로 보존하고 검증기·배치가 생성 프롬프트와 아트를 요구하지 않도록 실행 검증했다. **/ 기각**: 패턴 구조 도상·상징 오브제·타이포그래피 일러스트, 전용 스타일 키, 힌트 카드화, 매니페스트 행 삭제.
 
 ## Not yet specified
 

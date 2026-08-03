@@ -17,22 +17,23 @@ export function validateManifest(rows, contentSource) {
     if (seen.has(row.id)) errors.push(`duplicate id: ${row.id}`);
     seen.add(row.id);
 
-    if (row.composition !== 'single' && row.composition !== 'group') {
-      errors.push(`${row.id}: composition must be single or group`);
-    }
-
     if (row.category === 'clue') {
       clues += 1;
+      if (row.composition !== 'single' && row.composition !== 'group') {
+        errors.push(`${row.id}: composition must be single or group`);
+      }
       if (row.enabled !== true) errors.push(`${row.id}: clue must be enabled`);
+      if (typeof row.description !== 'string' || row.description.trim() === '') {
+        errors.push(`${row.id}: description is required`);
+      }
     } else if (row.category === 'adjunct') {
       adjuncts += 1;
       if (row.enabled !== false) errors.push(`${row.id}: adjunct must be disabled`);
+      if (row.artPolicy !== 'semantic-ui') {
+        errors.push(`${row.id}: adjunct artPolicy must be semantic-ui`);
+      }
     } else {
       errors.push(`${row.id}: category must be clue or adjunct`);
-    }
-
-    if (typeof row.description !== 'string' || row.description.trim() === '') {
-      errors.push(`${row.id}: description is required`);
     }
   }
 

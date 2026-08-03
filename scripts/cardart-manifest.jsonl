@@ -18,9 +18,9 @@
 {"id":"tod_gap","category":"clue","enabled":true,"description":"an open-faced pocket watch with a plain enamel dial and slender hands, the case scratched and the bow worn thin, chain absent","composition":"single"}
 {"id":"handwriting_match","category":"clue","enabled":true,"description":"two narrow slips of paper bearing lines of illegible ink handwriting, laid one above the other as one comparison group, the pen strokes pressed hard enough to emboss the paper","composition":"group"}
 {"id":"burned_note","category":"clue","enabled":true,"description":"a small scrap of paper charred brittle and black around every edge, the surface flaked away in patches, faint impressed pen strokes still raised across what remains","composition":"single"}
-{"id":"locked-room","category":"adjunct","enabled":false,"description":"a heavy hand-forged iron door bolt seated in its keeper plate, the shaft pitted with rust, square-headed rivets through the mounting strap","composition":"single"}
-{"id":"false-alibi","category":"adjunct","enabled":false,"description":"a printed theatre admission stub of thin card, one edge torn away, row and seat number represented by illegible marks, the corner rubbed round","composition":"single"}
-{"id":"invisible-man","category":"adjunct","enabled":false,"description":"a tailor's dress form of unbleached canvas over a padded torso, mounted on a turned wooden stand, with no head and no arms","composition":"single"}
-{"id":"staged-disappearance","category":"adjunct","enabled":false,"description":"a heavy wool overcoat lying crumpled, the cloth dark and sodden with water, one sleeve folded under itself, water beading along the hem","composition":"single"}
-{"id":"analysis","category":"adjunct","enabled":false,"description":"a brass-framed magnifying glass with a turned wooden handle, the brass dulled and the lens finely scratched","composition":"single"}
-{"id":"tipoff","category":"adjunct","enabled":false,"description":"a plain sealed envelope of cheap thin paper, unaddressed and unmarked, one corner creased over, the flap gummed shut","composition":"single"}
+{"id":"locked-room","category":"adjunct","enabled":false,"artPolicy":"semantic-ui"}
+{"id":"false-alibi","category":"adjunct","enabled":false,"artPolicy":"semantic-ui"}
+{"id":"invisible-man","category":"adjunct","enabled":false,"artPolicy":"semantic-ui"}
+{"id":"staged-disappearance","category":"adjunct","enabled":false,"artPolicy":"semantic-ui"}
+{"id":"analysis","category":"adjunct","enabled":false,"artPolicy":"semantic-ui"}
+{"id":"tipoff","category":"adjunct","enabled":false,"artPolicy":"semantic-ui"}

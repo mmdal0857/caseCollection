@@ -11,7 +11,7 @@ const { planBatch, resolveHiggsfieldBin } = cardArtBatch;
 const rows = [
   { id: 'alpha', category: 'clue', enabled: true, description: 'A', composition: 'single' },
   { id: 'beta', category: 'clue', enabled: true, description: 'B', composition: 'group' },
-  { id: 'pattern', category: 'adjunct', enabled: false, description: 'P', composition: 'single' },
+  { id: 'pattern', category: 'adjunct', enabled: false, artPolicy: 'semantic-ui' },
 ];
 
 test('plans every enabled clue when no IDs are specified', () => {
