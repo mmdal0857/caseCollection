@@ -96,7 +96,7 @@ bash scripts/cardart-generate.sh <card-id> "<object description>" single
 Operational constraints:
 
 - `scripts/cardart-manifest.jsonl` is the generation inventory and must match `content.ts` IDs.
-- Enabled clue rows generate by default; disabled adjunct rows do not.
+- Enabled clue rows generate by default. Disabled pattern and hint adjunct rows are intentionally `artPolicy: "semantic-ui"`: they retain IDs for content validation but have no generation prompt or image job, because patterns are hypothesis UI and hints are run actions rather than object-art cards.
 - `cardart-generate.sh` must fail if the style key is absent.
 - The current production choice documented by source is Higgsfield `gpt_image_2`, low, 3:4, 1k. Older plans naming `nano_banana_pro` are historical.
 - The batch script locates Higgsfield through `HIGGSFIELD_BIN` or the APPDATA npm shim. Do not expose credential values.

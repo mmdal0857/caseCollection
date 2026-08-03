@@ -35,7 +35,7 @@ This architecture [executes the card and context rules](../domain/game-model.md)
 | Pure game engine | `src/lib/engine.ts` | Types, actions, reducer, tracks, placement, review/final submission, progression and interludes |
 | Rule and state helpers | `src/lib/facets.ts`, `dramaturgy.ts`, `persona.ts`, `josa.ts`, `collection.ts`, `run-session.ts` | Facet legality, reactions, Korean particles, durable collection and versioned run snapshots |
 | Authored content | `src/lib/content.ts`, `narrative-content.ts` | 20 clues, four patterns, four cases, hints, tracks, interludes and endings |
-| UI and audio | `src/lib/ui/*.svelte`, `src/app.css`, `audio.ts` | Home, collection, run screens, notebook, visual treatments, settings and browser audio with silent fallback |
+| UI and audio | `src/lib/ui/*.svelte`, `src/app.css`, `audio.ts` | Home, collection, run screens, notebook, selected-card detail drawer, visual treatments, settings and browser audio with silent fallback |
 | Pack tooling | `src/lib/datapack.ts`, `pack-storage.ts`, `schema/game-data-pack-v2.json` | Validate/merge v2 packs and store them for the developer-only pack screen; not normal game startup |
 | Disconnected experiment | `src/lib/scenario.ts` | Adjacent-card narrative composition, not imported by the current runtime |
 
@@ -68,6 +68,10 @@ The screen components are:
 - `InterludeScreen.svelte`: use authored actions within the interlude AP budget.
 - `EndScreen.svelte` and `RunSummaryScreen.svelte`: display GOOD/BAD outcome, then summary, collection, or Home.
 
+During case composition, `HandRail.svelte` keeps the selected card's thumbnail in the pickup readout; its control opens `CardDetailDrawer.svelte`. The drawer reuses the durable collection's facet slots and card-specific rejected interpretations, including a non-owning guest-card view, but does not dispatch reducer actions or alter selection rules. This UI relationship surfaces the [game model](../domain/game-model.md) during play without changing the player workflow.
+
+`ReactionBand.svelte` also renders the single neutral Raiden portrait supplied by `persona.ts`. The helper builds its URL from Vite’s public base through `publicAssetUrl`, so the required `public/assets/characters/raiden-neutral.webp` works on the GitHub Pages repository subpath as well as local hosting. The [testing guidance](../testing/guidance.md) covers the corresponding public-asset and release-closure checks; this is one neutral presentation asset, not evidence of state-specific portrait variants.
+
 This lifecycle is the runtime side of the [player workflow](../workflows/play-and-content.md).
 
 ## State and action boundary
@@ -80,7 +84,7 @@ The current UI effectively uses **immediate commitment**. Alternative `commit` a
 
 ## Runtime content and data-pack boundary
 
-`App.svelte` imports `CONTENT` directly from `content.ts` for ordinary gameplay. `?data-packs=1` instead renders `DataPackScreen`, which validates and merges ordered v2 packs and persists selected pack bodies through `pack-storage.ts`. That developer-only output is not passed to normal `initGame` or reducer calls.
+`App.svelte` imports `CONTENT` directly from `content.ts` for ordinary gameplay. `?data-packs=1` instead renders `DataPackScreen`, which validates and merges ordered v2 packs and persists selected pack bodies through `pack-storage.ts`. Before IndexedDB writes, that seam JSON-serializes and reparses the pack body so a Svelte reactive proxy cannot reach IndexedDB's structured-clone boundary. That developer-only output is not passed to normal `initGame` or reducer calls.
 
 ```mermaid
 flowchart TD
