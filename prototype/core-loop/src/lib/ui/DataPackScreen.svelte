@@ -60,7 +60,7 @@
         next.push({
           fileName: file.name,
           json: {
-            __parseError: `JSON parse failed: ${file.name}`,
+            __parseError: `JSON 해석 실패: ${file.name}`,
           },
         });
       }
@@ -118,7 +118,7 @@
     <p class="eyebrow">개발자 도구</p>
     <h1>데이터 팩</h1>
     <p>
-      선택한 순서대로 base 뒤에 검증합니다. 오류가 있는 팩은 활성화되지
+      선택한 순서대로 기본 팩 뒤에 검증합니다. 오류가 있는 팩은 활성화되지
       않습니다.
     </p>
   </header>
@@ -142,7 +142,7 @@
             <code>{issue.code}</code> — {issue.message}
             {#if issue.id}
               <button type="button" onclick={() => removeMissingPack(issue.id!)}>
-                manifest에서 비활성화
+                활성 목록에서 비활성화
               </button>
             {/if}
           </li>

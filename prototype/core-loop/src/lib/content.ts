@@ -576,7 +576,7 @@ export const CONTENT: RunContent = {
       id: 'interview',
       kind: 'interview',
       label: '참고인 면담',
-      desc: '다음 사건의 게스트 allowlist에서 측면 하나를 빌린다.',
+      desc: '다음 사건의 대여 가능 목록에서 측면 하나를 빌린다.',
       cost: 1,
       effects: {},
       once: true,

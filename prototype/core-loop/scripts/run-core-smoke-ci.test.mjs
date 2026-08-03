@@ -4,7 +4,11 @@ import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
 
-import { runChecked, runSmokeSuite } from './run-core-smoke-ci.mjs';
+import {
+  CORE_SMOKE_SCRIPTS,
+  runChecked,
+  runSmokeSuite,
+} from './run-core-smoke-ci.mjs';
 
 function createSink() {
   const chunks = [];
@@ -18,6 +22,10 @@ function createSink() {
     },
   };
 }
+
+test('includes the Korean UI copy audit in the strict smoke suite', () => {
+  assert.ok(CORE_SMOKE_SCRIPTS.includes('smoke:korean-ui'));
+});
 
 async function writeScript(dir, name, body) {
   const filePath = path.join(dir, `${name}.mjs`);

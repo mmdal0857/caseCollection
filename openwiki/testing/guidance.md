@@ -71,7 +71,7 @@ This suite does maintain a failure count and exits nonzero on failure. It verifi
 
 ### CI and release gates
 
-`npm run smoke:ci` runs the 11 smoke scripts configured in `scripts/run-core-smoke-ci.mjs` sequentially. Unlike direct core-smoke invocation, it rejects a nonzero exit **or** a `FAIL` token printed by either output stream. The manual GitHub Pages workflow combines that strict smoke gate with `schema:check`, `test:release-tools`, source-release verification, type checking, build, and dist-release verification before it uploads `dist`; the [operations runbook](../operations/runbook.md) records the exact command order.
+`npm run smoke:ci` runs the 12 smoke scripts configured in `scripts/run-core-smoke-ci.mjs` sequentially, including the Korean UI copy audit. Unlike direct core-smoke invocation, it rejects a nonzero exit **or** a `FAIL` token printed by either output stream. The manual GitHub Pages workflow combines that strict smoke gate with `schema:check`, `test:release-tools`, source-release verification, type checking, build, and dist-release verification before it uploads `dist`; the [operations runbook](../operations/runbook.md) records the exact command order.
 
 `release:verify-source` validates the public release boundary before building: enabled card promotions and hashes, required backgrounds, audio manifest/runtime assets, containment, and absence of candidate/source paths or links under `public`. `release:verify-dist` checks the built artifact's equivalent closure and rejects owned root-absolute `/assets/` or `/audio/` URLs. `release:verify-pages-workflow` is covered by the release-tool test suite and verifies the committed workflow cannot weaken its trigger, command order, permissions, or gates.
 
@@ -97,7 +97,7 @@ The Python extraction skeleton has no dedicated test suite on main. Its default 
 |---|---|---|
 | `engine.ts`, `facets.ts`, `content.ts` | Both smoke suites, `tsc`, build | Compare behavior to governing tickets and [game model](../domain/game-model.md) |
 | `datapack.ts` or Schema | Data-pack smoke, core smoke, `tsc`, build | Confirm enum synchronization and post-merge references |
-| Svelte components or `app.css` | Both smoke suites, `tsc`, build | Browser play at representative viewport; inspect overlap, controls, state feedback and Korean spacing |
+| Svelte components or `app.css` | Both smoke suites, `smoke:korean-ui`, `tsc`, build | Browser play at representative viewport; inspect overlap, controls, state feedback and Korean spacing |
 | `josa.ts` or sentence content | Both smoke suites and build | Render correct, wrong and empty-slot names with/without final consonants |
 | Art scripts/manifest | Paired Node tests and manifest check | Prefer batch `--dry-run`; confirm style-key preflight and output boundary |
 | Extraction script | Inventory and optional draft validation | Confirm STUB status is not misrepresented; avoid accidental base-ID override |

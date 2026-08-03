@@ -302,7 +302,7 @@
 
     {#if game.casePhase === 'review' && game.review}
       <div class="review-panel" role="status">
-        <p class="eyebrow">CASE REVIEW</p>
+        <p class="eyebrow">사건 검토</p>
         <h2>
           {game.review.kind === 'sound'
             ? '이론이 성립한다'

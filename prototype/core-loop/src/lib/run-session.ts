@@ -111,10 +111,10 @@ export function loadRunSnapshot(
   try {
     parsed = JSON.parse(raw);
   } catch {
-    return issue('CORRUPT_JSON', '저장 데이터가 올바른 JSON이 아니다.', raw);
+    return issue('CORRUPT_JSON', '저장 데이터가 손상되었습니다.', raw);
   }
   if (!isRecord(parsed)) {
-    return issue('STATE_INVALID', '저장 envelope가 객체가 아니다.', raw);
+    return issue('STATE_INVALID', '저장된 수사 상태가 유효하지 않습니다.', raw);
   }
   if (
     typeof parsed.version === 'number' &&
@@ -122,7 +122,7 @@ export function loadRunSnapshot(
   ) {
     return issue(
       'FUTURE_VERSION',
-      `지원하지 않는 미래 저장 버전 ${parsed.version}이다.`,
+      '현재 버전에서 읽을 수 없는 저장 데이터입니다.',
       raw,
     );
   }
@@ -132,7 +132,7 @@ export function loadRunSnapshot(
   ) {
     return issue(
       'INCOMPATIBLE_FORMAT',
-      'RunSnapshot@1 형식이 아니다.',
+      '호환되지 않는 저장 데이터 형식입니다.',
       raw,
     );
   }
@@ -144,7 +144,7 @@ export function loadRunSnapshot(
   ) {
     return issue(
       'STATE_INVALID',
-      '저장된 상태 또는 action sequence가 유효하지 않다.',
+      '저장된 수사 상태가 유효하지 않습니다.',
       raw,
     );
   }

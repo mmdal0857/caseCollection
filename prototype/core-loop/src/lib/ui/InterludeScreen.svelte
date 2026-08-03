@@ -33,13 +33,13 @@
   };
   const kindDescription: Record<InterludeActionKind, string> = {
     recon: '다음 사건의 공개 허용 복선을 확인한다.',
-    interview: '다음 사건 guest allowlist의 측면 하나를 빌린다.',
+    interview: '다음 사건의 대여 가능 목록에서 측면 하나를 빌린다.',
     stabilize: '현재 실패축을 한 단계 완화한다.',
   };
 </script>
 
 <section class="screen interlude">
-  <p class="eyebrow">INTERLUDE · 3선 2택</p>
+  <p class="eyebrow">막간 수사 · 3선 2택</p>
   <h1>{definition?.presentation ?? event?.title ?? '다음 사건을 준비한다'}</h1>
   <p class="lede">{event?.desc}</p>
 
@@ -86,7 +86,7 @@
         <span class="action-kind">{kindLabel[action.kind]}</span>
         <b>{action.label}</b>
         <span>{'desc' in action ? action.desc : kindDescription[action.kind]}</span>
-        <i>{chosen ? '선택 완료' : 'AP 1'}</i>
+        <i>{chosen ? '선택 완료' : '행동력 1'}</i>
       </button>
     {/each}
   </div>

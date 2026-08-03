@@ -109,8 +109,8 @@
       (replacingSnapshot || replacingCollection) &&
       !window.confirm(
         replacingCollection
-          ? '기존 run과 읽을 수 없는 컬렉션 원문을 보존 종료하고 새 수사 상태로 교체할까요?'
-          : '기존 run을 끝내고 새 수사를 시작할까요?',
+          ? '기존 수사 기록과 읽을 수 없는 컬렉션 원문을 보존 종료하고 새 수사 상태로 교체할까요?'
+          : '기존 수사 기록을 끝내고 새 수사를 시작할까요?',
       )
     ) {
       return;
@@ -212,7 +212,7 @@
 {:else}
 <div class="shell">
   <header class="topbar">
-    <span class="proto-mark">CASE COLLECTION</span>
+    <span class="proto-mark">단서수집가</span>
     <span class="run-progress">사건 {Math.min(game.caseIndex + 1, CONTENT.cases.length)}/{CONTENT.cases.length}</span>
     <button class="topbar-action" onclick={() => openCollection(game.screen === 'summary' ? 'summary' : 'run')}>
       컬렉션

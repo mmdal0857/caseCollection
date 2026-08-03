@@ -58,7 +58,7 @@ export async function resolveManifest(
       issues.push({
         code: 'PACK_BODY_MISSING',
         id,
-        message: `활성 팩 body가 없다: ${id}`,
+        message: `활성 팩 내용이 없다: ${id}`,
       });
     } else {
       packs.push(pack);

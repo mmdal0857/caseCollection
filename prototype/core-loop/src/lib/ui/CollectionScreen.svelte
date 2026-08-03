@@ -48,7 +48,7 @@
   <header class="collection-title">
     <button class="back-button" onclick={onback} aria-label="이전 화면">←</button>
     <div>
-      <p class="eyebrow">COLLECTION</p>
+      <p class="eyebrow">컬렉션</p>
       <h1>컬렉션과 수사 노트</h1>
     </div>
   </header>

@@ -11,7 +11,7 @@
 
 <section class="screen briefing">
   <p class="eyebrow">
-    {game.caseIndex === content.cases.length - 1 ? 'BOSS BRIEFING' : `CASE ${game.caseIndex + 1}`}
+    {game.caseIndex === content.cases.length - 1 ? '최종 사건 브리핑' : `사건 ${game.caseIndex + 1}`}
   </p>
   <h1>{definition.title}</h1>
   <p class="lede">{definition.intro}</p>

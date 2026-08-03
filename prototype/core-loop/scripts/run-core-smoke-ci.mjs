@@ -20,6 +20,7 @@ export const CORE_SMOKE_SCRIPTS = [
   'smoke:collection',
   'smoke:narrative',
   'smoke:audio',
+  'smoke:korean-ui',
   'smoke:public-assets',
   'smoke:case-generator-e2e',
 ];

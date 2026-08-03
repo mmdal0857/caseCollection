@@ -79,6 +79,7 @@ Labels: wayfinder:map
 - `[검증]` [case 생성 E2E 데이터팩 프로토타입](issues/28-case-generator-e2e-datapack-prototype.md) — Project Gutenberg 204 고정 원문과 실제 sLLM selector/presenter/taste transcript를 승인 입력으로 저장하고, 두 replay를 byte-identical하게 emit했다. 최신 `game-data-pack@2`와 교차해 `boss→generated case` 진입 인터루드까지 포함한 `cases=5, overrides=0`을 검증했다. / 유예: `prototype/case-generator-shape`의 main 병합은 별도 사용자 결정.
 
 - `[검증]` [GitHub Pages 배포 파이프라인](issues/33-github-pages-deploy-pipeline.md) — `workflow_dispatch` 수동 트리거와 GitHub Actions Pages를 채택하고, `prototype/core-loop/dist`만 `/caseCollection/` base로 게시한다. schema·release-tool tests·smoke 11종·source/dist 경계·typecheck·build를 배포 gate로 강제했으며, clean Linux runner에서 드러난 Windows 절대 원문 의존은 byte-identical 저장소 fixture로 제거했다. 실제 Actions build/deploy와 공개 URL `https://mmdal0857.github.io/caseCollection/`의 200 응답·실브라우저 완주까지 검증했다. Higgsfield는 별도 수동 배포로 유지. **/ 기각**: main push·release tag 자동 트리거, `gh-pages` 브랜치 게시, 현재 단계의 커스텀 도메인.
+- `[검증]` [사용자 노출 영문 카피 한국어화](issues/36-korean-ui-copy-cleanup.md) — 일반 플레이·저장 복구 화면의 영문 카피를 한국어로 통일하고, 내부 식별자는 유지한 채 `smoke:korean-ui`를 release gate에 편입했다.
 
 ## Not yet specified
 
