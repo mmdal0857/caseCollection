@@ -194,11 +194,11 @@
   }
 </script>
 
-<AudioSettings {audio} />
-
 {#if showDataPacks}
+  <AudioSettings {audio} />
   <DataPackScreen basePack={packFromContent('base', CONTENT)} />
 {:else if view === 'home'}
+  <AudioSettings {audio} />
   <HomeScreen
     canContinue={snapshotLoad.snapshot !== null}
     snapshotIssue={snapshotLoad.issue}
@@ -208,12 +208,14 @@
     oncollection={() => openCollection('home')}
   />
 {:else if view === 'collection'}
+  <AudioSettings {audio} />
   <CollectionScreen {collection} content={CONTENT} onback={closeCollection} />
 {:else}
 <div class="shell">
   <header class="topbar">
     <span class="proto-mark">단서수집가</span>
     <span class="run-progress">사건 {Math.min(game.caseIndex + 1, CONTENT.cases.length)}/{CONTENT.cases.length}</span>
+    <AudioSettings {audio} />
     <button class="topbar-action" onclick={() => openCollection(game.screen === 'summary' ? 'summary' : 'run')}>
       컬렉션
     </button>

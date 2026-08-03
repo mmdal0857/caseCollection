@@ -8,6 +8,7 @@ import sharp from 'sharp';
 import { PROMOTION_OPTIONS } from './promote-card-art.mjs';
 
 const BACKGROUNDS = ['trust-low.webp', 'trust-mid.webp', 'trust-high.webp'];
+const CHARACTER_PORTRAITS = ['raiden-neutral.webp'];
 const ARTIFACT_LIMIT_BYTES = 64 * 1024 * 1024;
 const FORBIDDEN_SEGMENTS = new Set(['cardart', 'benchmark', 'protoart', 'audio-candidates']);
 
@@ -237,6 +238,16 @@ export async function verifySourceRelease(options) {
     }
   }
 
+  for (const portrait of CHARACTER_PORTRAITS) {
+    const portraitPath = path.join(publicRoot, 'assets/characters', portrait);
+    const portraitInspection = await inspectContainedPath(publicRoot, portraitPath);
+    if (!portraitInspection.exists) {
+      issue(issues, `public/assets/characters/${portrait}`, 'missing required character portrait');
+    } else if (!portraitInspection.contained) {
+      issue(issues, `public/assets/characters/${portrait}`, 'required file resolves outside public root');
+    }
+  }
+
   const audioManifestPath = path.join(publicRoot, 'audio/audio-manifest.json');
   const audioManifestInspection = await inspectContainedPath(publicRoot, audioManifestPath);
   if (!audioManifestInspection.exists) {
@@ -288,6 +299,7 @@ export async function verifyDistRelease(options) {
     'index.html',
     ...rows.map((row) => `assets/cards/${row.id}.webp`),
     ...BACKGROUNDS.map((name) => `assets/backgrounds/${name}`),
+    ...CHARACTER_PORTRAITS.map((name) => `assets/characters/${name}`),
     'audio/audio-manifest.json',
   ];
   const audioManifestFile = files.get('audio/audio-manifest.json');

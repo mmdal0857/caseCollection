@@ -1,9 +1,16 @@
-// PROTOTYPE — "캐릭터에 달라붙는 유머" (사용자 방향).
 // 반응이 익명 내레이션이 아니라 '레이든이 반응하는 것'으로 느껴지게 하는 페르소나 층.
-// 레이든: 38세, 지쳐 있고 건조하며 능청스러운 탐정. 어이없는 추리엔 몸짓으로 대꾸한다.
-// (프로토용 페르소나 — 정식은 OUT 위키 raiden.md의 speech_style·personality_tags 반영 예정.)
+// OUT 위키 정본: 38세, 냉정·호기심·건조한 유머, 짧은 단정형 화법.
+
+import { publicAssetUrl } from './public-assets';
 
 export const RAIDEN = '레이든';
+
+export function raidenPortrait(base: string): { src: string; alt: string } {
+  return {
+    src: publicAssetUrl('assets/characters/raiden-neutral.webp', base),
+    alt: RAIDEN,
+  };
+}
 
 // 어이없음의 강도에 따라 붙는 레이든의 반응 비트. 결정론적으로 골라 리렌더 안정.
 const ASIDES_MILD = [
@@ -13,7 +20,7 @@ const ASIDES_MILD = [
   '레이든은 커피가 식은 걸 알아챘다.',
 ];
 const ASIDES_HARSH = [
-  '레이든은 파이프에 불을 붙였다. 긴 하루가 되겠군.',
+  '레이든은 잠시 눈을 감았다. 긴 하루가 되겠군.',
   '레이든은 한숨을 삼키고 다음 카드를 기다렸다.',
   '레이든은 수첩을 덮었다가, 다시 폈다.',
   '레이든은 관자놀이를 눌렀다. 이런 조수는 처음이었다.',

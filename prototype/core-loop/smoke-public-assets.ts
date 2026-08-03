@@ -4,6 +4,7 @@ import {
   rebaseAudioManifest,
 } from './src/lib/public-assets';
 import type { AudioManifest } from './src/lib/audio';
+import * as persona from './src/lib/persona';
 
 assert.equal(publicAssetUrl('/assets/cards/a.webp', './'), './assets/cards/a.webp');
 assert.equal(publicAssetUrl('assets/cards/a.webp', '/caseCollection/'), '/caseCollection/assets/cards/a.webp');
@@ -29,4 +30,16 @@ assert.equal(rebased.assets[0].files.wav.path, '/caseCollection/audio/a.wav');
 assert.equal(rebased.assets[0].files.ogg.path, '/caseCollection/audio/a.ogg');
 assert.equal(rebased.assets[0].files.mp3.path, 'https://cdn.example/a.mp3');
 assert.equal(original.assets[0].files.wav.path, '/audio/a.wav');
+
+const raidenPortrait = (persona as {
+  raidenPortrait?: (base: string) => { src: string; alt: string };
+}).raidenPortrait;
+assert.equal(typeof raidenPortrait, 'function');
+assert.deepEqual(raidenPortrait?.('/caseCollection/'), {
+  src: '/caseCollection/assets/characters/raiden-neutral.webp',
+  alt: '레이든',
+});
+for (let index = 0; index < 256; index += 1) {
+  assert.doesNotMatch(persona.raidenAside(`raiden-${index}`, true), /파이프/);
+}
 console.log('PASS public asset URLs');

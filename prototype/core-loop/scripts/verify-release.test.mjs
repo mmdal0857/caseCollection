@@ -8,6 +8,7 @@ import test from 'node:test';
 import { verifyDistRelease, verifySourceRelease } from './verify-release.mjs';
 
 const BACKGROUNDS = ['trust-low.webp', 'trust-mid.webp', 'trust-high.webp'];
+const CHARACTER_PORTRAITS = ['raiden-neutral.webp'];
 
 function sha256(value) {
   return createHash('sha256').update(value).digest('hex');
@@ -35,9 +36,11 @@ async function createReleaseFixture(t) {
   await writeFile(manifestPath, `${JSON.stringify({ id: 'alpha', enabled: true })}\n`);
   await mkdir(path.join(publicRoot, 'assets/cards'), { recursive: true });
   await mkdir(path.join(publicRoot, 'assets/backgrounds'), { recursive: true });
+  await mkdir(path.join(publicRoot, 'assets/characters'), { recursive: true });
   await mkdir(path.join(publicRoot, 'audio'), { recursive: true });
   await writeFile(path.join(publicRoot, 'assets/cards/alpha.webp'), cardBytes);
   await Promise.all(BACKGROUNDS.map((name) => writeFile(path.join(publicRoot, 'assets/backgrounds', name), name)));
+  await Promise.all(CHARACTER_PORTRAITS.map((name) => writeFile(path.join(publicRoot, 'assets/characters', name), name)));
   await writeFile(path.join(publicRoot, 'audio/audio-manifest.json'), JSON.stringify(audioManifest));
   await writeFile(path.join(publicRoot, 'audio/cue.ogg'), 'ogg');
   await writeFile(path.join(publicRoot, 'audio/cue.mp3'), 'mp3');
@@ -64,10 +67,12 @@ async function populateDist(fixture, extraFiles = {}) {
   const { distRoot, cardBytes, audioManifest } = fixture;
   await mkdir(path.join(distRoot, 'assets/cards'), { recursive: true });
   await mkdir(path.join(distRoot, 'assets/backgrounds'), { recursive: true });
+  await mkdir(path.join(distRoot, 'assets/characters'), { recursive: true });
   await mkdir(path.join(distRoot, 'audio'), { recursive: true });
   await writeFile(path.join(distRoot, 'index.html'), '<!doctype html>');
   await writeFile(path.join(distRoot, 'assets/cards/alpha.webp'), cardBytes);
   await Promise.all(BACKGROUNDS.map((name) => writeFile(path.join(distRoot, 'assets/backgrounds', name), name)));
+  await Promise.all(CHARACTER_PORTRAITS.map((name) => writeFile(path.join(distRoot, 'assets/characters', name), name)));
   await writeFile(path.join(distRoot, 'audio/audio-manifest.json'), JSON.stringify(audioManifest));
   await writeFile(path.join(distRoot, 'audio/cue.ogg'), 'ogg');
   await writeFile(path.join(distRoot, 'audio/cue.mp3'), 'mp3');
@@ -125,6 +130,15 @@ test('reports a missing required trust background', async (t) => {
   ]);
 });
 
+test('reports a missing required Raiden portrait in source assets', async (t) => {
+  const fixture = await createReleaseFixture(t);
+  await unlink(path.join(fixture.publicRoot, 'assets/characters/raiden-neutral.webp'));
+
+  assert.deepEqual((await verifySourceRelease(fixture.sourceOptions)).issues, [
+    issue('public/assets/characters/raiden-neutral.webp', 'missing required character portrait'),
+  ]);
+});
+
 test('reports an audio-manifest OGG runtime asset that is missing', async (t) => {
   const fixture = await createReleaseFixture(t);
   await unlink(path.join(fixture.publicRoot, 'audio/cue.ogg'));
@@ -164,6 +178,16 @@ test('reports a textual dist asset with an owned root-absolute asset URL', async
 
   assert.deepEqual((await verifyDistRelease(fixture.distOptions)).issues, [
     issue('assets/app.js', 'contains root-absolute owned asset URL'),
+  ]);
+});
+
+test('reports a missing required Raiden portrait in dist', async (t) => {
+  const fixture = await createReleaseFixture(t);
+  await populateDist(fixture);
+  await unlink(path.join(fixture.distRoot, 'assets/characters/raiden-neutral.webp'));
+
+  assert.deepEqual((await verifyDistRelease(fixture.distOptions)).issues, [
+    issue('assets/characters/raiden-neutral.webp', 'missing required dist artifact'),
   ]);
 });
 
