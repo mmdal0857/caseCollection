@@ -1,6 +1,6 @@
 # MVP 출시 통합 점검
 
-Status: open
+Status: closed
 Labels: wayfinder:grilling
 Assignee: Codex
 Blocked-by: 33, 34, 36
@@ -24,3 +24,13 @@ Blocked-by: 33, 34, 36
 - 2026-08-03: 실제 화면에 남은 영문 카피가 발견되어 [36](36-korean-ui-copy-cleanup.md)을 발급하고 이 티켓의 blocker로 추가했다. 2026-08-02 데모 완주 기록은 화면 동작과 레이아웃을 증명하지만 한국어 우선 카피 완료를 증명하지 않으므로, 36이 닫히기 전에는 이 출시 통합 티켓도 닫지 않는다.
 - 2026-08-04: 사용자가 OUT의 `raiden_neutral/wry/grim` 세 파일이 동일한 중립 이미지라는 실측을 확인하고, 중립 초상 1장만 반응 띠에 연결하며 존재하지 않는 표정 차이는 가장하지 않는 안을 확정했다. OUT 위키와 충돌하던 파이프 묘사도 제거한다.
 - 2026-08-04 로컬 production 통합 점검 완료: 같은 `dist`에서 Home → 새 수사 → Briefing → case 4개 → Interlude 3개 → GOOD Ending(`사건부 완결`) → Run Summary → Collection을 새 런으로 연속 완주했다. 결과는 사건 4/4·최종 제출 4회·보유 카드 16/20·알려진 측면 21/55였다. 1280×720과 1024×768에서 document overflow 0, 플레이 보드 하단 오차 0px, 반응 띠–핸드 간격 16px, 오디오 UI–핸드 겹침 0을 실측했다. 레이든 WebP·배경·카드·오디오 요청은 모두 200/304였고, 404는 앱 자산이 아닌 브라우저 기본 `favicon.ico`뿐이었다. 생성기 replay의 실제 `game-data-pack@2`도 개발자 UI에서 추가 46·상쇄 0·문제 0으로 저장되고 새로고침 뒤 IDB에서 재수화됐다. 최신 커밋의 GitHub Pages 배포·공개 URL 재검증은 외부 변경 승인을 기다린다.
+
+## Resolution
+
+2026-08-04 원래 확정 항목 전부를 최신 공개 빌드에서 검증하고 MVP 출시 통합 점검을 닫았다.
+
+1. 출시 통합 커밋 `de8bdb3`을 `main`에 게시하고 GitHub Actions [`30839116790`](https://github.com/mmdal0857/caseCollection/actions/runs/30839116790)을 수동 실행했다. clean Linux build job의 schema·release-tool 71개·strict smoke 12종·source/dist release 경계·typecheck·production build와 Pages deploy job이 모두 성공했다.
+2. 실제 배포 URL [`https://mmdal0857.github.io/caseCollection/`](https://mmdal0857.github.io/caseCollection/)에서 Home → 새 수사 → Briefing → case 4개 → Interlude 3개 → GOOD Ending(`사건부 완결`) → Run Summary → Collection을 새 저장소 컨텍스트로 완주했다. 네 사건 모두 `이론이 성립했습니다.`였고 결과는 사건 4/4·최종 제출 4회·보유 카드 16/20·알려진 측면 19/55였다. 컬렉션의 패턴 4종은 전용 아트 없이 의미 UI로 표시됐다.
+3. OUT의 세 표정 파일이 동일 이미지인 현실을 반영해 `raiden-neutral.webp` 한 장만 반응 띠에 연결했다. 가짜 표정 상태를 만들지 않았고, OUT 정본과 충돌한 파이프 묘사는 제거했다. 공개 자산 URL은 200이며 실제 접근성 트리에 `레이든` 이미지로 노출됐다.
+4. 오디오 매니페스트·음악·효과음과 배경·카드 자산 요청은 모두 200이었다. 사용자 요청에 따라 공개 플레이스루는 `caseCollection.audioSettings@1`의 `muted:true`, `master:0` 상태로 진행했다. 승인 replay에서 다시 만든 `game-data-pack@2`(output `66791aea…`, provenance `2a3e4a2b…`)는 공개 개발자 UI에서 추가 46·상쇄 0·문제 0으로 적용됐고, 새로고침 후 `generated.pg204-invisible-man.json`이 IndexedDB에서 재수화됐다.
+5. 배포본의 1024×768·1280×720 브라우저 창에서 document overflow 0, 플레이 보드 하단 오차 0px, 반응 띠–핸드 간격 16px, 오디오 UI–핸드 겹침 0을 실측했다. 공개 세션의 유일한 404와 콘솔 오류는 앱 범위 밖 루트 `favicon.ico` 요청 2건이었다.

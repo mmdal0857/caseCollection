@@ -82,6 +82,7 @@ Labels: wayfinder:map
 - `[검증]` [사용자 노출 영문 카피 한국어화](issues/36-korean-ui-copy-cleanup.md) — 일반 플레이·저장 복구 화면의 영문 카피를 한국어로 통일하고, 내부 식별자는 유지한 채 `smoke:korean-ui`를 release gate에 편입했다.
 - `[검증]` [집은 카드 상세 판독창](issues/37-picked-card-detail-panel.md) — 핸드의 선택 카드 아트를 고정 썸네일로 표시하고, 플레이 중에도 영구 컬렉션의 알려진/미해금 측면과 카드별 오답 이력을 모달 판독창에서 확인하도록 구현했다. 대여 카드는 측면을 누출하지 않으며 세 가지 닫기와 트리거 초점 복귀를 실제 브라우저에서 검증했다.
 - `[검증]` [패턴·힌트 카드 시각 규칙 확정](issues/34-pattern-hint-card-art.md) — 패턴 4종은 가설 선언용 의미 칩, 힌트 2종은 런 액션 버튼으로 유지해 전용 일러스트 대상에서 제외했다. 6개 ID는 `artPolicy:"semantic-ui"`인 disabled adjunct로 보존하고 검증기·배치가 생성 프롬프트와 아트를 요구하지 않도록 실행 검증했다. **/ 기각**: 패턴 구조 도상·상징 오브제·타이포그래피 일러스트, 전용 스타일 키, 힌트 카드화, 매니페스트 행 삭제.
+- `[검증]` [MVP 출시 통합 점검](issues/35-mvp-launch-integration-check.md) — `de8bdb3`을 Actions `30839116790`으로 Pages에 게시해 clean Linux 출시 게이트를 통과시켰고, 공개 URL에서 case 4개·Interlude 3개·GOOD Ending·요약·컬렉션을 완주했다. 동일 중립 OUT 이미지 1장만 레이든 반응 띠에 연결하고 가짜 표정·파이프 묘사를 배제했다. 오디오 OFF 상태의 실배선, 실제 `game-data-pack@2` 적용·IndexedDB 재수화, 두 뷰포트 overflow 0·반응 띠/핸드 간격 16px·오디오 UI 겹침 0까지 검증했다.
 
 ## Not yet specified
 
