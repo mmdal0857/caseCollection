@@ -72,6 +72,7 @@ body {
 .stage-background.trust-mid { background: #0b0d0c; }
 .stage-background.trust-high { background: #0d110f; }
 .screen-holder { position: relative; z-index: 1; }
+.screen-holder:has(.drawer-scrim) { z-index: 90; }
 .topbar { background: #0c0b09; }
 
 .play-layers {
@@ -126,10 +127,22 @@ body {
    고른 뒤 슬롯을 누를 때까지 화면이 아무 말도 안 한다(ticket 31 ⓐ). 새 층이 아니라
    핸드 레일 안이므로 20의 층 예산은 그대로다. */
 .picked-readout {
-  display: flex; align-items: baseline; flex-wrap: wrap; gap: 2px 8px; margin: 0 0 8px; padding: 5px 9px;
+  position: relative; display: flex; align-items: center; flex-wrap: wrap; gap: 2px 8px;
+  min-height: 52px; margin: 0 0 8px; padding: 5px 9px 5px 57px;
   border: 1px solid var(--gold); border-left-width: 3px; border-radius: 5px;
   background: rgb(216 180 90 / 9%); font-size: 12px; color: var(--ink);
 }
+.picked-thumb {
+  position: absolute; left: 8px; top: 50%; transform: translateY(-50%);
+  width: 40px; height: 52px; overflow: hidden; padding: 0;
+  border: 2px solid var(--ink); border-radius: 4px; background: var(--panel);
+}
+.picked-thumb img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.picked-thumb.suit-physical { border-style: solid; }
+.picked-thumb.suit-behavioral { border-style: dashed; }
+.picked-thumb.suit-documentary { border-style: double; border-width: 4px; }
+.picked-thumb.suit-forensic { border-style: dotted; }
+.picked-thumb:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 .picked-readout b { color: var(--gold); }
 .picked-match { color: var(--dim); }
 .picked-match.lit { color: var(--gold); font-weight: 700; }
@@ -1108,15 +1121,16 @@ button:focus-visible {
 .drawer-scrim {
   position: fixed;
   inset: 0;
-  z-index: 20;
+  z-index: 90;
   width: 100%;
   height: 100%;
   border: 0;
   background: rgb(0 0 0 / 72%);
 }
-.notebook-drawer {
+.notebook-drawer,
+.card-detail-drawer {
   position: fixed;
-  z-index: 21;
+  z-index: 91;
   top: 0;
   right: 0;
   width: min(92vw, 520px);
@@ -1126,14 +1140,23 @@ button:focus-visible {
   border-left: 2px solid var(--gold);
   background: #14120f;
 }
-.notebook-drawer > header {
+.notebook-drawer > header,
+.card-detail-drawer > header {
   display: flex;
   align-items: start;
   justify-content: space-between;
   gap: var(--space-3);
   margin-bottom: var(--space-4);
 }
-.notebook-drawer > header button { width: 44px; padding: 0; font-size: 24px; }
+.notebook-drawer > header button,
+.card-detail-drawer > header button { width: 44px; padding: 0; font-size: 24px; }
+.card-detail-card { display: flex; justify-content: center; margin-bottom: var(--space-4); }
+.card-detail-card .card { width: min(100%, 240px); min-height: 320px; }
+.card-detail-silhouette {
+  display: grid; place-items: center; gap: var(--space-2); min-height: 150px;
+  padding: var(--space-4); border: 1px dashed var(--line); color: var(--dim); text-align: center;
+}
+.card-detail-silhouette span { font-size: 36px; }
 .drawer-cards { display: grid; gap: var(--space-2); }
 .drawer-cards article { padding: var(--space-3); border: 1px solid var(--line); }
 .drawer-cards article > span { color: var(--dim); }

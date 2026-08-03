@@ -2,17 +2,19 @@
   import type { ClueCard, Suit } from '../engine';
   import { SUIT_LABEL, SUIT_ICON } from '../engine';
   import { eul } from '../josa';
+  import { publicAssetUrl } from '../public-assets';
   import CardChip from './CardChip.svelte';
 
   type HandCard = { card: ClueCard; guest: boolean; available: boolean };
 
   type Readings = { judged: number; knownUnjudged: number; unknown: number; lit: number };
 
-  let { cards, selected, verified, onpick, readings }: {
+  let { cards, selected, verified, onpick, onviewdetail, readings }: {
     cards: HandCard[];
     selected: string | null;
     verified: string[];
     onpick: (id: string) => void;
+    onviewdetail: () => void;
     readings: Readings | null;
   } = $props();
 
@@ -23,12 +25,24 @@
   // 유일한 자리가 펼침 안인데 선택 즉시 펼침이 닫히므로(결함 ③ 수정), 고른 순간 표시가
   // 접힌 스택 안으로 숨었다 — "선택 후 클릭할 때까지 어떤 상태인지 알 수 없음"(ticket 31 ⓐ).
   const picked = $derived(selected ? cards.find((item) => item.card.id === selected) ?? null : null);
+  const pickedArt = $derived(
+    picked
+      ? publicAssetUrl(`assets/cards/${picked.card.id}.webp`, import.meta.env.BASE_URL)
+      : '',
+  );
 </script>
 
 <section class="hand-rail" aria-label="핸드">
   {#if picked}
     <p class="picked-readout" role="status">
-      <span class="picked-icon">{SUIT_ICON[picked.card.suit]}</span>
+      <button
+        class="picked-thumb suit-{picked.card.suit}"
+        type="button"
+        aria-label={`${picked.card.name} 상세 보기`}
+        onclick={onviewdetail}
+      >
+        <img src={pickedArt} alt="" />
+      </button>
       <!-- 조사는 이름에 **붙어야** 한다. flex 자식으로 떼어놓으면 gap이 끼어들어
            "환기구 틈 을 집었다"가 된다 — 받침 계산이 맞아도 띄어쓰기가 틀리면 소용없다.
            그래서 이름·조사·문장을 한 인라인 덩어리로 묶는다. 을/를 판정은 19의 josa 모듈. -->

@@ -8,6 +8,7 @@
   import { josaPlaceholder, resolveJosa } from '../josa';
   import { publicAssetUrl } from '../public-assets';
   import CardChip from './CardChip.svelte';
+  import CardDetailDrawer from './CardDetailDrawer.svelte';
   import CaseNotebookDrawer from './CaseNotebookDrawer.svelte';
   import HandRail from './HandRail.svelte';
   import Meters from './Meters.svelte';
@@ -26,7 +27,9 @@
   let facetSlot: string | null = $state(null);
   let hintMode: string | null = $state(null);
   let showNotebook = $state(false);
+  let showCardDetail = $state(false);
   let notebookButton: HTMLButtonElement;
+  let cardDetailButton: HTMLButtonElement | null = null;
 
   const def = $derived(content.cases[game.caseIndex]);
   const inUse = $derived(new Set([
@@ -153,6 +156,7 @@
   }
 
   function pickCard(id: string) {
+    showCardDetail = false;
     if (hintMode) return;
     if (selectedCard !== id) playSfx('card_pick');
     selectedCard = selectedCard === id ? null : id;
@@ -190,6 +194,18 @@
   function closeNotebook(): void {
     showNotebook = false;
     requestAnimationFrame(() => notebookButton?.focus());
+  }
+
+  function viewCardDetail(): void {
+    cardDetailButton = document.activeElement instanceof HTMLButtonElement
+      ? document.activeElement
+      : null;
+    showCardDetail = true;
+  }
+
+  function closeCardDetail(): void {
+    showCardDetail = false;
+    requestAnimationFrame(() => cardDetailButton?.focus());
   }
 </script>
 
@@ -335,7 +351,14 @@
 
   <ReactionBand submit={game.lastSubmit} {slotLabel} />
   {#if game.casePhase === 'compose'}
-    <HandRail cards={hand} selected={selectedCard} verified={game.verified} onpick={pickCard} readings={pickedReadings} />
+    <HandRail
+      cards={hand}
+      selected={selectedCard}
+      verified={game.verified}
+      onpick={pickCard}
+      onviewdetail={viewCardDetail}
+      readings={pickedReadings}
+    />
   {:else}
     <div class="review-hand-lock">검토 중 · 수정하려면 ‘수정하기’를 누르십시오.</div>
   {/if}
@@ -347,4 +370,14 @@
   {content}
   {collection}
   onclose={closeNotebook}
+/>
+
+<CardDetailDrawer
+  open={showCardDetail && !!selectedClue}
+  card={selectedClue}
+  {collection}
+  {content}
+  owned={!!selectedClue && game.ownedClues.includes(selectedClue.id)}
+  verified={!!selectedClue && game.verified.includes(selectedClue.id)}
+  onclose={closeCardDetail}
 />
