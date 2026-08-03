@@ -1,4 +1,5 @@
 import {
+  createIndexedDbPackStore,
   createMemoryPackStore,
   loadPackManifest,
   resolveManifest,
@@ -49,6 +50,67 @@ check(
   'S4 손상 manifest 보존·경고',
   corrupt.issues.some((issue) => issue.code === 'MANIFEST_CORRUPT') &&
     storage.getItem('case-collection.pack-manifest.v1') === '{broken',
+);
+
+let capturedPack: unknown;
+function cloneCheckingFactory(): IDBFactory {
+  const database = {
+    objectStoreNames: { contains: () => true },
+    transaction: () => {
+      const transaction: {
+        error: DOMException | null;
+        oncomplete?: () => void;
+        onerror?: () => void;
+        onabort?: () => void;
+        objectStore: () => { put: (value: unknown) => IDBRequest<IDBValidKey> };
+      } = {
+        error: null,
+        objectStore: () => ({
+          put: (value: unknown) => {
+            capturedPack = structuredClone(value);
+            const request = {
+              result: (capturedPack as { id: string }).id,
+              error: null,
+            } as unknown as IDBRequest<IDBValidKey>;
+            queueMicrotask(() => {
+              request.onsuccess?.(new Event('success'));
+              transaction.oncomplete?.();
+            });
+            return request;
+          },
+        }),
+      };
+      return transaction as unknown as IDBTransaction;
+    },
+    close: () => undefined,
+  };
+  return {
+    open: () => {
+      const request = {
+        result: database,
+        error: null,
+      } as unknown as IDBOpenDBRequest;
+      queueMicrotask(() => request.onsuccess?.(new Event('success')));
+      return request;
+    },
+  } as unknown as IDBFactory;
+}
+
+const reactiveJson = new Proxy({ id: 'mod.proxy' }, {});
+let reactivePutSucceeded = true;
+try {
+  await createIndexedDbPackStore(cloneCheckingFactory()).put({
+    id: 'mod.proxy',
+    json: reactiveJson,
+    importedAt: 3,
+  });
+} catch {
+  reactivePutSucceeded = false;
+}
+check(
+  'S5 반응형 JSON 저장 경계 정규화',
+  reactivePutSucceeded &&
+    (capturedPack as { json?: { id?: string } } | undefined)?.json?.id === 'mod.proxy',
 );
 
 console.log(

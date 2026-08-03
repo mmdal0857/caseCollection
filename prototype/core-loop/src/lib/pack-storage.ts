@@ -145,6 +145,18 @@ function transactionDone(transaction: IDBTransaction): Promise<void> {
   });
 }
 
+function toIndexedDbRecord(pack: StoredPack): StoredPack {
+  const serialized = JSON.stringify(pack.json);
+  if (serialized === undefined) {
+    throw new TypeError('data pack body must be JSON-serializable');
+  }
+  return {
+    id: pack.id,
+    json: JSON.parse(serialized) as unknown,
+    importedAt: pack.importedAt,
+  };
+}
+
 async function withStore<T>(
   factory: IDBFactory,
   mode: IDBTransactionMode,
@@ -173,10 +185,11 @@ export function createIndexedDbPackStore(factory: IDBFactory): PackStore {
         (store) => store.get(id),
       ),
     put: async (pack) => {
+      const record = toIndexedDbRecord(pack);
       await withStore<IDBValidKey>(
         factory,
         'readwrite',
-        (store) => store.put(pack),
+        (store) => store.put(record),
       );
     },
     delete: async (id) => {
